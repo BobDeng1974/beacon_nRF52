@@ -26,14 +26,14 @@ enum mode_t
 };
 
 
-static uint16_t m_tbl_adv_distance_msec_info[16] = {
-  100,    200,    400,    800,    1600,   3200,   6400,   10000,
-  125,    150,    175,    225,     250,    275,    300,      76
+static uint32_t m_tbl_adv_distance_msec_info[16] = {
+  100000,    200000,    400000,    800000,    1600000,   3200000,   6400000,   10000000,
+  125000,    150000,    175000,    225000,     250000,    275000,    300000,     762500
 };
 
-static uint16_t m_tbl_slot_length_msec_info[16] = {
-   10,     20,     40,     80,     160,    320,    640,    1000,
-   25,     50,     75,    125,     150,    175,    200,      30
+static uint32_t m_tbl_slot_length_msec_info[16] = {
+   10000,     20000,     40000,     80000,     160000,    320000,    640000,    1000000,
+   25000,     50000,     75000,    125000,     150000,    175000,    200000,      76250
 };
 
 /**Constants for timeslot API*/
@@ -46,6 +46,14 @@ static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
 static advertising_timeslot_param_t m_eddystone;
 static uint8_t m_adv_pdu[APP_PDU_INFO_LENGTH];
 static advertising_timeslot_param_t m_adv_timeslot[MAX_ADV_MODE_LIST];
+
+uint16_t get_timesdlot_distance(void)
+{
+  int mode_index = get_current_advmode();
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  uint32_t distance = m_tbl_adv_distance_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  return (uint16_t)(distance/1000);
+}
 
 #ifndef RADIO_TIMESLOT_PDU
 uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params)
@@ -81,9 +89,9 @@ uint32_t request_next_event_earliest(void)
   int mode_index = get_current_advmode();
   advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint16_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
 
-  m_slot_length                                                     = slot_length * 1000;
+  m_slot_length                                                     = slot_length;
   _adv_timeslot_param->timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
   _adv_timeslot_param->timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
   _adv_timeslot_param->timeslot_request.params.earliest.priority    = NRF_RADIO_PRIORITY_HIGH;
@@ -100,9 +108,9 @@ void configure_next_event_earliest(void)
   int mode_index = get_current_advmode();
   advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint16_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
 
-  m_slot_length                                                     = slot_length * 1000;
+  m_slot_length                                                     = slot_length;
   _adv_timeslot_param->timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
   _adv_timeslot_param->timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
   _adv_timeslot_param->timeslot_request.params.earliest.priority    = NRF_RADIO_PRIORITY_HIGH;
@@ -118,17 +126,17 @@ void configure_next_event_normal(void)
   int mode_index = get_current_advmode();
   advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint16_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
-  uint16_t distance_us = m_tbl_adv_distance_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t distance_us = m_tbl_adv_distance_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
 #ifdef TIMESLOT_DEBUG
   NRF_LOG_INFO("mode=%d slot_length=%d distance_us=%d", mode_index, slot_length, distance_us);
 #endif
-  m_slot_length                                                    = slot_length * 1000;
+  m_slot_length                                                    = slot_length;
   _adv_timeslot_param->timeslot_request.request_type               = NRF_RADIO_REQ_TYPE_NORMAL;
   _adv_timeslot_param->timeslot_request.params.normal.hfclk        = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
   _adv_timeslot_param->timeslot_request.params.normal.priority     = NRF_RADIO_PRIORITY_HIGH;
-  _adv_timeslot_param->timeslot_request.params.normal.distance_us  = distance_us * 1000; //to mssec
-  _adv_timeslot_param->timeslot_request.params.normal.length_us    = m_slot_length; //to mssec
+  _adv_timeslot_param->timeslot_request.params.normal.distance_us  = distance_us;
+  _adv_timeslot_param->timeslot_request.params.normal.length_us    = m_slot_length;
   memcpy(&m_timeslot_request, &_adv_timeslot_param->timeslot_request, sizeof(nrf_radio_request_t));
 }
 

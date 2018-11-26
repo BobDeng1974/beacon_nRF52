@@ -15,6 +15,8 @@ typedef struct
 } advertising_timeslot_param_t;
 
 
+uint16_t get_timesdlot_distance(void);
+
 /**@brief Radio GAP advertising configure
 */
 uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params);

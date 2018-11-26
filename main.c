@@ -288,7 +288,6 @@ static void time_30000ms_count_hanlder(void * p_context)
   UNUSED_PARAMETER(p_context);
 #endif
   NRF_LOG_INFO("time_30000ms_count_hanlder");
-  execute_pending_led(LED_OFF);
 
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if (_beacon_info[BINFO_STATUS_VALUE_IDX] != 0x00) {
@@ -839,7 +838,7 @@ static void services_init(void)
 
   // Timeslot Mode
   if (_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] != 0x00) m_timesot_mode = true;
-  //m_timesot_mode = true;    // ##DEBUG##
+  m_timesot_mode = true;    // ##DEBUG##
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
@@ -1446,6 +1445,13 @@ int main(void)
 #endif
 
   // Timeslot Started
+    uint8_t *_beacon_infox = ble_bms_get_beacon_info();
+  for (int i = BINFO_TIMESLOT_LENGTH_LIST_IDX, j = 0; i < BINFO_TIMESLOT_LENGTH_LIST_IDX + BINFO_TIMESLOT_LENGTH_LIST_SIZ ; ++i, ++j) {
+    _beacon_infox[i] = j;
+  }
+  for (int i = BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX, j = 0; i < BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX + BINFO_TIMESLOT_ADV_DISTANCE_LIST_SIZ ; ++i, ++j) {
+    _beacon_infox[i] = j;
+  }
   if (ble_bms_get_timeslot_status() != 0x00) {
     err_code = timeslot_start();
     APP_ERROR_CHECK(err_code);

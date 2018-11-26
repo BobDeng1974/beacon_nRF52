@@ -167,7 +167,7 @@ uint16_t get_battery_level()
   blevel -= bl_min;
 
   // 平均値を計算
-  blevel = blevel / 8;
+  blevel = (blevel / 8) * 30;
 
   return blevel;
 }
@@ -231,7 +231,7 @@ uint16_t battery_level_get()
   return vbat_current_in_mv;
 }
 
-uint8_t battery_level_to_percent_old(const uint16_t mvolts)
+uint8_t battery_level_to_percent(const uint16_t mvolts)
 {
     uint8_t battery_level;
 
@@ -240,25 +240,6 @@ uint8_t battery_level_to_percent_old(const uint16_t mvolts)
     } else if (mvolts >= 2300) { // 2300
         battery_level = 75;
     } else if (mvolts >= 1950) { // 1950
-        battery_level = 50;
-    } else { // 1600
-        battery_level = 25;
-    }
-
-    return battery_level;
-}
-
-uint8_t battery_level_to_percent(const uint16_t mvolts)
-{
-    uint8_t battery_level;
-
-    if (mvolts >= 120) { // 3V以上
-        battery_level = 200;
-    } else if (mvolts >= 90) {
-        battery_level = 100;
-    } else if (mvolts >= 70) {
-        battery_level = 75;
-    } else if (mvolts >= 40) {
         battery_level = 50;
     } else { // 1600
         battery_level = 25;
@@ -281,7 +262,7 @@ uint8_t battery_level_to_percent(const uint16_t mvolts)
   0x01:   0%
   0x00: Unkown/continuous power
 */
-uint8_t battery_level_to_percent_devidedby10_old(const uint16_t mvolts)
+uint8_t battery_level_to_percent_devidedby10(const uint16_t mvolts)
 {
   uint8_t battery_level;
 
@@ -310,11 +291,6 @@ uint8_t battery_level_to_percent_devidedby10_old(const uint16_t mvolts)
   }
 
   return battery_level;
-}
-
-uint8_t battery_level_to_percent_devidedby10(const uint16_t mvolts)
-{
-  return mvolts;
 }
 
 int8_t get_adjusted_rssi(uint8_t tx_power) 

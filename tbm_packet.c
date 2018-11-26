@@ -66,8 +66,8 @@ void build_bms_data(void)
      memset(&bms_info[10], 0xFF, sizeof(m_pre_time));
     }
 
-    bms_info[17] = get_battery_level();
-    bms_info[18] = get_battery_level();
+    bms_info[17] = battery_level_get2();
+    bms_info[18] = battery_level_get2();
   }
 
   // Battery Supply / Beacon Battery / Beacon Status

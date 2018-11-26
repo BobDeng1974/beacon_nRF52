@@ -1,10 +1,10 @@
-Tangerine nRF51 beacon firmware
+Tangerine nRF52 beac_on firmware
 ==================
 
 Overview
 
 ## Description
-nRF51 beacon firmware for Tangerine.
+nRF52 beacon firmware for Tangerine.
 
 ## Features
 This firmware supports following protocols.
@@ -14,10 +14,12 @@ This firmware supports following protocols.
 * EddyStone-UUID
 * EddyStone-TLM
 * LINE Beacon
+* ECO Mode
+* Selected Radio Timeslot Mode
 
 ## Support Devices
 * RapiNavi Air 2
-* nRF51-DK (nRF6824, PC10028)
+* nRF52-DK (PC10040)
 
 ## Requirement
 * Toolchain: gcc-arm-none-eabi-4_9-2015q3  
@@ -30,7 +32,7 @@ This firmware supports following protocols.
 * SoftDevice: s110_nrf51822_8.0.0
   [linkref] http://developer.nordicsemi.com/nRF5_SDK/
 
-* Nordic SDK: nRF51_SDK_8.1.0_b6ed55f
+* Nordic SDK: nRF52_SDK_15.2.0_b6ed55f
   [linkref] http://www.nordicsemi.com/eng/Products/Bluetooth-low-energy/nRF51822
 
 ## Versions and Tags(master branch)
@@ -44,6 +46,7 @@ This firmware supports following protocols.
 | v41040  | v41040      | master           | refactoring                     |
 | v41056  |             | master           | LINE beacon                     |
 | v41072  |             | feature/tgsecure | Tagnerine Secure iBeacon        |
+| v42000  |             | feature/tt52     | Tagnerine Secure iBeacon        |
 
 ## Third-party crypto libraries
 This firmware uses algorithm from the following third-party cryptographic libraries.

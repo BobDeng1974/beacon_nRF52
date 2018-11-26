@@ -710,14 +710,16 @@ static void ble_bms_set_default_value_to_beacon_info()
   }
 
   if (m_beacon_info[BINFO_TIMESLOT_LENGTH_LIST_IDX] == 0xFF) {
-    for (int i = BINFO_TIMESLOT_LENGTH_LIST_IDX; i < BINFO_TIMESLOT_LENGTH_LIST_IDX + BINFO_TIMESLOT_LENGTH_LIST_SIZ ; ++i) {
+    for (int i = BINFO_TIMESLOT_LENGTH_LIST_IDX, j = 0; i < BINFO_TIMESLOT_LENGTH_LIST_IDX + BINFO_TIMESLOT_LENGTH_LIST_SIZ ; ++i, ++j) {
       m_beacon_info[i] = BMS_DEFAULT_TXFRQ_VALUE;
+      m_beacon_info[i] = j;
     }
   }
 
   if (m_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX] == 0xFF) {
-    for (int i = BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX; i < BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX + BINFO_TIMESLOT_ADV_DISTANCE_LIST_SIZ ; ++i) {
+    for (int i = BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX, j = 0; i < BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX + BINFO_TIMESLOT_ADV_DISTANCE_LIST_SIZ ; ++i, ++j) {
       m_beacon_info[i] = BMS_DEFAULT_TXFRQ_VALUE;
+      m_beacon_info[i] = j;
     }
   }
 
