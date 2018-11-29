@@ -839,7 +839,7 @@ static void services_init(void)
 
   // Timeslot Mode
   if (_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] != 0x00) m_timesot_mode = true;
-  m_timesot_mode = true;    // ##DEBUG##
+  //m_timesot_mode = true;    // ##DEBUG##
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
@@ -1484,7 +1484,7 @@ int main(void)
     {
         nrf_pwr_mgmt_run();
     }
-    power_manage();
+    //power_manage();
 #endif
   }
 }
