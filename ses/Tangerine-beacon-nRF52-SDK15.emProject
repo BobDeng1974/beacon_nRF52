@@ -1,0 +1,186 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="Tangerine-beacon-nRF52-SDK15" target="8" version="2">
+  <project Name="Tangerine-beacon-nRF52-SDK15">
+    <configuration
+      Name="Common"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_endian="Little"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_linker_heap_size="1024"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="2048"
+      arm_linker_treat_warnings_as_errors="No"
+      arm_simulator_memory_simulation_parameter="RWX 00000000,00100000,FFFFFFFF;RWX 20000000,00010000,CDCDCDCD"
+      arm_target_device_name="nRF52832_xxAA"
+      arm_target_interface_type="SWD"
+      c_preprocessor_definitions="BOARD_PCA10040;CONFIG_GPIO_AS_PINRESET;FLOAT_ABI_HARD;INCLUDE_vTaskSuspend;INITIALIZE_USER_SECTIONS;NO_VTOR_CONFIG;NRF52;NRF52832_XXAA;NRF52_PAN_74;NRF_SD_BLE_API_VERSION=6;S132;SOFTDEVICE_PRESENT;configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY;configTICK_SOURCE;configUSE_IDLE_HOOK;configUSE_PORT_OPTIMISED_TASK_SELECTION;configUSE_PREEMPTION;configUSE_TICKLESS_IDLE;configUSE_TIMERS;NO_VTOR_CONFIG;NRF52_SERIES;NRF52832;NRF52832_XXAA;S132;SOFTDEVICE_PRESENT;NRF_SD_BLE_API_VERSION=6;BOARD_PCA10040;CONFIG_GPIO_AS_PINRESET;DEBUG;BL_SETTINGS_ACCESS_ONLY;NRF_DFU_SVCI_ENABLED;NRF_DFU_TRANSPORT_BLE=1;CONFIG_NFCT_PINS_AS_GPIOS=1;SWI_DISABLE0"
+      c_user_include_directories="../;../config;../crypto_libs/rfc6234;../dfu_service;../include;../include/boot_common;../ant_bootloader/include;../ant_bootloader/config;$(SDKDir)/modules/nrfx/hal;$(SDKDir)/components;$(SDKDir)/components/softdevice/s132/header;$(SDKDir)/components/ble/ble_advertising;$(SDKDir)/components/ble/ble_services/ble_dfu;$(SDKDir)/components/ble/ble_db_discovery;$(SDKDir)/components/ble/ble_dtm;$(SDKDir)/components/ble/ble_racp;$(SDKDir)/components/ble/ble_services/nrf_ble_bms;$(SDKDir)/components/ble/ble_services/ble_ancs_c;$(SDKDir)/components/ble/ble_services/ble_ans_c;$(SDKDir)/components/ble/ble_services/ble_bas;$(SDKDir)/components/ble/ble_services/ble_bas_c;$(SDKDir)/components/ble/ble_services/ble_cscs;$(SDKDir)/components/ble/ble_services/ble_cts_c;$(SDKDir)/components/ble/ble_services/ble_dfu;$(SDKDir)/components/ble/ble_services/ble_dis;$(SDKDir)/components/ble/ble_services/ble_gls;$(SDKDir)/components/ble/ble_services/ble_hids;$(SDKDir)/components/ble/ble_services/ble_hrs;$(SDKDir)/components/ble/ble_services/ble_hrs_c;$(SDKDir)/components/ble/ble_services/ble_hts;$(SDKDir)/components/ble/ble_services/ble_ias;$(SDKDir)/components/ble/ble_services/ble_ias_c;$(SDKDir)/components/ble/ble_services/ble_lbs;$(SDKDir)/components/ble/ble_services/ble_lbs_c;$(SDKDir)/components/ble/ble_services/ble_lls;$(SDKDir)/components/ble/ble_services/ble_nus;$(SDKDir)/components/ble/ble_services/ble_nus_c;$(SDKDir)/components/ble/ble_services/ble_rscs;$(SDKDir)/components/ble/ble_services/ble_rscs_c;$(SDKDir)/components/ble/ble_services/ble_tps;$(SDKDir)/components/ble/ble_services/ble_dfu;$(SDKDir)/components/ble/common;$(SDKDir)/components/ble/nrf_ble_gatt;$(SDKDir)/components/ble/nrf_ble_qwr;$(SDKDir)/components/ble/peer_manager;$(SDKDir)/components/boards;$(SDKDir)/components/drivers_nrf/usbd;$(SDKDir)/components/libraries/atomic;$(SDKDir)/components/libraries/atomic_fifo;$(SDKDir)/components/libraries/atomic_flags;$(SDKDir)/components/libraries/balloc;$(SDKDir)/components/libraries/bootloader/ble_dfu;$(SDKDir)/components/libraries/bsp;$(SDKDir)/components/libraries/button;$(SDKDir)/components/libraries/cli;$(SDKDir)/components/libraries/crc16;$(SDKDir)/components/libraries/crc32;$(SDKDir)/components/libraries/crypto;$(SDKDir)/components/libraries/csense;$(SDKDir)/components/libraries/csense_drv;$(SDKDir)/components/libraries/delay;$(SDKDir)/components/libraries/ecc;$(SDKDir)/components/libraries/experimental_section_vars;$(SDKDir)/components/libraries/experimental_task_manager;$(SDKDir)/components/libraries/fds;$(SDKDir)/components/libraries/fstorage;$(SDKDir)/components/libraries/gfx;$(SDKDir)/components/libraries/gpiote;$(SDKDir)/components/libraries/hardfault;$(SDKDir)/components/libraries/hardfault/nrf52;$(SDKDir)/components/libraries/hci;$(SDKDir)/components/libraries/led_softblink;$(SDKDir)/components/libraries/log;$(SDKDir)/components/libraries/log/src;$(SDKDir)/components/libraries/mem_manager;$(SDKDir)/components/libraries/memobj;$(SDKDir)/components/libraries/mpu;$(SDKDir)/components/libraries/mutex;$(SDKDir)/components/libraries/pwm;$(SDKDir)/components/libraries/pwr_mgmt;$(SDKDir)/components/libraries/queue;$(SDKDir)/components/libraries/ringbuf;$(SDKDir)/components/libraries/scheduler;$(SDKDir)/components/libraries/sdcard;$(SDKDir)/components/libraries/sensorsim;$(SDKDir)/components/libraries/slip;$(SDKDir)/components/libraries/sortlist;$(SDKDir)/components/libraries/spi_mngr;$(SDKDir)/components/libraries/stack_guard;$(SDKDir)/components/libraries/strerror;$(SDKDir)/components/libraries/svc;$(SDKDir)/components/libraries/timer;$(SDKDir)/components/libraries/twi_mngr;$(SDKDir)/components/libraries/twi_sensor;$(SDKDir)/components/libraries/usbd;$(SDKDir)/components/libraries/usbd/class/audio;$(SDKDir)/components/libraries/usbd/class/cdc;$(SDKDir)/components/libraries/usbd/class/cdc/acm;$(SDKDir)/components/libraries/usbd/class/hid;$(SDKDir)/components/libraries/usbd/class/hid/generic;$(SDKDir)/components/libraries/usbd/class/hid/kbd;$(SDKDir)/components/libraries/usbd/class/hid/mouse;$(SDKDir)/components/libraries/usbd/class/msc;$(SDKDir)/components/libraries/util;$(SDKDir)/components/nfc/ndef/conn_hand_parser;$(SDKDir)/components/nfc/ndef/conn_hand_parser/ac_rec_parser;$(SDKDir)/components/nfc/ndef/conn_hand_parser/ble_oob_advdata_parser;$(SDKDir)/components/nfc/ndef/conn_hand_parser/le_oob_rec_parser;$(SDKDir)/components/nfc/ndef/connection_handover/ac_rec;$(SDKDir)/components/nfc/ndef/connection_handover/ble_oob_advdata;$(SDKDir)/components/nfc/ndef/connection_handover/ble_pair_lib;$(SDKDir)/components/nfc/ndef/connection_handover/ble_pair_msg;$(SDKDir)/components/nfc/ndef/connection_handover/common;$(SDKDir)/components/nfc/ndef/connection_handover/ep_oob_rec;$(SDKDir)/components/nfc/ndef/connection_handover/hs_rec;$(SDKDir)/components/nfc/ndef/connection_handover/le_oob_rec;$(SDKDir)/components/nfc/ndef/generic/message;$(SDKDir)/components/nfc/ndef/generic/record;$(SDKDir)/components/nfc/ndef/launchapp;$(SDKDir)/components/nfc/ndef/parser/message;$(SDKDir)/components/nfc/ndef/parser/record;$(SDKDir)/components/nfc/ndef/text;$(SDKDir)/components/nfc/ndef/uri;$(SDKDir)/components/nfc/t2t_lib;$(SDKDir)/components/nfc/t2t_lib/hal_t2t;$(SDKDir)/components/nfc/t2t_parser;$(SDKDir)/components/nfc/t4t_lib;$(SDKDir)/components/nfc/t4t_lib/hal_t4t;$(SDKDir)/components/nfc/t4t_parser/apdu;$(SDKDir)/components/nfc/t4t_parser/cc_file;$(SDKDir)/components/nfc/t4t_parser/hl_detection_procedure;$(SDKDir)/components/nfc/t4t_parser/tlv;$(SDKDir)/components/softdevice/common;$(SDKDir)/components/softdevice/s132/headers;$(SDKDir)/components/softdevice/s132/headers/nrf52;$(SDKDir)/components/toolchain/cmsis/include;$(SDKDir)/external/fprintf;$(SDKDir)/external/segger_rtt;$(SDKDir)/external/utf_converter;$(SDKDir)/integration/nrfx;$(SDKDir)/integration/nrfx/legacy;$(SDKDir)/modules/nrfx;$(SDKDir)/modules/nrfx/drivers/include;$(SDKDir)/modules/nrfx/hal;$(SDKDir)/modules/nrfx/mdk;../config;$(SDKDir)/components/libraries/bootloader;$(SDKDir)/components/libraries/bootloader/ble_dfu;$(SDKDir)/components/libraries/bootloader/dfu;$(SDKDir)/components/proprietary_rf/gzll"
+      debug_additional_load_file="$(SDKDir)/components/softdevice/s132/hex/s132_nrf52_6.1.0_softdevice.hex"
+      debug_register_definition_file="$(SDKDir)/modules/nrfx/mdk/nrf52.svd"
+      debug_start_from_entry_point_symbol="No"
+      debug_target_connection="J-Link"
+      gcc_debugging_level="Level 3"
+      gcc_entry_point="Reset_Handler"
+      linker_output_format="hex"
+      linker_printf_fmt_level="long"
+      linker_printf_width_precision_supported="Yes"
+      linker_section_placement_file="flash_placement.xml"
+      linker_section_placement_macros="FLASH_PH_START=0x0;FLASH_PH_SIZE=0x80000;RAM_PH_START=0x20000000;RAM_PH_SIZE=0x10000;FLASH_START=0x26000;FLASH_SIZE=0x5a000;RAM_START=0x200057b8;RAM_SIZE=0xE278"
+      linker_section_placements_segments="FLASH RX 0x0 0x80000;RAM RWX 0x20000000 0x10000;uicr_bootloader_start_address RX 0x10001014 0x4"
+      macros="CMSIS_CONFIG_TOOL=$(SDKDir)/external_tools/cmsisconfig/CMSIS_Configuration_Wizard.jar;SDKDir=../../nRF5_SDK_15.2.0_9412b96"
+      project_directory=""
+      project_type="Executable" />
+    <folder Name="Segger Startup Files">
+      <file file_name="$(StudioDir)/source/thumb_crt0.s" />
+    </folder>
+    <folder Name="nRF_Log">
+      <file file_name="$(SDKDir)/components/libraries/log/src/nrf_log_backend_rtt.c" />
+      <file file_name="$(SDKDir)/components/libraries/log/src/nrf_log_backend_serial.c" />
+      <file file_name="$(SDKDir)/components/libraries/log/src/nrf_log_backend_uart.c" />
+      <file file_name="$(SDKDir)/components/libraries/log/src/nrf_log_default_backends.c" />
+      <file file_name="$(SDKDir)/components/libraries/log/src/nrf_log_frontend.c" />
+      <file file_name="$(SDKDir)/components/libraries/log/src/nrf_log_str_formatter.c" />
+    </folder>
+    <folder Name="nRF_Libraries">
+      <file file_name="$(SDKDir)/components/libraries/button/app_button.c" />
+      <file file_name="$(SDKDir)/components/libraries/util/app_error.c" />
+      <file file_name="$(SDKDir)/components/libraries/util/app_error_handler_gcc.c" />
+      <file file_name="$(SDKDir)/components/libraries/util/app_error_weak.c" />
+      <file file_name="$(SDKDir)/components/libraries/util/app_util_platform.c" />
+      <file file_name="$(SDKDir)/components/libraries/crc16/crc16.c" />
+      <file file_name="$(SDKDir)/components/libraries/fds/fds.c" />
+      <file file_name="$(SDKDir)/components/libraries/hardfault/nrf52/handler/hardfault_handler_gcc.c" />
+      <file file_name="$(SDKDir)/components/libraries/hardfault/hardfault_implementation.c" />
+      <file file_name="$(SDKDir)/components/libraries/util/nrf_assert.c" />
+      <file file_name="$(SDKDir)/components/libraries/atomic_fifo/nrf_atfifo.c" />
+      <file file_name="$(SDKDir)/components/libraries/atomic_flags/nrf_atflags.c" />
+      <file file_name="$(SDKDir)/components/libraries/atomic/nrf_atomic.c" />
+      <file file_name="$(SDKDir)/components/libraries/balloc/nrf_balloc.c" />
+      <file file_name="$(SDKDir)/external/fprintf/nrf_fprintf.c" />
+      <file file_name="$(SDKDir)/external/fprintf/nrf_fprintf_format.c" />
+      <file file_name="$(SDKDir)/components/libraries/fstorage/nrf_fstorage.c" />
+      <file file_name="$(SDKDir)/components/libraries/fstorage/nrf_fstorage_sd.c" />
+      <file file_name="$(SDKDir)/components/libraries/memobj/nrf_memobj.c" />
+      <file file_name="$(SDKDir)/components/libraries/ringbuf/nrf_ringbuf.c" />
+      <file file_name="$(SDKDir)/components/libraries/experimental_section_vars/nrf_section_iter.c" />
+      <file file_name="$(SDKDir)/components/libraries/strerror/nrf_strerror.c" />
+      <file file_name="$(SDKDir)/components/libraries/sensorsim/sensorsim.c" />
+      <file file_name="$(SDKDir)/components/libraries/gpiote/app_gpiote.c" />
+      <file file_name="$(SDKDir)/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c" />
+      <file file_name="$(SDKDir)/components/libraries/bootloader/nrf_bootloader_info.c" />
+      <file file_name="../../nRF5_SDK_15.2.0_9412b96/components/libraries/timer/app_timer.c" />
+    </folder>
+    <folder Name="None">
+      <file file_name="$(SDKDir)/modules/nrfx/mdk/ses_startup_nrf52.s" />
+      <file file_name="$(SDKDir)/modules/nrfx/mdk/ses_startup_nrf_common.s" />
+      <file file_name="$(SDKDir)/modules/nrfx/mdk/system_nrf52.c" />
+    </folder>
+    <folder Name="Board Definition">
+      <file file_name="$(SDKDir)/components/boards/boards.c" />
+    </folder>
+    <folder Name="nRF_Drivers">
+      <file file_name="$(SDKDir)/integration/nrfx/legacy/nrf_drv_clock.c" />
+      <file file_name="$(SDKDir)/integration/nrfx/legacy/nrf_drv_uart.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/nrfx_clock.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/nrfx_gpiote.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/nrfx_power_clock.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/prs/nrfx_prs.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/nrfx_uart.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/nrfx_uarte.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/nrfx_saadc.c" />
+      <file file_name="$(SDKDir)/modules/nrfx/drivers/src/nrfx_twi.c" />
+      <file file_name="$(SDKDir)/integration/nrfx/legacy/nrf_drv_twi.c" />
+    </folder>
+    <folder Name="Board Support">
+      <file file_name="$(SDKDir)/components/libraries/bsp/bsp.c" />
+      <file file_name="$(SDKDir)/components/libraries/bsp/bsp_btn_ble.c" />
+    </folder>
+    <folder Name="Application">
+      <file file_name="../crypto_libs/rfc6234/hmac.c" />
+      <file file_name="../crypto_libs/rfc6234/sha1.c" />
+      <file file_name="../crypto_libs/rfc6234/sha224-256.c" />
+      <file file_name="../crypto_libs/rfc6234/sha384-512.c" />
+      <file file_name="../crypto_libs/rfc6234/usha.c" />
+      <file file_name="../advertising.h" />
+      <file file_name="../beacon_device.h" />
+      <file file_name="../ble_bms.h" />
+      <file file_name="../eddystone.h" />
+      <file file_name="../ibeacon.h" />
+      <file file_name="../line.h" />
+      <file file_name="../setting.h" />
+      <file file_name="../tb_global.h" />
+      <file file_name="../tb_manager.h" />
+      <file file_name="../tbm_packet.h" />
+      <file file_name="../tgsec_ibeacon.h" />
+      <file file_name="../advertising.c" />
+      <file file_name="../beacon_device.c" />
+      <file file_name="../ble_bms.c" />
+      <file file_name="../eddystone.c" />
+      <file file_name="../ibeacon.c" />
+      <file file_name="../line.c" />
+      <file file_name="../main.c" />
+      <file file_name="../tb_manager.c" />
+      <file file_name="../tbm_packet.c" />
+      <file file_name="../tgsec_ibeacon.c" />
+      <file file_name="../timeslot.c" />
+      <file file_name="../timeslot.h" />
+      <file file_name="../config/custom_board.h" />
+      <file file_name="../config/sdk_config.h" />
+    </folder>
+    <folder Name="nRF_SVC">
+      <file file_name="$(SDKDir)/components/libraries/bootloader/dfu/nrf_dfu_svci.c" />
+    </folder>
+    <folder Name="nRF_Segger_RTT">
+      <file file_name="$(SDKDir)/external/segger_rtt/SEGGER_RTT.c" />
+      <file file_name="$(SDKDir)/external/segger_rtt/SEGGER_RTT_Syscalls_SES.c" />
+      <file file_name="$(SDKDir)/external/segger_rtt/SEGGER_RTT_printf.c" />
+    </folder>
+    <folder Name="nRF_BLE">
+      <file file_name="$(SDKDir)/components/ble/peer_manager/auth_status_tracker.c" />
+      <file file_name="$(SDKDir)/components/ble/common/ble_advdata.c" />
+      <file file_name="$(SDKDir)/components/ble/ble_advertising/ble_advertising.c" />
+      <file file_name="$(SDKDir)/components/ble/common/ble_conn_params.c" />
+      <file file_name="$(SDKDir)/components/ble/common/ble_conn_state.c" />
+      <file file_name="$(SDKDir)/components/ble/common/ble_srv_common.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/gatt_cache_manager.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/gatts_cache_manager.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/id_manager.c" />
+      <file file_name="$(SDKDir)/components/ble/nrf_ble_gatt/nrf_ble_gatt.c" />
+      <file file_name="$(SDKDir)/components/ble/nrf_ble_qwr/nrf_ble_qwr.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/peer_data_storage.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/peer_database.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/peer_id.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/peer_manager.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/peer_manager_handler.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/pm_buffer.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/security_dispatcher.c" />
+      <file file_name="$(SDKDir)/components/ble/peer_manager/security_manager.c" />
+      <file file_name="$(SDKDir)/components/ble/ble_services/nrf_ble_bms/nrf_ble_bms.c" />
+    </folder>
+    <folder Name="nRF_DFU">
+      <file file_name="$(SDKDir)/components/ble/ble_services/ble_dfu/ble_dfu.c" />
+      <file file_name="$(SDKDir)/components/ble/ble_services/ble_dfu/ble_dfu_bonded.c" />
+      <file file_name="$(SDKDir)/components/ble/ble_services/ble_dfu/ble_dfu_unbonded.c" />
+    </folder>
+    <folder Name="UTF8/UTF16 converter">
+      <file file_name="$(SDKDir)/external/utf_converter/utf.c" />
+    </folder>
+    <folder Name="nRF_BLE_Services">
+      <file file_name="$(SDKDir)/components/ble/ble_services/ble_bas/ble_bas.c" />
+      <file file_name="$(SDKDir)/components/ble/ble_services/ble_dis/ble_dis.c" />
+      <file file_name="$(SDKDir)/components/ble/ble_services/ble_hrs/ble_hrs.c" />
+    </folder>
+    <folder Name="nRF_SoftDevice">
+      <file file_name="$(SDKDir)/components/softdevice/common/nrf_sdh.c" />
+      <file file_name="$(SDKDir)/components/softdevice/common/nrf_sdh_ble.c" />
+      <file file_name="$(SDKDir)/components/softdevice/common/nrf_sdh_soc.c" />
+    </folder>
+  </project>
+  <configuration Name="Release" c_preprocessor_definitions="NDEBUG" />
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG; DEBUG_NRF"
+    gcc_optimization_level="Debug" />
+</solution>

@@ -19,8 +19,10 @@ uint8_t                       m_adv_switch_timer_start = false;
 ble_gap_adv_params_t          m_adv_params;                                   /**< Parameters to be passed to the stack when starting advertising. */
 uint8_t                       m_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET;  /**< Advertising handle used to identify an advertising set. */
 bool                          m_adv_switch_timer_enabled;                     /**< Flag for enabling and disabling the registration of new RR interval measurements (the purpose of disabling this is just to test sending HRM without RR interval data. */
-TimerHandle_t                 m_adv_switch_timer;                             /**< Definition of battery timer. */
 
+#ifdef  FREERTOS_SWITCH
+  TimerHandle_t                 m_adv_switch_timer;                             /**< Definition of battery timer. */
+#endif
 
 ble_advertising_mode_t get_current_advmode()
 {

@@ -57,14 +57,15 @@
 #include "tracetask.h"
 
 //#define ADV_SWITCH_TIMER_APP_TIMER
-#define FREERTOS_SWITCH
+//#define FREERTOS_SWITCH
 
-#include "nrf_sdh_freertos.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "timers.h"
-#include "semphr.h"
-
+#ifdef   FREERTOS_SWITCH
+  #include "nrf_sdh_freertos.h"
+  #include "FreeRTOS.h"
+  #include "task.h"
+  #include "timers.h"
+  #include "semphr.h"
+#endif
 
 //----------------------------------------------------------------------------
 // version number

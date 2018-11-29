@@ -93,8 +93,8 @@ uint8_t m_adc_status = true;
   static TimerHandle_t m_battery_monitoring_timer;
 #else
   //#define BATTERY_MONITORING_INTERVAL APP_TIMER_TICKS(30 * 1000, APP_TIMER_PRESCALER) //  test: 30s
-  #define BATTERY_MONITORING_INTERVAL APP_TIMER_TICKS(12 * 60 * 60 * 1000, APP_TIMER_PRESCALER) // 12 hours
-  static app_timer_id_t  m_battery_monitoring_timer_id;
+  #define BATTERY_MONITORING_INTERVAL APP_TIMER_TICKS(12 * 60 * 60 * 1000) // 12 hours
+  APP_TIMER_DEF(m_battery_monitoring_timer_id);
   static void read_battery_hysteresis(void * p_context);
 #endif
 
@@ -107,8 +107,8 @@ uint8_t m_adc_status = true;
   static void time_100ms_count_hanlder(TimerHandle_t xTimer);
   static TimerHandle_t m_100ms_count_timer;
 #else
-  #define COUNTER_100ms_INTERVAL APP_TIMER_TICKS(100, APP_TIMER_PRESCALER) // 100msec
-  static app_timer_id_t  m_100ms_count_timer_id; /**< timer for counting 100ms counter */
+  #define COUNTER_100ms_INTERVAL APP_TIMER_TICKS(100) // 100msec
+  APP_TIMER_DEF(m_100ms_count_timer_id);
   static void time_100ms_count_hanlder(void * p_context);
 #endif
 
@@ -120,8 +120,8 @@ uint8_t m_adc_status = true;
   static void time_15000ms_count_hanlder(TimerHandle_t xTimer);
   static TimerHandle_t m_15000ms_count_timer;
 #else
-  #define COUNTER_15000ms_INTERVAL APP_TIMER_TICKS(15000, APP_TIMER_PRESCALER) // 15000msec = 15sec
-  static app_timer_id_t  m_15000ms_count_timer_id; /**< timer for counting 15000ms counter */
+  #define COUNTER_15000ms_INTERVAL APP_TIMER_TICKS(15000) // 15000msec = 15sec
+  APP_TIMER_DEF(m_15000ms_count_timer_id);
   static void time_15000ms_count_hanlder(void * p_context);
 #endif
 //-----------------------------------------------------------------------------
@@ -132,8 +132,8 @@ uint8_t m_adc_status = true;
   static void time_30000ms_count_hanlder(TimerHandle_t xTimer);
   static TimerHandle_t m_30000ms_count_timer;
 #else
-  #define COUNTER_30000ms_INTERVAL APP_TIMER_TICKS(30000-10, APP_TIMER_PRESCALER) // 30000msec = 30sec
-  static app_timer_id_t  m_30000ms_count_timer_id; /**< timer for counting 30000ms counter */
+  #define COUNTER_30000ms_INTERVAL APP_TIMER_TICKS(30000-10) // 30000msec = 30sec
+  APP_TIMER_DEF(m_30000ms_count_timer_id);
   static void time_30000ms_count_hanlder(void * p_context);
 #endif
 
@@ -145,8 +145,8 @@ uint8_t m_adc_status = true;
   static void time_ecomodecheck_count_hanlder(TimerHandle_t xTimer);
   static TimerHandle_t m_ecomodecheck_count_timer;
 #else
-  #define COUNTER_ECOMODECHECK_INTERVAL APP_TIMER_TICKS(607 * 1000, APP_TIMER_PRESCALER) // 30000msec = 30sec
-  static app_timer_id_t  m_ecomodecheck_count_timer_id; /**< timer for counting 30000ms counter */
+  #define COUNTER_ECOMODECHECK_INTERVAL APP_TIMER_TICKS(607 * 1000) // 30000msec = 30sec
+  APP_TIMER_DEF(m_ecomodecheck_count_timer_id);
   static void m_ecomodecheck_count_timer(void * p_context);
 #endif
 
@@ -674,6 +674,7 @@ static void timers_init(void)
 static void application_timers_start(void)
 {
   // Start application timers.
+  uint32_t                err_code;
 
 #ifdef FREERTOS_SWITCH
   // start counter 100msec  timer.
@@ -1281,23 +1282,6 @@ void vApplicationIdleHook( void )
 #endif
 }
 
-/**@brief Function for initializing logging. */
-void log_init(void)
-{
-    ret_code_t err_code = NRF_LOG_INIT(NULL);
-    APP_ERROR_CHECK(err_code);
-
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
-}
-
-/**@brief Function for initializing the clock.
- */
-void clock_init(void)
-{
-    ret_code_t err_code = nrf_drv_clock_init();
-    APP_ERROR_CHECK(err_code);
-}
-
 static void tsk_Advertising_start(void * arg)
 {
   UNUSED_PARAMETER(arg);
@@ -1326,6 +1310,24 @@ static void tsk_LED_control(void * arg)
 }
 #endif
 
+/**@brief Function for initializing logging. */
+void log_init(void)
+{
+    ret_code_t err_code = NRF_LOG_INIT(NULL);
+    APP_ERROR_CHECK(err_code);
+
+    NRF_LOG_DEFAULT_BACKENDS_INIT();
+}
+
+/**@brief Function for initializing the clock.
+ */
+void clock_init(void)
+{
+    ret_code_t err_code = nrf_drv_clock_init();
+    APP_ERROR_CHECK(err_code);
+}
+
+
 
 /**@brief F unction for application main entry.
  */
@@ -1343,8 +1345,8 @@ int main(void)
   m_Execute_led_flash_type1 = false;
 
   // Initialize.
-#ifdef FREERTOS_SWITCH
   log_init();
+#ifdef FREERTOS_SWITCH
   clock_init();
   // Activate deep sleep mode.
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
@@ -1366,12 +1368,14 @@ int main(void)
   err_code = nrf_pwr_mgmt_init();
   APP_ERROR_CHECK(err_code);
 
+#ifdef FREERTOS_SWITCH
 #if NRF_LOG_ENABLED
     // Start execution.
     if (pdPASS != xTaskCreate(logger_thread, "LOGGER", 256, NULL, 1, &m_logger_thread))
     {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
     }
+#endif
 #endif
 
   gap_params_init();
@@ -1427,6 +1431,8 @@ int main(void)
   // Create a FreeRTOS task for the BLE stack.
   // The task will run advertising_start() before entering its loop.
   nrf_sdh_freertos_init(advertising_start, &erase_bonds);
+#else
+  advertising_start();
 #endif
 
   // Start execution.
@@ -1470,6 +1476,15 @@ int main(void)
   // Should not reach here.
   for (;;)
   {
+#ifdef FREERTOS_SWITCH
     APP_ERROR_HANDLER(NRF_ERROR_FORBIDDEN);
+#else
+    UNUSED_RETURN_VALUE(NRF_LOG_PROCESS());
+    if (NRF_LOG_PROCESS() == false)
+    {
+        nrf_pwr_mgmt_run();
+    }
+    power_manage();
+#endif
   }
 }
