@@ -356,7 +356,7 @@ uint32_t tb_manager_settings_store(void)
     err_code = fds_record_find(CONFIG_FILE, CONFIG_REC_KEY, &desc, &token);
     if (err_code == FDS_SUCCESS)
     {
-        //err_code = fds_record_update(&desc, &record);
+        err_code = fds_record_update(&desc, &record);
     }
     else if (err_code == FDS_ERR_NOT_FOUND)
     {

@@ -343,7 +343,7 @@ void bms_advertising_init(ble_bms_t m_bms)
   // Set Timeslot Advertising PDU packet
   //
 #ifdef TIMESLOT_DEBUG
-  if (ble_bms_get_timeslot_status() != 0x00) {
+  if (ble_bms_get_timeslot_status() == 0x00) {
 
     radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
     {  

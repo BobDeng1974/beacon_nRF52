@@ -125,16 +125,16 @@ uint8_t m_adc_status = true;
   static void time_15000ms_count_hanlder(void * p_context);
 #endif
 //-----------------------------------------------------------------------------
-// 30sec timer count for startup stage.
+// 60sec timer count for startup stage.
 //-----------------------------------------------------------------------------
 #ifdef FREERTOS_SWITCH
-  #define COUNTER_30000ms_INTERVAL_ (30000-10) // 30000msec = 30sec
-  static void time_30000ms_count_hanlder(TimerHandle_t xTimer);
-  static TimerHandle_t m_30000ms_count_timer;
+  #define COUNTER_60000ms_INTERVAL_ (60000-10) // 60000msec = 30sec
+  static void time_60000ms_count_hanlder(TimerHandle_t xTimer);
+  static TimerHandle_t m_60000ms_count_timer;
 #else
-  #define COUNTER_30000ms_INTERVAL APP_TIMER_TICKS(30000-10) // 30000msec = 30sec
-  APP_TIMER_DEF(m_30000ms_count_timer_id);
-  static void time_30000ms_count_hanlder(void * p_context);
+  #define COUNTER_60000ms_INTERVAL APP_TIMER_TICKS(60000-10) // 60000msec = 30sec
+  APP_TIMER_DEF(m_60000ms_count_timer_id);
+  static void time_60000ms_count_hanlder(void * p_context);
 #endif
 
 //-----------------------------------------------------------------------------
@@ -145,7 +145,7 @@ uint8_t m_adc_status = true;
   static void time_ecomodecheck_count_hanlder(TimerHandle_t xTimer);
   static TimerHandle_t m_ecomodecheck_count_timer;
 #else
-  #define COUNTER_ECOMODECHECK_INTERVAL APP_TIMER_TICKS(607 * 1000) // 30000msec = 30sec
+  #define COUNTER_ECOMODECHECK_INTERVAL APP_TIMER_TICKS(607 * 1000) // 60000msec = 30sec
   APP_TIMER_DEF(m_ecomodecheck_count_timer_id);
   static void m_ecomodecheck_count_timer(void * p_context);
 #endif
@@ -279,15 +279,15 @@ static void time_15000ms_count_hanlder(void * p_context)
  *
  */
 #ifdef FREERTOS_SWITCH
-static void time_30000ms_count_hanlder(TimerHandle_t xTimer)
+static void time_60000ms_count_hanlder(TimerHandle_t xTimer)
 {
   UNUSED_PARAMETER(xTimer);
 #else
-static void time_30000ms_count_hanlder(void * p_context)
+static void time_60000ms_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  NRF_LOG_INFO("time_30000ms_count_hanlder");
+  NRF_LOG_INFO("time_60000ms_count_hanlder");
 
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if (_beacon_info[BINFO_STATUS_VALUE_IDX] != 0x00) {
@@ -296,7 +296,7 @@ static void time_30000ms_count_hanlder(void * p_context)
     xTimerStop(xTimer, 0);
     xTimerDelete(xTimer, 0);
   #else
-    app_timer_stop(m_30000ms_count_timer_id);
+    app_timer_stop(m_60000ms_count_timer_id);
   #endif
   }
 }
@@ -594,12 +594,12 @@ static void timers_init(void)
                                         NULL,
                                         time_15000ms_count_hanlder);
 
-  // Create counter 30000msec  timer for power-on startup stage.
-  m_30000ms_count_timer       = xTimerCreate("COUNTER_30000ms_INTERVAL",
-                                        COUNTER_30000ms_INTERVAL_,
+  // Create counter 60000msec  timer for power-on startup stage.
+  m_60000ms_count_timer       = xTimerCreate("COUNTER_60000ms_INTERVAL",
+                                        COUNTER_60000ms_INTERVAL_,
                                         pdTRUE,
                                         NULL,
-                                        time_30000ms_count_hanlder);
+                                        time_60000ms_count_hanlder);
 
 
   // Create Battery check timer for power-on startup stage.
@@ -623,7 +623,7 @@ static void timers_init(void)
   /* Error checking */
   if ( (NULL == m_100ms_count_timer)
     || (NULL == m_15000ms_count_timer)
-    || (NULL == m_30000ms_count_timer)
+    || (NULL == m_60000ms_count_timer)
   #if defined(BATTERY_CHECKING_ENABLED)
   //|| (NULL == m_battery_monitoring_timer)
   #endif
@@ -645,10 +645,10 @@ static void timers_init(void)
                               time_15000ms_count_hanlder);
   APP_ERROR_CHECK(err_code);
 
-  // Create counter 30000msec  timer for power-on startup stage.
-  err_code = app_timer_create(&m_30000ms_count_timer_id,
+  // Create counter 60000msec  timer for power-on startup stage.
+  err_code = app_timer_create(&m_60000ms_count_timer_id,
                               APP_TIMER_MODE_SINGLE_SHOT,
-                              time_30000ms_count_hanlder);
+                              time_60000ms_count_hanlder);
   APP_ERROR_CHECK(err_code);
 
   #if defined(BATTERY_CHECKING_ENABLED)
@@ -692,8 +692,8 @@ static void application_timers_start(void)
     }
   //}
 
-  // start counter 30000ms timer for power-on stage.
-  if (pdPASS != xTimerStart(m_30000ms_count_timer, OSTIMER_WAIT_FOR_QUEUE))
+  // start counter 60000ms timer for power-on stage.
+  if (pdPASS != xTimerStart(m_60000ms_count_timer, OSTIMER_WAIT_FOR_QUEUE))
   {
        APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
   }
@@ -722,8 +722,8 @@ static void application_timers_start(void)
     APP_ERROR_CHECK(err_code);
   //}
 
-  // start counter 30000ms timer for power-on stage.
-  err_code = app_timer_start(m_30000ms_count_timer_id, COUNTER_30000ms_INTERVAL, NULL);
+  // start counter 60000ms timer for power-on stage.
+  err_code = app_timer_start(m_60000ms_count_timer_id, COUNTER_60000ms_INTERVAL, NULL);
   APP_ERROR_CHECK(err_code);
 
   #if defined(BATTERY_CHECKING_ENABLED)
@@ -839,7 +839,7 @@ static void services_init(void)
 
   // Timeslot Mode
   if (_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] != 0x00) m_timesot_mode = true;
-  //m_timesot_mode = true;    // ##DEBUG##
+  m_timesot_mode = true;    // ##DEBUG##
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND

@@ -128,7 +128,7 @@ void configure_next_event_normal(void)
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   uint32_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
   uint32_t distance_us = m_tbl_adv_distance_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
-#ifdef TIMESLOT_DEBUG
+#ifdef TIMESLOT_DEBUG_LOG
   NRF_LOG_INFO("mode=%d slot_length=%d distance_us=%d", mode_index, slot_length, distance_us);
 #endif
   m_slot_length                                                    = slot_length;
@@ -295,8 +295,8 @@ static nrf_radio_signal_callback_return_param_t * radio_callback(uint8_t signal_
   switch(signal_type)
   {
   case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
-   //Start of the timeslot - set up timer interrupt
-   nrf_gpio_pin_set(DEBUG_PIN);
+    //Start of the timeslot - set up timer interrupt
+    nrf_gpio_pin_set(DEBUG_PIN);
   #ifdef TIMESLOT_RADIO_MODE
     radio_handle_start();
     mode = ADV_INIT;

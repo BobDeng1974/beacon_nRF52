@@ -123,20 +123,19 @@ void ibeacon_advertising_init()
   //
   if (ble_bms_get_timeslot_status() != 0x00) {
     radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-  } else {
+  }
 
   //
   // Set AdvData and ScanResponseData
   //
-    err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
-    APP_ERROR_CHECK(err_code);
+  err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
+  APP_ERROR_CHECK(err_code);
 
   //
   // Update TxPower for iBeacon
   //
-    int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
-    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
-    APP_ERROR_CHECK(err_code);
-  }
+  int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
+  err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
+  APP_ERROR_CHECK(err_code);
 }
 

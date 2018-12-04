@@ -122,7 +122,8 @@ void advertising_start(void)
 
   // Start advertising.
 #ifdef TIMESLOT_DEBUG
-  if (ble_bms_get_timeslot_status() == 0x00) start_adv_switch_timer(txFreq);
+  start_adv_switch_timer(txFreq);
+  //if (ble_bms_get_timeslot_status() == 0x00) start_adv_switch_timer(txFreq);
 #else
   start_adv_switch_timer(txFreq);
 #endif
@@ -131,7 +132,9 @@ void advertising_start(void)
     if (g_advertising_mode != BLE_ADV_MODE_PAUSE) {  
 
 #ifdef TIMESLOT_DEBUG
-      if (ble_bms_get_timeslot_status() != 0x00) {
+      if (ble_bms_get_timeslot_status() == 0x00) {
+        m_advertising.adv_modes_config.ble_adv_fast_interval  = txFrequencyValue + ADV_INTERVAL_MARGIN;
+        m_advertising.adv_modes_config.ble_adv_fast_timeout   = timeout + ADV_TIMEOUT_MARGIN;
         err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
         APP_ERROR_CHECK(err_code);
       } else {
@@ -240,7 +243,7 @@ void adv_switch_handler(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  nrf_gpio_pin_toggle(DEBUG_PIN);
+  //nrf_gpio_pin_toggle(DEBUG_PIN);
 
   // HOSTと接続中の場合、Adv Switchは行わない
   if (g_connected == 1) {
@@ -264,11 +267,13 @@ void adv_switch_handler(void * p_context)
 #endif
 
   /* stop advertising and timer */
-#ifdef TIMESLOT_DEBUG
+#ifdef TIMESLOT_DEBUG_STEP1
   if (ble_bms_get_timeslot_status() == 0x00) advertising_stop();
-#endif
+#else
   advertising_stop();
-#ifdef TIMESLOT_DEBUG
+#endif
+
+#ifdef TIMESLOT_DEBUG_STEP1
   sd_radio_session_close();
 #endif
 
@@ -419,13 +424,13 @@ void adv_switch_handler(void * p_context)
   } // END OF IF ELSE
 
   /* start adv_switch_timer and advertise */
-#ifdef TIMESLOT_DEBUG
+#ifdef TIMESLOT_DEBUG_STEP1
   if (ble_bms_get_timeslot_status() == 0x00) advertising_start();  
 #else
   advertising_start();  
 #endif
 
-#ifdef TIMESLOT_DEBUG
+#ifdef TIMESLOT_DEBUG_STEP1
   // Timeslot Started
   if (ble_bms_get_timeslot_status() != 0x00) {
     uint32_t err_code = timeslot_start();
