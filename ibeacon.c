@@ -112,7 +112,7 @@ void ibeacon_advertising_init()
   memset(&m_adv_params, 0, sizeof(m_adv_params));
 
   m_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
-  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
+  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
   m_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
   m_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;

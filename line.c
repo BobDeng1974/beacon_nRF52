@@ -118,7 +118,7 @@ void line_ibeacon_advertising_init()
   memset(&m_adv_params, 0, sizeof(m_adv_params));
 
   m_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
-  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
+  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
   m_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
   m_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
@@ -129,22 +129,21 @@ void line_ibeacon_advertising_init()
   //
   if (ble_bms_get_timeslot_status() != 0x00) {
     radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-  } else {
-
-    //
-    // Set AdvData and ScanResponseData
-    //
-    err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
-    APP_ERROR_CHECK(err_code);
-
-    //
-    // Update TxPower for iBeacon
-    //
-    int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
-
-    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
-    APP_ERROR_CHECK(err_code);
   }
+
+  //
+  // Set AdvData and ScanResponseData
+  //
+  err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
+  APP_ERROR_CHECK(err_code);
+
+  //
+  // Update TxPower for iBeacon
+  //
+  int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
+
+  err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
+  APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Building LINE Beacon Packet advertising data
@@ -250,22 +249,21 @@ void line_beacon_packet_advertising_init()
   //
   if (ble_bms_get_timeslot_status() != 0x00) {
     radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-  } else {
-
-    //
-    // Set AdvData and ScanResponseData
-    //
-    err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
-    APP_ERROR_CHECK(err_code);
-
-    //
-    // Update TxPower
-    //
-    uint8_t *_beacon_info = ble_bms_get_beacon_info();
-    int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
-    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
-    APP_ERROR_CHECK(err_code);
   }
+
+  //
+  // Set AdvData and ScanResponseData
+  //
+  err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
+  APP_ERROR_CHECK(err_code);
+
+  //
+  // Update TxPower
+  //
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
+  err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
+  APP_ERROR_CHECK(err_code);
 }
 
 static void build_line_secmsg(uint64_union_t timestamp, uint8_t *hwid, uint8_t *vendorKey, uint8_t *lotKey,  uint8_t bat, uint8_t *secmsg) 

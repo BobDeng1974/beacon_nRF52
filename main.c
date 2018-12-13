@@ -63,6 +63,7 @@ TaskHandle_t    m_advertising_start;
 TaskHandle_t    m_LED_control;
 #endif
 
+uint8_t         m_tbm_scan_mode = false;
 uint8_t         m_timesot_mode = false;
 uint8_t         m_eco_adv_stop = false;
 ble_gap_addr_t  m_device_addr;              // 48-bit address, LSB format
@@ -839,7 +840,7 @@ static void services_init(void)
 
   // Timeslot Mode
   if (_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] != 0x00) m_timesot_mode = true;
-  m_timesot_mode = true;    // ##DEBUG##
+  //m_timesot_mode = true;    // ##DEBUG##
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
@@ -1065,7 +1066,7 @@ static void ble_stack_init(void)
 
   // Register handler for BLE events.
   NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
-  NRF_SDH_SOC_OBSERVER(m_soc_observer, APP_SOC_OBSERVER_PRIO, soc_evt_handler, NULL);
+//  NRF_SDH_SOC_OBSERVER(m_soc_observer, APP_SOC_OBSERVER_PRIO, soc_evt_handler, NULL);
 }
 
 
@@ -1332,7 +1333,7 @@ void clock_init(void)
 /**@brief F unction for application main entry.
  */
 int main(void)
-{
+ {
   uint32_t err_code;
   bool erase_bonds;
 
@@ -1451,13 +1452,6 @@ int main(void)
 #endif
 
   // Timeslot Started
-    uint8_t *_beacon_infox = ble_bms_get_beacon_info();
-  for (int i = BINFO_TIMESLOT_LENGTH_LIST_IDX, j = 0; i < BINFO_TIMESLOT_LENGTH_LIST_IDX + BINFO_TIMESLOT_LENGTH_LIST_SIZ ; ++i, ++j) {
-    _beacon_infox[i] = j;
-  }
-  for (int i = BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX, j = 0; i < BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX + BINFO_TIMESLOT_ADV_DISTANCE_LIST_SIZ ; ++i, ++j) {
-    _beacon_infox[i] = j;
-  }
   if (ble_bms_get_timeslot_status() != 0x00) {
     err_code = timeslot_start();
     APP_ERROR_CHECK(err_code);

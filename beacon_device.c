@@ -20,9 +20,44 @@ PRE_TIME m_pre_time;
 static const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
 static bool m_xfer_done;
 
-
 /**@brief Function for initializing the GPIOTE handler module.
  */
+
+#ifndef RGB_LED
+void execute_led(const char *param)
+{
+  if (param[0] == '0') {
+    nrf_gpio_pin_clear(LED_G);
+    nrf_gpio_pin_clear(LED_R);
+  }
+  else {
+    nrf_gpio_pin_set(LED_G);
+    nrf_gpio_pin_clear(LED_R);
+  }
+}
+
+void execute_error_led(const char *param)
+{
+  if (param[0] == '0') {
+    nrf_gpio_pin_clear(LED_R);
+  }
+  else {
+    nrf_gpio_pin_set(LED_R);
+  }
+}
+
+void execute_pending_led(const char *param)
+{
+  if (param[0] == '0') {
+    nrf_gpio_pin_clear(LED_G);
+    nrf_gpio_pin_clear(LED_R);
+  }
+  else {
+    nrf_gpio_pin_set(LED_G);
+    nrf_gpio_pin_clear(LED_R);
+  }
+}
+#else
 void execute_led(const char *param)
 {
   if (param[0] == '1') {
@@ -60,6 +95,7 @@ void execute_pending_led(const char *param)
     nrf_gpio_pin_set(LED_B);
   }
 }
+#endif
 
 void blink_led(uint8_t count)
 {

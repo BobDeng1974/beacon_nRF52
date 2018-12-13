@@ -339,37 +339,14 @@ void bms_advertising_init(ble_bms_t m_bms)
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_adv_params.duration        = 0;       // Never time out.
 
-  //
-  // Set Timeslot Advertising PDU packet
-  //
-#ifdef TIMESLOT_DEBUG
-  if (ble_bms_get_timeslot_status() == 0x00) {
+  if (m_tbm_scan_mode == true) {
+      m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
+  } 
 
+  if (ble_bms_get_timeslot_status() != 0x00) {
     radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-    {  
-      ble_advertising_init_t init;
+  }
 
-      memset(&init, 0, sizeof(init));
-
-      init.advdata.name_type               = BLE_ADVDATA_NO_NAME;
-      init.advdata.include_appearance      = false;
-      init.advdata.flags                   = flags;
-      init.advdata.p_manuf_specific_data   = &tangerine_data;
-
-      init.config.ble_adv_fast_enabled  = true;
-      init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
-      init.config.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
-
-      init.evt_handler = on_adv_evt;
-
-      err_code = ble_advertising_init(&m_advertising, &init);
-      APP_ERROR_CHECK(err_code);
-
-      ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
-    }
-
-  } else {
-#endif
     err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
     APP_ERROR_CHECK(err_code);
 
@@ -395,7 +372,4 @@ void bms_advertising_init(ble_bms_t m_bms)
     int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_FOR_MNG_IDX] ); // get TxPower for management
     err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
     APP_ERROR_CHECK(err_code);
-#ifdef TIMESLOT_DEBUG
-  }
-#endif
 }

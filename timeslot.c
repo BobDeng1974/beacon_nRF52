@@ -47,11 +47,15 @@ static advertising_timeslot_param_t m_eddystone;
 static uint8_t m_adv_pdu[APP_PDU_INFO_LENGTH];
 static advertising_timeslot_param_t m_adv_timeslot[MAX_ADV_MODE_LIST];
 
+NRF_SDH_SOC_OBSERVER(system_event,                                                             \
+                     BLE_ADV_SOC_OBSERVER_PRIO,                                                     \
+                     nrf_evt_signal_handler, NULL);
+
 uint16_t get_timesdlot_distance(void)
 {
   int mode_index = get_current_advmode();
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t distance = m_tbl_adv_distance_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t distance = m_tbl_adv_distance_msec_info[mode_index];
   return (uint16_t)(distance/1000);
 }
 
@@ -89,7 +93,7 @@ uint32_t request_next_event_earliest(void)
   int mode_index = get_current_advmode();
   advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t slot_length = m_tbl_slot_length_msec_info[mode_index];
 
   m_slot_length                                                     = slot_length;
   _adv_timeslot_param->timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
@@ -108,7 +112,7 @@ void configure_next_event_earliest(void)
   int mode_index = get_current_advmode();
   advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t slot_length = m_tbl_slot_length_msec_info[mode_index];
 
   m_slot_length                                                     = slot_length;
   _adv_timeslot_param->timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
@@ -126,8 +130,8 @@ void configure_next_event_normal(void)
   int mode_index = get_current_advmode();
   advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t slot_length = m_tbl_slot_length_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
-  uint32_t distance_us = m_tbl_adv_distance_msec_info[_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX+mode_index]];
+  uint32_t slot_length = m_tbl_slot_length_msec_info[mode_index];
+  uint32_t distance_us = m_tbl_adv_distance_msec_info[mode_index];
 #ifdef TIMESLOT_DEBUG_LOG
   NRF_LOG_INFO("mode=%d slot_length=%d distance_us=%d", mode_index, slot_length, distance_us);
 #endif
@@ -177,14 +181,14 @@ static void radio_configure_radio()
 
 void start_timer(void)
 {		
-    NRF_TIMER0->MODE = TIMER_MODE_MODE_Timer;  // Set the timer in Counter Mode
+    //NRF_TIMER0->MODE = TIMER_MODE_MODE_Timer;  // Set the timer in Counter Mode
    // NRF_TIMER0->TASKS_CLEAR = 1;               // clear the task first to be usable for later
     //NRF_TIMER0->PRESCALER = 6;								 // Prescaler = 6 creates 250kHz tick frequency, i.e. tick frequency of 4us
     //NRF_TIMER0->BITMODE = TIMER_BITMODE_BITMODE_16Bit;//0x01UL;										//Set counter to 16 bit resolution
     NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
-    NRF_TIMER0->CC[0] = m_slot_length - 5000;
+    NRF_TIMER0->CC[0] = m_slot_length - 1000;
     // Set and enable interrupt on Timer0
-    NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos;
+    //NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos;
     NVIC_EnableIRQ(TIMER0_IRQn);
 		
     //NRF_TIMER0->TASKS_START = 1;               // Start timer
@@ -268,14 +272,23 @@ void nrf_evt_signal_handler(uint32_t evt_id)
     NRF_LOG_INFO("NRF_EVT_RADIO_SESSION_CLOSED")
     break;
   case NRF_EVT_RADIO_BLOCKED:
-    //NRF_LOG_INFO("NRF_EVT_RADIO_BLOCKED")
+    NRF_LOG_INFO("NRF_EVT_RADIO_BLOCKED")
     //Fall through
   case NRF_EVT_RADIO_CANCELED:
-    //NRF_LOG_INFO("NRF_EVT_RADIO_CANCELED")
+    NRF_LOG_INFO("NRF_EVT_RADIO_CANCELED")
     if (m_keep_running) {
       err_code = request_next_event_earliest();
       APP_ERROR_CHECK(err_code);
     }
+    break;
+  case NRF_EVT_HFCLKSTARTED :                         /**< Event indicating that the HFCLK has started. */
+    NRF_LOG_INFO("NRF_EVT_HFCLKSTARTED")
+    break;
+  case NRF_EVT_POWER_FAILURE_WARNING :                /**< Event indicating that a power failure warning has occurred. */
+    NRF_LOG_INFO("NRF_EVT_POWER_FAILURE_WARNING")
+    break;
+  case NRF_EVT_FLASH_OPERATION_ERROR :                /**< Event indicating that the ongoing flash operation has timed out with an error. */
+    NRF_LOG_INFO("NRF_EVT_FLASH_OPERATION_ERROR")
     break;
   default:
     break;
@@ -398,3 +411,40 @@ uint32_t timeslot_stop(void)
 {
     m_keep_running = false;
 }
+
+#ifdef BD_ADDR_TEST
+/**@brief Function for initializing Beacon advertiser.
+ */
+static void beacon_adv_init(void)
+{
+    static uint8_t beacon_uuid[] = {BEACON_UUID};
+    
+    memcpy(beacon_init.uuid.uuid128, beacon_uuid, sizeof(beacon_uuid));
+    beacon_init.adv_interval  = BEACON_ADV_INTERVAL;
+    beacon_init.major         = BEACON_MAJOR;
+    beacon_init.minor         = BEACON_MINOR;
+    beacon_init.manuf_id      = APP_COMPANY_IDENTIFIER;
+    beacon_init.rssi          = BEACON_RSSI;
+    beacon_init.error_handler = beacon_advertiser_error_handler;
+    
+    uint32_t err_code = sd_ble_gap_address_get(&beacon_init.beacon_addr);
+    APP_ERROR_CHECK(err_code);
+    
+    app_beacon_init(&beacon_init);
+}
+
+void app_beacon_init(ble_beacon_init_t * p_init)
+{
+    memcpy(&m_beacon.uuid, &p_init->uuid, sizeof(p_init->uuid));
+    m_beacon.adv_interval = p_init->adv_interval;
+    m_beacon.major        = p_init->major;
+    m_beacon.minor        = p_init->minor;
+    m_beacon.slot_length  = BEACON_SLOT_LENGTH;
+    m_beacon.manuf_id     = p_init->manuf_id;
+    m_beacon.rssi         = p_init->rssi;
+    m_beacon.beacon_addr  = p_init->beacon_addr;
+    m_beacon.error_handler= p_init->error_handler;
+}
+
+
+#endif

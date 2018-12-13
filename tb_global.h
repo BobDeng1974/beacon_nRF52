@@ -59,6 +59,7 @@
 //#define ADV_SWITCH_TIMER_APP_TIMER
 #define FREERTOS_SWITCH
 #define TIMESLOT_DEBUG
+#define RGB_LED
 
 #ifdef   FREERTOS_SWITCH
   #include "nrf_sdh_freertos.h"
@@ -110,6 +111,7 @@
 //----------------------------------------------------------------------------
 //  global variables 
 //----------------------------------------------------------------------------
+extern  uint8_t   m_tbm_scan_mode;
 extern  uint8_t   m_timesot_mode;
 extern  uint8_t   m_eco_adv_stop;
 extern  ble_gap_addr_t m_device_addr;  // 48-bit address, LSB format

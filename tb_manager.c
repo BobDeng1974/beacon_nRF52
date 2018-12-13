@@ -79,8 +79,8 @@
 
 #define BMS_CURRENT_DATETIME                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // sec/min/hour/days/week/mon/year
 
-#define BMS_TIMESLOT_LENGTH_LIST            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // Timeslot length
-#define BMS_TIMESLOT_ADV_DISTANCE_LIST      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // Timeslot advertising distance
+#define BMS_TIMESLOT_MODE_LIST_TXFRQ_VALUE  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // Timeslot mode Intervals
+#define BMS_TBM_TXFRQ_VALUE                 0x00, 0x00                        // BMS advertising Intervals
 
 
 // flag operation
@@ -89,7 +89,7 @@
 #define BMS_FL_CLR(flg, bits)                (flg & ~bits)
 
 /* Persistent Beacon Settings  */
-#define BMS_BEACON_INFO_LENGTH                  200
+#define BMS_BEACON_INFO_LENGTH                  190
 
 static uint8_t m_beacon_info[BMS_BEACON_INFO_LENGTH] = {
 
@@ -152,8 +152,8 @@ static uint8_t m_beacon_info[BMS_BEACON_INFO_LENGTH] = {
 
     BMS_CURRENT_DATETIME,                // l=8 : s=168 : ECO mode status
 
-    BMS_TIMESLOT_LENGTH_LIST,            // l=12 : s=176 : Timeslot length
-    BMS_TIMESLOT_ADV_DISTANCE_LIST       // l=12 : s=188 : Timeslot advertising distance
+    BMS_TIMESLOT_MODE_LIST_TXFRQ_VALUE,  // l=12 : s=176 : Timeslot mode Intervals
+    BMS_TBM_TXFRQ_VALUE                  // l=2  : s=188 : BMS advertising Intervals
 };
 
 #define BMS_DB_SIZE \
@@ -709,18 +709,16 @@ static void ble_bms_set_default_value_to_beacon_info()
     m_beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1] = 0x00;
   }
 
-  if (m_beacon_info[BINFO_TIMESLOT_LENGTH_LIST_IDX] == 0xFF) {
-    for (int i = BINFO_TIMESLOT_LENGTH_LIST_IDX, j = 0; i < BINFO_TIMESLOT_LENGTH_LIST_IDX + BINFO_TIMESLOT_LENGTH_LIST_SIZ ; ++i, ++j) {
-      m_beacon_info[i] = BMS_DEFAULT_TXFRQ_VALUE;
+  if (m_beacon_info[BINFO_MODE_LIST_TXFRQ_VALUE_IDX] == 0xFF) {
+    for (int i = BINFO_MODE_LIST_TXFRQ_VALUE_IDX, j = 0; i < BINFO_MODE_LIST_TXFRQ_VALUE_IDX + BINFO_MODE_LIST_TXFRQ_VALUE_SIZ ; ++i, ++j) {
+      m_beacon_info[i] = 0x00;
       m_beacon_info[i] = j;
     }
   }
 
-  if (m_beacon_info[BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX] == 0xFF) {
-    for (int i = BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX, j = 0; i < BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX + BINFO_TIMESLOT_ADV_DISTANCE_LIST_SIZ ; ++i, ++j) {
-      m_beacon_info[i] = BMS_DEFAULT_TXFRQ_VALUE;
-      m_beacon_info[i] = j;
-    }
+  if (m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] == 0xFF) {
+    m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = 0xE0;
+    m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX+1] = 0x2E;
   }
 
 

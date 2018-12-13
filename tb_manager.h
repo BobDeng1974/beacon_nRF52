@@ -125,11 +125,11 @@
 #define BINFO_CURRENT_DATETIME_IDX           168     // l=8 : s=168 : Current date/time
 #define BINFO_CURRENT_DATETIME_SIZ             7     // -
 
-#define BINFO_TIMESLOT_LENGTH_LIST_IDX       176     // l=24 : s=176 : Timeslot length
-#define BINFO_TIMESLOT_LENGTH_LIST_SIZ        12     // -
+#define BINFO_MODE_LIST_TXFRQ_VALUE_IDX       176     // l=12 : s=176 : Timeslot length
+#define BINFO_MODE_LIST_TXFRQ_VALUE_SIZ        12     // -
 
-#define BINFO_TIMESLOT_ADV_DISTANCE_LIST_IDX 188     // l=24 : s=200 : Timeslot advertising distance
-#define BINFO_TIMESLOT_ADV_DISTANCE_LIST_SIZ  12     // -
+#define BINFO_TBM_TXFRQ_VALUE_IDX             188     // l=2 : s=188 : Timeslot advertising distance
+#define BINFO_TBM_TXFRQ_VALUE_SIZ               2     // -
 
 #define MAX_ADV_MODE_LIST                     12     // Advertising Mode List Max Index
 

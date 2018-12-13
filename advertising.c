@@ -12,6 +12,7 @@
 static ble_advertising_mode_t g_advertising_mode;                             /**< Variable to keep track of when we are */
 static uint8_t                g_current_mode_index;
 
+uint32_t                      m_tbm_adv_adding_interval = 0;
 uint8_t                       m_adv_debug = 0;
 uint8_t                       m_adv_debug2 = 0;
 uint8_t                       m_adv_init = false;
@@ -92,6 +93,8 @@ void advertising_start(void)
   uint16_t txFrequencyValue_msec = get_beacon_frequency(txFreq, TIME_UNIT_MSEC);
   uint16_t timeout = txFrequencyValue_msec;
 
+  m_tbm_adv_adding_interval += txFrequencyValue_msec;
+
   // Initialize advertising parameters with defaults values
   memset(&adv_params, 0, sizeof(adv_params));
 
@@ -120,30 +123,17 @@ void advertising_start(void)
       adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
     }
 
+  if (m_tbm_scan_mode == true && g_advertising_mode == BLE_ADV_MODE_BMS) {
+      adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
+  } 
+
   // Start advertising.
-#ifdef TIMESLOT_DEBUG
   start_adv_switch_timer(txFreq);
-  //if (ble_bms_get_timeslot_status() == 0x00) start_adv_switch_timer(txFreq);
-#else
-  start_adv_switch_timer(txFreq);
-#endif
 
   if (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] == 0x00 || !m_eco_adv_stop) {   
     if (g_advertising_mode != BLE_ADV_MODE_PAUSE) {  
-
-#ifdef TIMESLOT_DEBUG
-      if (ble_bms_get_timeslot_status() == 0x00) {
-        m_advertising.adv_modes_config.ble_adv_fast_interval  = txFrequencyValue + ADV_INTERVAL_MARGIN;
-        m_advertising.adv_modes_config.ble_adv_fast_timeout   = timeout + ADV_TIMEOUT_MARGIN;
-        err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-        APP_ERROR_CHECK(err_code);
-      } else {
-#endif
         err_code = sd_ble_gap_adv_start(m_adv_handle, APP_BLE_CONN_CFG_TAG);
         APP_ERROR_CHECK(err_code);
-#ifdef TIMESLOT_DEBUG
-      }
-#endif
     }
   }
 
@@ -266,16 +256,11 @@ void adv_switch_handler(void * p_context)
   }
 #endif
 
-  /* stop advertising and timer */
-#ifdef TIMESLOT_DEBUG_STEP1
-  if (ble_bms_get_timeslot_status() == 0x00) advertising_stop();
-#else
-  advertising_stop();
-#endif
+  m_tbm_scan_mode = true;
+  //m_tbm_adv_adding_interval = 0;
 
-#ifdef TIMESLOT_DEBUG_STEP1
-  sd_radio_session_close();
-#endif
+  /* stop advertising and timer */
+  advertising_stop();
 
   if (g_ibeacon_mode == 1) {
     // iBeacon互換動作モードの場合、強制的に常にiBeacon送信
@@ -289,6 +274,19 @@ void adv_switch_handler(void * p_context)
       ble_advertising_mode_t current_mode = _beacon_info[BINFO_MODE_LIST_IDX+g_current_mode_index];
       if (current_mode == BLE_ADV_MODE_UNDEFINED) {
         current_mode = BLE_ADV_MODE_BMS;
+      }
+
+      // TBM
+      if ( current_mode == BLE_ADV_MODE_BMS ) current_mode = 0xFF;
+      uint16_t *_tbm_adv_interval = (uint16_t *)&_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX];
+      uint16_t tbm_adv_interval = (uint16_t)*_tbm_adv_interval;
+      if ( tbm_adv_interval < 100 ) tbm_adv_interval = 100;
+      else if ( tbm_adv_interval > 12000 ) tbm_adv_interval = 12000;
+    
+      if ( m_tbm_adv_adding_interval > tbm_adv_interval ) {
+        m_tbm_adv_adding_interval = 0;
+        current_mode = BLE_ADV_MODE_BMS;
+        NRF_LOG_INFO("tbm_adv_interval=%d", m_tbm_adv_adding_interval);
       }
 
       switch (current_mode) {
@@ -404,8 +402,9 @@ void adv_switch_handler(void * p_context)
         is_select = true;
         break;
 
-      default: // BLE_ADV_MODE_BMS:
-      
+      case BLE_ADV_MODE_BMS: 
+      //default: // BLE_ADV_MODE_BMS:
+
         g_advertising_mode = BLE_ADV_MODE_BMS;
         is_select = true;
 
@@ -424,19 +423,7 @@ void adv_switch_handler(void * p_context)
   } // END OF IF ELSE
 
   /* start adv_switch_timer and advertise */
-#ifdef TIMESLOT_DEBUG_STEP1
-  if (ble_bms_get_timeslot_status() == 0x00) advertising_start();  
-#else
   advertising_start();  
-#endif
-
-#ifdef TIMESLOT_DEBUG_STEP1
-  // Timeslot Started
-  if (ble_bms_get_timeslot_status() != 0x00) {
-    uint32_t err_code = timeslot_start();
-    APP_ERROR_CHECK(err_code);
-  }
-#endif
 }
 
 
