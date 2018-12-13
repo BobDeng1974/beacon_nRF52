@@ -242,7 +242,7 @@ void eddtystone_advertising_init(ble_advertising_mode_t eddystone_mode)
   memset(&m_adv_params, 0, sizeof(m_adv_params));
 
   m_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
-  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
+  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
   m_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
   m_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
@@ -260,6 +260,8 @@ void eddtystone_advertising_init(ble_advertising_mode_t eddystone_mode)
   //
   err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
   APP_ERROR_CHECK(err_code);
+
+  memcpy(&m_ble_adv_data, &m_adv_data, sizeof(ble_gap_adv_data_t));
 
   //
   // Update TxPower for EddyStone

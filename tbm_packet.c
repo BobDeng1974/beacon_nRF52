@@ -339,37 +339,35 @@ void bms_advertising_init(ble_bms_t m_bms)
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_adv_params.duration        = 0;       // Never time out.
 
-  if (m_tbm_scan_mode == true) {
-      m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
-  } 
-
   if (ble_bms_get_timeslot_status() != 0x00) {
     radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
   }
 
-    err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
-    APP_ERROR_CHECK(err_code);
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
+  APP_ERROR_CHECK(err_code);
 
-    //
-    // Build and set advertising scan response
-    //
-    memset(&scanrsp, 0, sizeof(scanrsp));
-    scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
-    scanrsp.uuids_complete.p_uuids  = adv_uuids;
+  //
+  // Build and set advertising scan response
+  //
+  memset(&scanrsp, 0, sizeof(scanrsp));
+  scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+  scanrsp.uuids_complete.p_uuids  = adv_uuids;
 
-    err_code = ble_advdata_encode(&scanrsp, m_adv_data.scan_rsp_data.p_data, &m_adv_data.scan_rsp_data.len);
-    APP_ERROR_CHECK(err_code);
+  err_code = ble_advdata_encode(&scanrsp, m_adv_data.scan_rsp_data.p_data, &m_adv_data.scan_rsp_data.len);
+  APP_ERROR_CHECK(err_code);
 
-    //
-    // Set AdvData and ScanResponseData
-    //
-    err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
-    APP_ERROR_CHECK(err_code);
+  //
+  // Set AdvData and ScanResponseData
+  //
+  err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
+  APP_ERROR_CHECK(err_code);
 
-    //
-    // Update TxPower for Manager Packet
-    //
-    int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_FOR_MNG_IDX] ); // get TxPower for management
-    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
-    APP_ERROR_CHECK(err_code);
+  memcpy(&m_ble_adv_data, &m_adv_data, sizeof(ble_gap_adv_data_t));
+
+  //
+  // Update TxPower for Manager Packet
+  //
+  int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_FOR_MNG_IDX] ); // get TxPower for management
+  err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
+  APP_ERROR_CHECK(err_code);
 }

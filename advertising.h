@@ -87,7 +87,9 @@ extern  bool               m_adv_switch_timer_enabled;       /**< Flag for enabl
 
 extern  uint8_t            m_adv_switch_timer_start;
 extern  uint8_t            m_adv_handle;
-extern  ble_gap_adv_params_t   m_adv_params;                 /**< Parameters to be passed to the stack when starting advertising. */
+
+extern  ble_gap_adv_params_t  m_adv_params;                 /**< Parameters to be passed to the stack when starting advertising. */
+extern  ble_gap_adv_data_t    m_ble_adv_data;
 
 //
 // public functions

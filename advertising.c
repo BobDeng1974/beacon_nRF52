@@ -25,6 +25,26 @@ bool                          m_adv_switch_timer_enabled;                     /*
   TimerHandle_t                 m_adv_switch_timer;                             /**< Definition of battery timer. */
 #endif
 
+/**@Brief advertising initialization
+*/
+static uint8_t              m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded advertising set. */
+static uint8_t              m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded scan response data set. */
+
+/**@brief Struct that contains pointers to the encoded advertising data. */
+ble_gap_adv_data_t m_ble_adv_data =
+{
+    .adv_data =
+    {
+        .p_data = m_enc_advdata,
+        .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
+    },
+    .scan_rsp_data =
+    {
+        .p_data = m_enc_scrdata,
+        .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
+    }
+};
+
 ble_advertising_mode_t get_current_advmode()
 {
   return g_advertising_mode;
@@ -98,9 +118,9 @@ void advertising_start(void)
   // Initialize advertising parameters with defaults values
   memset(&adv_params, 0, sizeof(adv_params));
 
-  adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_IND
-  adv_params.p_peer_addr = NULL;
-  adv_params.filter_policy = BLE_GAP_ADV_FP_ANY;
+  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_IND
+  m_adv_params.p_peer_addr = NULL;
+  m_adv_params.filter_policy = BLE_GAP_ADV_FP_ANY;
 
   // support frequency less than 100 msec 
   if (txFrequencyValue_msec < 100) {
@@ -108,8 +128,8 @@ void advertising_start(void)
     timeout = 100;
   }
 
-  adv_params.interval    = txFrequencyValue + ADV_INTERVAL_MARGIN;
-  adv_params.duration    = timeout + ADV_TIMEOUT_MARGIN;
+  m_adv_params.interval    = txFrequencyValue + ADV_INTERVAL_MARGIN;
+  //m_adv_params.duration    = timeout + ADV_TIMEOUT_MARGIN;
 
   if (g_ibeacon_mode == 1 
       || g_advertising_mode == BLE_ADV_MODE_IBEACON 
@@ -120,11 +140,11 @@ void advertising_start(void)
       || g_advertising_mode == BLE_ADV_MODE_LINE_IBEACON
       || g_advertising_mode == BLE_ADV_MODE_LINE_PACKET)
     {
-      adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
+      m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
     }
 
   if (m_tbm_scan_mode == true && g_advertising_mode == BLE_ADV_MODE_BMS) {
-      adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
+      m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED; //BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
   } 
 
   // Start advertising.
@@ -132,6 +152,9 @@ void advertising_start(void)
 
   if (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] == 0x00 || !m_eco_adv_stop) {   
     if (g_advertising_mode != BLE_ADV_MODE_PAUSE) {  
+        err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_ble_adv_data, &m_adv_params);
+        APP_ERROR_CHECK(err_code);
+
         err_code = sd_ble_gap_adv_start(m_adv_handle, APP_BLE_CONN_CFG_TAG);
         APP_ERROR_CHECK(err_code);
     }
@@ -233,7 +256,7 @@ void adv_switch_handler(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  //nrf_gpio_pin_toggle(DEBUG_PIN);
+  nrf_gpio_pin_toggle(DEBUG_PIN);
 
   // HOSTと接続中の場合、Adv Switchは行わない
   if (g_connected == 1) {
@@ -257,7 +280,6 @@ void adv_switch_handler(void * p_context)
 #endif
 
   m_tbm_scan_mode = true;
-  //m_tbm_adv_adding_interval = 0;
 
   /* stop advertising and timer */
   advertising_stop();
