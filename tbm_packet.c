@@ -118,7 +118,12 @@ void build_bms_data(void)
   }
 
   // ECO mode status
-  statusFlags |= (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] << 3);
+  //statusFlags |= (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] << 3);
+  m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
+  m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
+  m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
+  m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
+  if (m_eco_start_time.wTime != m_eco_finish_time.wTime) statusFlags |= 0x08;
 
   bms_info[20] = statusFlags;
   if ( m_fcm == 0xFF ) bms_info[20] = m_fcm;

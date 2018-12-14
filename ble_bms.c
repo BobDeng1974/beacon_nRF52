@@ -736,12 +736,6 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
       pcf8563_write();
     }
 
-    // 00D0 : SET Enable/Disable ECO / TIMESLOT mode
-    else if (p_data[i] == 0x00 && p_data[i+1] == 0xD0) {
-      _beacon_info[BINFO_ECO_MODE_STATUS_IDX]= p_data[i+2] & 0x01;
-      _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]= p_data[i+2] & 0x02;
-    }
-
     // 00D1 : SET ECO Mode Start Time
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD1) {
       if (length != BINFO_ECO_MODE_START_TIME_SIZ+OP_SEC_LEN) return;
@@ -758,13 +752,14 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
       _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1] = p_data[i+3];
     }
 
+    // 00D0 : SET Enable/Disable ECO / TIMESLOT mode & status
+    else if (p_data[i] == 0x00 && p_data[i+1] == 0xD0) {
+      _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]= p_data[i+2] & 0x8F;
+    }
+
     // 00D3: Set Radio Timeslot length list
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD3) {
-      if (length != BINFO_MODE_LIST_TXFRQ_VALUE_IDX+OP_SEC_LEN) return;
-
-      for (int j = 0, k = i+2; j < BINFO_MODE_LIST_SIZ; ++j, ++k) {
-        _beacon_info[BINFO_MODE_LIST_TXFRQ_VALUE_IDX+j] = p_data[k];
-      }
+      _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] = p_data[i+2];
     }
 
     // 00D4: Set Radio Timeslot advertising distance list

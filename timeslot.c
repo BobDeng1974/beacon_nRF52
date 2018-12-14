@@ -1,20 +1,41 @@
 #include "timeslot.h"
 
-#define ADV_CHANNEL_37                  37
-#define ADV_CHANNEL_38                  38
-#define ADV_CHANNEL_39                  39
-
-#define FREQ_ADV_CHANNEL_37             2
-#define FREQ_ADV_CHANNEL_38             26
-#define FREQ_ADV_CHANNEL_39             80
-
-#define APP_PDU_INFO_LENGTH             40    
 #define ADV_PACK_LENGTH_IDX 1
 #define ADV_DATA_LENGTH_IDX 12
 #define ADV_HEADER_LEN      3
+
 #define ADV_TYPE_LEN 2
 
 #define APP_DEVICE_TYPE               0x02                              /**< 0x02 refers to Beacon. */
+
+#define ADV_CHANNEL_37                 37
+#define ADV_CHANNEL_38                 38
+#define ADV_CHANNEL_39                 39
+
+#define FREQ_ADV_CHANNEL_37             2
+#define FREQ_ADV_CHANNEL_38            26
+#define FREQ_ADV_CHANNEL_39            80
+
+#define BEACON_SLOT_LENGTH             5500
+
+#define APP_PDU_INFO_LENGTH             40    
+
+static struct
+{
+    ble_uuid128_t           uuid;                               /** 128 proprietary service UUID to include in advertisement packets*/
+    uint32_t                adv_interval;                       /** Advertising interval in milliseconds to be used for 'beacon' advertisements*/
+    uint16_t                major;                              /** Major identifier to use for 'beacon'*/
+    uint16_t                minor;                              /** Minor identifier to use for 'beacon'*/
+    bool                    keep_running;                       /** */
+    bool                    is_running;                         /** is the 'beacon' running*/
+    uint32_t                slot_length;                        /** */
+    nrf_radio_request_t     timeslot_request;                   /** */
+    uint16_t                manuf_id;
+    uint16_t                rssi;                               /** measured RSSI at 1 meter distance in dBm*/
+    ble_gap_addr_t          beacon_addr;                        /** ble address to be used by the beacon*/
+    ble_srv_error_handler_t error_handler;                      /**< Function to be called in case of an error. */
+} m_beacon;
+
 
 enum mode_t
 {
@@ -26,40 +47,10 @@ enum mode_t
 };
 
 
-static uint32_t m_tbl_adv_distance_msec_info[16] = {
-  100000,    200000,    400000,    800000,    1600000,   3200000,   6400000,   10000000,
-  125000,    150000,    175000,    225000,     250000,    275000,    300000,     762500
-};
-
-static uint32_t m_tbl_slot_length_msec_info[16] = {
-   10000,     20000,     40000,     80000,     160000,    320000,    640000,    1000000,
-   25000,     50000,     75000,    125000,     150000,    175000,    200000,      76250
-};
-
-/**Constants for timeslot API*/
-static enum mode_t mode;
-static uint8_t m_keep_running = false;
-static uint8_t m_is_running   = false;
-static nrf_radio_request_t  m_timeslot_request;
-static uint32_t m_slot_length;  
-static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
-static advertising_timeslot_param_t m_eddystone;
 static uint8_t m_adv_pdu[APP_PDU_INFO_LENGTH];
-static advertising_timeslot_param_t m_adv_timeslot[MAX_ADV_MODE_LIST];
 
-NRF_SDH_SOC_OBSERVER(system_event,                                                             \
-                     BLE_ADV_SOC_OBSERVER_PRIO,                                                     \
-                     nrf_evt_signal_handler, NULL);
+//NRF_SDH_SOC_OBSERVER(system_event, BLE_ADV_SOC_OBSERVER_PRIO, nrf_evt_signal_handler, NULL);
 
-uint16_t get_timesdlot_distance(void)
-{
-  int mode_index = get_current_advmode();
-  uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t distance = m_tbl_adv_distance_msec_info[mode_index];
-  return (uint16_t)(distance/1000);
-}
-
-#ifndef RADIO_TIMESLOT_PDU
 uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params)
 {
   int mode = get_current_advmode();
@@ -83,74 +74,109 @@ uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_
     
   return &m_adv_pdu[0];
 }
-#endif
 
-/* config */
-/**@brief Request next timeslot event in earliest configuration
- */
-uint32_t request_next_event_earliest(void)
+nrf_radio_request_t * m_configure_next_event(void)
 {
-  int mode_index = get_current_advmode();
-  advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
-  uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t slot_length = m_tbl_slot_length_msec_info[mode_index];
-
-  m_slot_length                                                     = slot_length;
-  _adv_timeslot_param->timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
-  _adv_timeslot_param->timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
-  _adv_timeslot_param->timeslot_request.params.earliest.priority    = NRF_RADIO_PRIORITY_HIGH;
-  _adv_timeslot_param->timeslot_request.params.earliest.length_us   = m_slot_length;
-  _adv_timeslot_param->timeslot_request.params.earliest.timeout_us  = 1000000;
-  memcpy(&m_timeslot_request, &_adv_timeslot_param->timeslot_request, sizeof(nrf_radio_request_t));
-  return sd_radio_request(&m_timeslot_request);
+  m_beacon.timeslot_request.request_type              = NRF_RADIO_REQ_TYPE_NORMAL;
+  m_beacon.timeslot_request.params.normal.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
+  m_beacon.timeslot_request.params.normal.priority    = NRF_RADIO_PRIORITY_NORMAL;  // NRF_RADIO_PRIORITY_HIGH;
+  m_beacon.timeslot_request.params.normal.distance_us = (m_beacon.adv_interval+rand()%10) * 1000;
+  m_beacon.timeslot_request.params.normal.length_us   = m_beacon.slot_length;
+  return &m_beacon.timeslot_request;
 }
 
-/**@brief Configure next timeslot event in earliest configuration
- */
-void configure_next_event_earliest(void)
+uint32_t m_request_earliest(enum NRF_RADIO_PRIORITY priority)
 {
-  int mode_index = get_current_advmode();
-  advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
-  uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t slot_length = m_tbl_slot_length_msec_info[mode_index];
-
-  m_slot_length                                                     = slot_length;
-  _adv_timeslot_param->timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
-  _adv_timeslot_param->timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
-  _adv_timeslot_param->timeslot_request.params.earliest.priority    = NRF_RADIO_PRIORITY_HIGH;
-  _adv_timeslot_param->timeslot_request.params.earliest.length_us   = m_slot_length;
-  _adv_timeslot_param->timeslot_request.params.earliest.timeout_us  = 1000000;
-  memcpy(&m_timeslot_request, &_adv_timeslot_param->timeslot_request, sizeof(nrf_radio_request_t));
+  m_beacon.timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
+  m_beacon.timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
+  m_beacon.timeslot_request.params.earliest.priority    = priority;
+  m_beacon.timeslot_request.params.earliest.length_us   = m_beacon.slot_length;
+  m_beacon.timeslot_request.params.earliest.timeout_us  = 1000000;
+  return sd_radio_request(&m_beacon.timeslot_request);
 }
 
-/**@brief Configure next timeslot event in normal configuration
- */
-void configure_next_event_normal(void)
+uint32_t m_request_normal(void)
 {
-  int mode_index = get_current_advmode();
-  advertising_timeslot_param_t *_adv_timeslot_param = &m_adv_timeslot[mode_index];
-  uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint32_t slot_length = m_tbl_slot_length_msec_info[mode_index];
-  uint32_t distance_us = m_tbl_adv_distance_msec_info[mode_index];
-#ifdef TIMESLOT_DEBUG_LOG
-  NRF_LOG_INFO("mode=%d slot_length=%d distance_us=%d", mode_index, slot_length, distance_us);
-#endif
-  m_slot_length                                                    = slot_length;
-  _adv_timeslot_param->timeslot_request.request_type               = NRF_RADIO_REQ_TYPE_NORMAL;
-  _adv_timeslot_param->timeslot_request.params.normal.hfclk        = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
-  _adv_timeslot_param->timeslot_request.params.normal.priority     = NRF_RADIO_PRIORITY_HIGH;
-  _adv_timeslot_param->timeslot_request.params.normal.distance_us  = distance_us;
-  _adv_timeslot_param->timeslot_request.params.normal.length_us    = m_slot_length;
-  memcpy(&m_timeslot_request, &_adv_timeslot_param->timeslot_request, sizeof(nrf_radio_request_t));
+  m_beacon.timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_NORMAL;
+  m_beacon.timeslot_request.params.normal.hfclk         = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
+  m_beacon.timeslot_request.params.normal.priority      = NRF_RADIO_PRIORITY_NORMAL;
+  m_beacon.timeslot_request.params.normal.distance_us   = (m_beacon.adv_interval+rand()%10) * 1000 * 2;
+  m_beacon.timeslot_request.params.normal.length_us     = m_beacon.slot_length;
+  return sd_radio_request(&m_beacon.timeslot_request);
 }
 
-/* common config */
-static void radio_configure_radio()
+static uint8_t * m_get_adv_packet(void)
 {
-  // Radio config
-  NRF_RADIO->TXPOWER   = (RADIO_TXPOWER_TXPOWER_0dBm << RADIO_TXPOWER_TXPOWER_Pos);
-  NRF_RADIO->FREQUENCY = 7UL;  // Frequency bin 7, 2407MHz
-  NRF_RADIO->MODE      = (RADIO_MODE_MODE_Nrf_1Mbit << RADIO_MODE_MODE_Pos);
+  static uint8_t adv_pdu[40];
+  uint8_t packet_len_start_idx, manuf_data_len_start_idx, beacon_data_len_start_idx;
+  uint8_t offset    = 0;
+
+  // Constructing header
+  //adv_pdu[offset]    = BLE_GAP_ADV_TYPE_ADV_SCAN_IND;    // Advertisement type ADV_NONCONN_IND
+  adv_pdu[offset++] |= 1 << 6;                           // TxAdd 1 (random address)
+  adv_pdu[offset++]  = 0;                                // Packet length field (will be filled later)
+  adv_pdu[offset++]  = 0x00;                             // Extra byte used to map into the radio register.
+  packet_len_start_idx = offset;
+
+  // Constructing base advertising packet
+  memcpy(&adv_pdu[offset], m_beacon.beacon_addr.addr, BLE_GAP_ADDR_LEN);
+  offset += BLE_GAP_ADDR_LEN;
+    
+  // Adding advertising data: Flags
+  adv_pdu[offset++] =  ADV_TYPE_LEN;
+  adv_pdu[offset++] =  BLE_GAP_AD_TYPE_FLAGS;
+  adv_pdu[offset++] =  BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
+
+  // Adding advertising data: Manufacturer specific data.
+  adv_pdu[offset++]               =  0x00;                             // Manufacturer specific data length field (will be filled later).
+  manuf_data_len_start_idx = offset;
+  adv_pdu[offset++] =  BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
+  offset += uint16_encode(m_beacon.manuf_id, &adv_pdu[offset]);
+  adv_pdu[offset++] =  APP_DEVICE_TYPE;
+
+  // Adding manufacturer specific data (beacon data).
+  adv_pdu[offset++] =  0;                                              // Beacon data length field (will be filled later).
+  beacon_data_len_start_idx = offset;
+  memcpy(&adv_pdu[offset], &m_beacon.uuid, sizeof(ble_uuid128_t));
+  offset += sizeof(ble_uuid128_t);
+  offset += uint16_encode(m_beacon.major, &adv_pdu[offset]);
+  offset += uint16_encode(m_beacon.minor, &adv_pdu[offset]);
+  adv_pdu[offset++] = m_beacon.rssi;
+    
+  // Filling in length fields.
+  adv_pdu[ADV_PACK_LENGTH_IDX]         = offset - packet_len_start_idx;
+  adv_pdu[ADV_DATA_LENGTH_IDX]         = offset - manuf_data_len_start_idx;
+  adv_pdu[beacon_data_len_start_idx-1] = offset - beacon_data_len_start_idx;
+    
+  return &adv_pdu[0];
+}
+
+static void m_set_adv_ch(uint32_t channel)
+{
+  if (channel == ADV_CHANNEL_37)
+  {
+    NRF_RADIO->FREQUENCY    = FREQ_ADV_CHANNEL_37;
+    NRF_RADIO->DATAWHITEIV  = ADV_CHANNEL_37;
+  }
+  if (channel == ADV_CHANNEL_38)
+  {
+    NRF_RADIO->FREQUENCY    = FREQ_ADV_CHANNEL_38;
+    NRF_RADIO->DATAWHITEIV  = ADV_CHANNEL_38;
+  }
+  if (channel == ADV_CHANNEL_39)
+  {
+    NRF_RADIO->FREQUENCY    = FREQ_ADV_CHANNEL_39;
+    NRF_RADIO->DATAWHITEIV  = ADV_CHANNEL_39;
+  }
+}
+
+static void m_configure_radio()
+{
+  //NRF_RADIO->TXPOWER   = (RADIO_TXPOWER_TXPOWER_0dBm << RADIO_TXPOWER_TXPOWER_Pos);
+  //NRF_RADIO->FREQUENCY = 7UL;  // Frequency bin 7, 2407MHz
+  //NRF_RADIO->MODE      = (RADIO_MODE_MODE_Nrf_1Mbit << RADIO_MODE_MODE_Pos);
+
+  uint8_t * p_adv_pdu = m_get_adv_packet();
 
   NRF_RADIO->POWER        = 1;
   NRF_RADIO->PCNF0        =   (((1UL) << RADIO_PCNF0_S0LEN_Pos                               ) & RADIO_PCNF0_S0LEN_Msk)
@@ -159,7 +185,7 @@ static void radio_configure_radio()
   NRF_RADIO->PCNF1        =   (((RADIO_PCNF1_ENDIAN_Little)     << RADIO_PCNF1_ENDIAN_Pos    ) & RADIO_PCNF1_ENDIAN_Msk)
                             | (((3UL)                           << RADIO_PCNF1_BALEN_Pos     ) & RADIO_PCNF1_BALEN_Msk)
                             | (((0UL)                           << RADIO_PCNF1_STATLEN_Pos   ) & RADIO_PCNF1_STATLEN_Msk)
-                            | ((((uint32_t) 37)                 << RADIO_PCNF1_MAXLEN_Pos    ) & RADIO_PCNF1_MAXLEN_Msk)
+                          | ((((uint32_t) 37)                 << RADIO_PCNF1_MAXLEN_Pos    ) & RADIO_PCNF1_MAXLEN_Msk)
                             | ((RADIO_PCNF1_WHITEEN_Enabled     << RADIO_PCNF1_WHITEEN_Pos   ) & RADIO_PCNF1_WHITEEN_Msk);
   NRF_RADIO->CRCCNF       =   (((RADIO_CRCCNF_SKIPADDR_Skip)    << RADIO_CRCCNF_SKIPADDR_Pos ) & RADIO_CRCCNF_SKIPADDR_Msk)
                             | (((RADIO_CRCCNF_LEN_Three)        << RADIO_CRCCNF_LEN_Pos      ) & RADIO_CRCCNF_LEN_Msk);
@@ -167,271 +193,193 @@ static void radio_configure_radio()
   NRF_RADIO->RXADDRESSES  = ((RADIO_RXADDRESSES_ADDR0_Enabled)  << RADIO_RXADDRESSES_ADDR0_Pos);
   NRF_RADIO->SHORTS       = ((1 << RADIO_SHORTS_READY_START_Pos) | (1 << RADIO_SHORTS_END_DISABLE_Pos));
   NRF_RADIO->MODE         = ((RADIO_MODE_MODE_Ble_1Mbit)        << RADIO_MODE_MODE_Pos       ) & RADIO_MODE_MODE_Msk;
-  NRF_RADIO->TIFS         = 100;
+  NRF_RADIO->TIFS         = 150;
   NRF_RADIO->INTENSET     = (1 << RADIO_INTENSET_DISABLED_Pos);
 
   NRF_RADIO->PREFIX0      = 0x0000008e; //access_addr[3]
-  NRF_RADIO->BASE0        = 0x89bed607; //access_addr[0:3]
   NRF_RADIO->BASE0        = 0x89bed600; //access_addr[0:3]
   NRF_RADIO->CRCINIT      = 0x00555555;
-  NRF_RADIO->PACKETPTR    = (uint32_t) m_adv_pdu[0];
+  NRF_RADIO->PACKETPTR    = (uint32_t) p_adv_pdu;
 
   NVIC_EnableIRQ(RADIO_IRQn);
 }
 
-void start_timer(void)
-{		
-    //NRF_TIMER0->MODE = TIMER_MODE_MODE_Timer;  // Set the timer in Counter Mode
-   // NRF_TIMER0->TASKS_CLEAR = 1;               // clear the task first to be usable for later
-    //NRF_TIMER0->PRESCALER = 6;								 // Prescaler = 6 creates 250kHz tick frequency, i.e. tick frequency of 4us
-    //NRF_TIMER0->BITMODE = TIMER_BITMODE_BITMODE_16Bit;//0x01UL;										//Set counter to 16 bit resolution
-    NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
-    NRF_TIMER0->CC[0] = m_slot_length - 1000;
-    // Set and enable interrupt on Timer0
-    //NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos;
-    NVIC_EnableIRQ(TIMER0_IRQn);
-		
-    //NRF_TIMER0->TASKS_START = 1;               // Start timer
-}
-
-void radio_handle_start(void)
+void m_handle_start(void)
 {
-    // Configure TX_EN on TIMER EVENT_0
-  NRF_PPI->CH[8].TEP      = (uint32_t)(&NRF_RADIO->TASKS_TXEN);
-  NRF_PPI->CH[8].EEP      = (uint32_t)(&NRF_TIMER0->EVENTS_COMPARE[0]);
-  NRF_PPI->CHENSET        = (1 << 8);
-
+  // Configure TX_EN on TIMER EVENT_0
+  NRF_PPI->CH[8].TEP    = (uint32_t)(&NRF_RADIO->TASKS_TXEN);
+  NRF_PPI->CH[8].EEP    = (uint32_t)(&NRF_TIMER0->EVENTS_COMPARE[0]);
+  NRF_PPI->CHENSET      = (1 << 8);
+    
   // Configure and initiate radio
-  radio_configure_radio();
+  m_configure_radio();
   NRF_RADIO->TASKS_DISABLE = 1;
 }
 
-static void radio_set_adv_ch(uint32_t channel)
-{
-  switch(channel)
-  {
-  case ADV_CHANNEL_37 : 
-    NRF_RADIO->FREQUENCY    = FREQ_ADV_CHANNEL_37;
-    NRF_RADIO->DATAWHITEIV  = ADV_CHANNEL_37;
-    break;
-  case ADV_CHANNEL_38 :
-    NRF_RADIO->FREQUENCY    = FREQ_ADV_CHANNEL_38;
-    NRF_RADIO->DATAWHITEIV  = ADV_CHANNEL_38;
-    break;
- case ADV_CHANNEL_39 :
-    NRF_RADIO->FREQUENCY    = FREQ_ADV_CHANNEL_39;
-    NRF_RADIO->DATAWHITEIV  = ADV_CHANNEL_39;
-    break;
-  }
-}
-
-void handle_radio_disable(enum mode_t mode)
+void m_handle_radio_disabled(enum mode_t mode)
 {
   switch (mode)
   {
   case ADV_RX_CH37:
-    radio_set_adv_ch(ADV_CHANNEL_37);
-    NRF_RADIO->TASKS_TXEN = 1;
-    break;
+      m_set_adv_ch(ADV_CHANNEL_37);
+      NRF_RADIO->TASKS_TXEN = 1;
+      break;
   case ADV_RX_CH38:
-    radio_set_adv_ch(ADV_CHANNEL_38);
-    NRF_TIMER0->TASKS_CLEAR = 1;
-    NRF_TIMER0->CC[0]       = 400;
-    break;
+      m_set_adv_ch(ADV_CHANNEL_38);
+      NRF_TIMER0->TASKS_CLEAR = 1;
+      NRF_TIMER0->CC[0]       = 400;
+      break;
   case ADV_RX_CH39:
-    radio_set_adv_ch(ADV_CHANNEL_39);
-    NRF_TIMER0->TASKS_CLEAR = 1;
-    NRF_TIMER0->CC[0]       = 400;
-    break;
+      m_set_adv_ch(ADV_CHANNEL_39);
+      NRF_TIMER0->TASKS_CLEAR = 1;
+      NRF_TIMER0->CC[0]       = 400;
+      break;
   default:
-    break;
-  }
+      break;
+    }
 }
 
-
-/**@brief Timeslot signal handler
- */
-void nrf_evt_signal_handler(uint32_t evt_id)
+static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t signal_type)
 {
-  uint32_t err_code;
+  static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
+  static enum mode_t mode;
 
-  switch (evt_id)
-  {
-  case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
-    NRF_LOG_INFO("NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN")
-    break;
-  case NRF_EVT_RADIO_SESSION_IDLE:
-    NRF_LOG_INFO("NRF_EVT_RADIO_SESSION_IDLE")
-   if (m_is_running) {
-      m_is_running = false;
-      err_code = sd_radio_session_close();
-      APP_ERROR_CHECK(err_code);
-    }
-    break;
-  case NRF_EVT_RADIO_SESSION_CLOSED:
-    NRF_LOG_INFO("NRF_EVT_RADIO_SESSION_CLOSED")
-    break;
-  case NRF_EVT_RADIO_BLOCKED:
-    NRF_LOG_INFO("NRF_EVT_RADIO_BLOCKED")
-    //Fall through
-  case NRF_EVT_RADIO_CANCELED:
-    NRF_LOG_INFO("NRF_EVT_RADIO_CANCELED")
-    if (m_keep_running) {
-      err_code = request_next_event_earliest();
-      APP_ERROR_CHECK(err_code);
-    }
-    break;
-  case NRF_EVT_HFCLKSTARTED :                         /**< Event indicating that the HFCLK has started. */
-    NRF_LOG_INFO("NRF_EVT_HFCLKSTARTED")
-    break;
-  case NRF_EVT_POWER_FAILURE_WARNING :                /**< Event indicating that a power failure warning has occurred. */
-    NRF_LOG_INFO("NRF_EVT_POWER_FAILURE_WARNING")
-    break;
-  case NRF_EVT_FLASH_OPERATION_ERROR :                /**< Event indicating that the ongoing flash operation has timed out with an error. */
-    NRF_LOG_INFO("NRF_EVT_FLASH_OPERATION_ERROR")
-    break;
-  default:
-    break;
-  }
-}
-
-
-/**@brief Timeslot event handler
- */
-static nrf_radio_signal_callback_return_param_t * radio_callback(uint8_t signal_type)
-{
   //nrf_gpio_pin_toggle(DEBUG_PIN);
 
-  signal_callback_return_param.params.request.p_next = NULL;
-  signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+  signal_callback_return_param.params.request.p_next  = NULL;
+  signal_callback_return_param.callback_action        = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
-  switch(signal_type)
+  switch (signal_type)
   {
-  case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
-    //Start of the timeslot - set up timer interrupt
-    nrf_gpio_pin_set(DEBUG_PIN);
-  #ifdef TIMESLOT_RADIO_MODE
-    radio_handle_start();
-    mode = ADV_INIT;
-    mode++;
-  #else
-    start_timer();
-  #endif
-    break;
+    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
 
-  case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0:
-    //Timer interrupt - do graceful shutdown - schedule next timeslot
-    nrf_gpio_pin_clear(DEBUG_PIN);
-    NRF_RADIO->PACKETPTR = (uint32_t) m_adv_pdu[0];
+      nrf_gpio_pin_set(DEBUG_PIN);
+  
+      m_handle_start();
 
-    if (m_keep_running) {
-      configure_next_event_normal();
-      signal_callback_return_param.params.request.p_next = &m_timeslot_request;
-      signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
-    }
-    else {
-      signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
-    }
-    break;
-
-  case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO:
-    NRF_LOG_INFO("NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO");
-  #ifdef TIMESLOT_RADIO_MODE
-    NRF_RADIO->PACKETPTR = (uint32_t) m_adv_pdu[0];
-    if (NRF_RADIO->EVENTS_DISABLED == 1) {
-      NRF_RADIO->EVENTS_DISABLED = 0;
-
-      handle_radio_disable(mode);
+      mode = ADV_INIT;
       mode++;
+      break;
 
-      if (mode == ADV_DONE) {
-        NRF_PPI->CHENCLR = (1 << 8);  
+    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO:
 
-        if (m_keep_running){
-          configure_next_event_normal();
-          signal_callback_return_param.params.request.p_next = &m_timeslot_request;
-          signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
+      nrf_gpio_pin_clear(DEBUG_PIN);
+      if (NRF_RADIO->EVENTS_DISABLED == 1)
+      {
+        NRF_RADIO->EVENTS_DISABLED = 0;
+
+        m_handle_radio_disabled(mode);
+
+        if (mode == ADV_DONE)
+        {
+          NRF_PPI->CHENCLR = (1 << 8);
+          if (m_beacon.keep_running)
+          {
+            signal_callback_return_param.params.request.p_next = m_configure_next_event();
+            signal_callback_return_param.callback_action       = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
+          }
+          else
+          {
+            signal_callback_return_param.callback_action       = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
+          }
+          break;
         }
-        else {
-          NRF_LOG_INFO("TIMER0_END");
-          signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
-        }
+        mode++;
       }
-    }
-  #endif
-    break;
+      break;
 
-  case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED:
-    //Try scheduling a new timeslot
-    NRF_LOG_INFO("NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED");
-    configure_next_event_earliest();
-    signal_callback_return_param.params.request.p_next = &m_timeslot_request;
-    signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
-    break;
+    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0:
 
-  case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED:
-    NRF_LOG_INFO("NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED");
-    NRF_TIMER0->EVENTS_COMPARE[0]=0;
-    NRF_TIMER0->TASKS_CLEAR = 1;
-    signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
-   break;
+    #ifdef TIMESLOT_TIMER0_MODE
+      nrf_gpio_pin_clear(DEBUG_PIN);
+      NRF_RADIO->PACKETPTR = (uint32_t) m_adv_pdu[0];
 
-  default:
-    //No implementation needed
-    break;
+      if (m_beacon.keep_running)
+        signal_callback_return_param.params.request.p_next = m_configure_next_event();
+        signal_callback_return_param.callback_action       = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
+      }
+      else {
+        signal_callback_return_param.callback_action       = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
+      }
+      break;
+    #endif
+
+    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED:
+
+      NRF_LOG_INFO("NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED");
+      break;
+
+    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED:
+
+      NRF_LOG_INFO("NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED");
+      break;
+
+    default:
+
+      if (m_beacon.error_handler != NULL)
+      {
+          m_beacon.error_handler(NRF_ERROR_INVALID_STATE);
+      }
+      break;
   }
-  return (&signal_callback_return_param);
+
+  return ( &signal_callback_return_param );
 }
 
-
-/**@brief Function for initializing the timeslot API.
- */
-uint32_t timeslot_start(void)
+void app_beacon_on_sys_evt(uint32_t event)
 {
   uint32_t err_code;
-    
-  m_keep_running = true;
-  m_is_running   = true;
-
-  err_code = sd_radio_session_open(radio_callback);
-  if (err_code != NRF_SUCCESS)
+  switch (event)
   {
-    return err_code;
-  }
-    
-  err_code = request_next_event_earliest();
-  if (err_code != NRF_SUCCESS)
-  {
-    (void)sd_radio_session_close();
-  }
-  return NRF_SUCCESS;
+    case NRF_EVT_RADIO_SESSION_IDLE:
+        NRF_LOG_INFO("NRF_EVT_RADIO_SESSION_IDLE")
+        if (m_beacon.is_running)
+        {
+            m_beacon.is_running = false;
+            err_code = sd_radio_session_close();
+            if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
+            {
+              m_beacon.error_handler(err_code);
+            }
+        }
+        break;
+    case NRF_EVT_RADIO_SESSION_CLOSED:
+        NRF_LOG_INFO("NRF_EVT_RADIO_SESSION_CLOSED")
+        break;
+    case NRF_EVT_RADIO_BLOCKED:
+        NRF_LOG_INFO("NRF_EVT_RADIO_BLOCKED")
+    case NRF_EVT_RADIO_CANCELED: // Fall through
+        NRF_LOG_INFO("NRF_EVT_RADIO_CANCELED")
+        if (m_beacon.keep_running)
+        {
+            // TODO: A proper solution should try again in <block_count> * m_beacon.adv_interval
+            //  err_code = m_request_earliest(NRF_RADIO_PRIORITY_HIGH);
+            err_code = m_request_normal();
+            if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
+            {
+              m_beacon.error_handler(err_code);
+            }
+        }
+        break;
+    case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
+        NRF_LOG_INFO("NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN")
+        break;
+
+    case NRF_EVT_HFCLKSTARTED :             /**< Event indicating that the HFCLK has started. */
+        NRF_LOG_INFO("NRF_EVT_HFCLKSTARTED")
+        break;
+    case NRF_EVT_POWER_FAILURE_WARNING :    /**< Event indicating that a power failure warning has occurred. */
+        NRF_LOG_INFO("NRF_EVT_POWER_FAILURE_WARNING")
+        break;
+    case NRF_EVT_FLASH_OPERATION_ERROR :    /**< Event indicating that the ongoing flash operation has timed out with an error. */
+        NRF_LOG_INFO("NRF_EVT_FLASH_OPERATION_ERROR")
+        break;
+    default:
+        break;
+    }
 }
 
-uint32_t timeslot_stop(void)
-{
-    m_keep_running = false;
-}
 
-#ifdef BD_ADDR_TEST
-/**@brief Function for initializing Beacon advertiser.
- */
-static void beacon_adv_init(void)
-{
-    static uint8_t beacon_uuid[] = {BEACON_UUID};
-    
-    memcpy(beacon_init.uuid.uuid128, beacon_uuid, sizeof(beacon_uuid));
-    beacon_init.adv_interval  = BEACON_ADV_INTERVAL;
-    beacon_init.major         = BEACON_MAJOR;
-    beacon_init.minor         = BEACON_MINOR;
-    beacon_init.manuf_id      = APP_COMPANY_IDENTIFIER;
-    beacon_init.rssi          = BEACON_RSSI;
-    beacon_init.error_handler = beacon_advertiser_error_handler;
-    
-    uint32_t err_code = sd_ble_gap_address_get(&beacon_init.beacon_addr);
-    APP_ERROR_CHECK(err_code);
-    
-    app_beacon_init(&beacon_init);
-}
 
 void app_beacon_init(ble_beacon_init_t * p_init)
 {
@@ -446,5 +394,27 @@ void app_beacon_init(ble_beacon_init_t * p_init)
     m_beacon.error_handler= p_init->error_handler;
 }
 
+/**@brief Function for initializing the timeslot API.
+ */
+void timeslot_start(void)
+{
+    m_beacon.keep_running = true;
+    m_beacon.is_running   = true;
 
-#endif
+    uint32_t err_code = sd_radio_session_open(m_timeslot_callback);
+    if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
+    {
+        m_beacon.error_handler(err_code);
+    }
+    
+    err_code = m_request_earliest(NRF_RADIO_PRIORITY_NORMAL);
+    if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
+    {
+        m_beacon.error_handler(err_code);
+    }
+}
+
+void timeslot_stop(void)
+{
+    m_beacon.keep_running = false;
+}

@@ -1,3 +1,16 @@
+/** @file
+ *
+ * @defgroup ble_sdk_adv_beacon Advertiser Module using the radio through the sd_radio_request SoftDevice API
+ * @{
+ * @ingroup ble_sdk_radio_time_slot_api
+ * @brief Advertiser module. This module shows an example of using periodic timeslots on the radio when the SoftDevice is running
+ *
+ * @details This module implements an advertiser which can be run in parallel with the S110 (thus allowing, for example, to advertise while in a connection)
+ *          This module shows an example of using periodic timeslots on the radio when the SoftDevice is running
+ *
+ * @note This module is experimental.
+ *
+ */
 #ifndef TIMESLOT_H__
 #define TIMESLOT_H__
 
@@ -6,39 +19,50 @@
 
 typedef struct
 {
+    ble_uuid128_t           uuid;
     uint32_t                adv_interval;
-    bool                    keep_running;                       /** */
-    bool                    is_running;                         /** is the 'beacon' running*/
-    nrf_radio_request_t     timeslot_request;                   /** */
-    ble_gap_addr_t          addr;                                /** ble address to be used by the beacon*/
+    uint16_t                major;
+    uint16_t                minor;
+    uint16_t                manuf_id;
+    uint8_t                 rssi;                               /** measured RSSI at 1 meter distance in dBm*/
+    ble_gap_addr_t          beacon_addr;                        /** ble address to be used by the beacon*/    
     ble_srv_error_handler_t error_handler;                      /**< Function to be called in case of an error. */
-} advertising_timeslot_param_t;
+} ble_beacon_init_t;
 
 
-uint16_t get_timesdlot_distance(void);
+/**@brief Function for handling system events.
+ *
+ * @details Handles all system events of interest to the Advertiser module. 
+ *
+ * @param[in]   event     received event.
+ */
+void app_beacon_on_sys_evt(uint32_t event);
+
+/**@brief Timeslot signal handler
+ */
+void nrf_evt_signal_handler(uint32_t event);
+
+/**@brief Function for initializing the advertiser module.
+ *
+ * @param[in]   p_init     structure containing advertiser configuration information.
+ */
+void app_beacon_init(ble_beacon_init_t * p_init);
+
+/**@brief Function for starting the advertisement.
+ *
+ */
+void timeslot_start(void);
+
+/**@brief Function for stopping the advertisement.
+ * @note This functions returns immediately, but the advertisement is actually stopped after the next radio slot.
+ *
+ */
+void timeslot_stop(void);
+
 
 /**@brief Radio GAP advertising configure
 */
 uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params);
-
-/**@brief Radio event handler
-*/
-void RADIO_timeslot_IRQHandler(void);
-
-
-/**@brief Timeslot signal handler
- */
-void nrf_evt_signal_handler(uint32_t evt_id);
-
-
-/**@brief Timeslot event handler
- */
-static nrf_radio_signal_callback_return_param_t * radio_callback(uint8_t signal_type);
-
-
-/**@brief Function for initializing the timeslot API.
- */
-uint32_t timeslot_start(void);
 
 
 #endif

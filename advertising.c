@@ -150,7 +150,7 @@ void advertising_start(void)
   // Start advertising.
   start_adv_switch_timer(txFreq);
 
-  if (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] == 0x00 || !m_eco_adv_stop) {   
+  if (m_eco_start_time.wTime == m_eco_finish_time.wTime || !m_eco_adv_stop) {   
     if (g_advertising_mode != BLE_ADV_MODE_PAUSE) {  
         err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_ble_adv_data, &m_adv_params);
         APP_ERROR_CHECK(err_code);

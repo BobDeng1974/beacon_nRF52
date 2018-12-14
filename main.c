@@ -81,6 +81,9 @@ uint16_union_t  m_battery_charge;           /**< current battery charge */
 uint64_union_t  m_line_timestamp;           /**< 64bit timestamp for LINE Beacon */
 uint32_union_t  m_tgsec_timestamp;          /**< 32bit timestamp for Tangerine Secure iBeacon */
 
+dectime_union_t m_eco_start_time;           /**< 16bit decmal eco mode start time */
+dectime_union_t m_eco_finish_time;          /**< 16bit decmal eco mode finish time */
+
 //------------------------------------------------------------------------------
 // Battery monitoring
 //------------------------------------------------------------------------------
@@ -328,40 +331,41 @@ static void time_ecomodecheck_count_hanlder(void * p_context)
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   memcpy(&_beacon_info[BINFO_CURRENT_DATETIME_IDX], &m_pre_time, BINFO_CURRENT_DATETIME_SIZ);
 
-  uint8_t m_eco_start_hours = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
-  uint8_t m_eco_start_minutes = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
-  uint8_t m_eco_finish_hours = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
-  uint8_t m_eco_finish_minutes = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
-
+  m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
+  m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
+  m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
+  m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
 
   bool bEco_Mode = false;
-  if (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] != 0x00)
+  //if (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] != 0x00)
+  if (m_eco_start_time.wTime != m_eco_finish_time.wTime)
   {
-    if ( m_eco_start_hours <= m_eco_finish_hours )
+    if ( m_eco_start_time.dec.Hours <= m_eco_finish_time.dec.Hours )
     {        
-      if (m_eco_start_hours <= m_pre_time.hours && m_pre_time.hours <= m_eco_finish_hours)
+      if ( m_eco_start_time.dec.Hours <= m_pre_time.hours && m_pre_time.hours <= m_eco_finish_time.dec.Hours )
       {
-        if ( m_eco_start_minutes <= m_eco_finish_minutes )
+        if ( m_eco_start_time.dec.Minutes <= m_eco_finish_time.dec.Minutes )
         {
-          if (m_eco_start_minutes <= m_pre_time.minutes && m_pre_time.minutes <= m_eco_finish_minutes)
+          if ( m_eco_start_time.dec.Minutes <= m_pre_time.minutes && m_pre_time.minutes <= m_eco_finish_time.dec.Minutes )
             bEco_Mode = true;
-         } else if ( m_eco_start_minutes <= m_pre_time.minutes || m_pre_time.minutes <= m_eco_finish_minutes ) 
+         } else if ( m_eco_start_time.dec.Minutes <= m_pre_time.minutes || m_pre_time.minutes <= m_eco_finish_time.dec.Minutes ) 
             bEco_Mode = true;
       }
     } else {
-      if ( m_eco_start_hours <= m_pre_time.hours || m_pre_time.hours <= m_eco_finish_hours )
+      if ( m_eco_start_time.dec.Hours <= m_pre_time.hours || m_pre_time.hours <= m_eco_finish_time.dec.Hours )
       {
-        if ( m_eco_start_minutes <= m_eco_finish_minutes )
+        if ( m_eco_start_time.dec.Minutes <= m_eco_finish_time.dec.Minutes )
         {
-          if (m_eco_start_minutes <= m_pre_time.minutes && m_pre_time.minutes <= m_eco_finish_minutes) 
+          if ( m_eco_start_time.dec.Minutes <= m_pre_time.minutes && m_pre_time.minutes <= m_eco_finish_time.dec.Minutes ) 
             bEco_Mode = true;
-        } else if ( m_eco_start_minutes <= m_pre_time.minutes || m_pre_time.minutes <= m_eco_finish_minutes ) 
+        } else if ( m_eco_start_time.dec.Minutes <= m_pre_time.minutes || m_pre_time.minutes <= m_eco_finish_time.dec.Minutes ) 
             bEco_Mode = true;
       }
     }
   }
   m_eco_adv_stop = bEco_Mode;
-  NRF_LOG_INFO("ECO mode = %d", m_eco_adv_stop);
+  NRF_LOG_INFO("ECO mode = %d %02X:%02X", m_eco_adv_stop, m_pre_time.hours, m_pre_time.minutes);
+  NRF_LOG_INFO("(%02X:%02X-%02X:%02X)", m_eco_start_time.dec.Hours, m_eco_start_time.dec.Minutes, m_eco_finish_time.dec.Hours, m_eco_finish_time.dec.Minutes);  
 }
 
 
@@ -705,6 +709,12 @@ static void application_timers_start(void)
   //}
   #endif
   #if defined(ECOMODE_CHECKING_ENABLED)
+    uint8_t *_beacon_info = ble_bms_get_beacon_info();
+    m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
+    m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
+    m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
+    m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
+
     if (pdPASS != xTimerStart(m_ecomodecheck_count_timer, OSTIMER_WAIT_FOR_QUEUE))
     {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
@@ -733,6 +743,12 @@ static void application_timers_start(void)
   #endif
 
   #if defined(ECOMODE_CHECKING_ENABLED)
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
+  m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
+  m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
+  m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
+
   err_code = app_timer_start(m_ecomodecheck_count_timer_id, COUNTER_ECOMODECHECK_INTERVAL, NULL);
   APP_ERROR_CHECK(err_code);
   #endif
@@ -1452,10 +1468,8 @@ int main(void)
 #endif
 
   // Timeslot Started
-  if (ble_bms_get_timeslot_status() != 0x00) {
-    err_code = timeslot_start();
-    APP_ERROR_CHECK(err_code);
-  }
+  if (ble_bms_get_timeslot_status() != 0x00) timeslot_start();
+
   // App Started
   print("Tangerin Beacon started.");
 

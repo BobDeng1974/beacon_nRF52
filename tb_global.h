@@ -22,6 +22,8 @@
 #include "ble_advertising.h"
 #include "ble_advdata.h"
 #include "ble_conn_params.h"
+#include "ble_types.h"
+#include "ble_gap.h"
 #include "nrf_ble_gatt.h"
 #include "boards.h"
 #include "app_timer.h"
@@ -85,13 +87,8 @@
 //----------------------------------------------------------------------------
 // device name and company identifier
 //----------------------------------------------------------------------------
-#ifndef TABGERINE_NRF52_DEBUG
-  #define DEVICE_NAME                   "TgReF"   /**< Name of device. Will be included in the advertising data. */
-#else
-  #define DEVICE_NAME                   "TgRef"     /**< Name of device. Will be included in the advertising data. */
-#endif
-
-#define TANGERINE_COMPANY_IDENTIFIER     0x014E     /*< Company identifier for Tangerine Inc. as per www.bluetooth.org. */
+#define DEVICE_NAME                     "TgReF"   /**< Name of device. Will be included in the advertising data. */
+#define TANGERINE_COMPANY_IDENTIFIER    0x014E     /*< Company identifier for Tangerine Inc. as per www.bluetooth.org. */
 
 //----------------------------------------------------------------------------
 // 
@@ -145,6 +142,14 @@ typedef union {
   uint8_t array[8];
 } uint64_union_t;
 
+typedef union {
+  unsigned short int wTime;
+  struct {
+    unsigned char Hours;
+    unsigned char Minutes;
+  } dec;
+} dectime_union_t;
+
 //-----------------------------------------------------------------------------
 // counters
 //----------------------------------------------------------------------------
@@ -154,6 +159,8 @@ extern  uint16_union_t m_battery_charge;      /**< current battery charge */
 extern  uint64_union_t m_line_timestamp;      /**< 64bit timestamp for LINE Beacon */
 extern  uint32_union_t m_tgsec_timestamp;     /**< 32bit timestamp for Tangerine Secure iBeacon */
 
+extern  dectime_union_t m_eco_start_time;     /**< 16bit decmal eco mode start time */
+extern  dectime_union_t m_eco_finish_time;    /**< 16bit decmal eco mode finish time */
 
 #endif /*  _TB_GLOBAL_H_ */
 

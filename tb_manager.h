@@ -108,28 +108,26 @@
 #define BINFO_TGSECB_ROTATED_BEACONID_IDX    150     // l=4 : s=150 : tg secure rotated beaconID
 #define BINFO_TGSECB_ROTATED_BEACONID_SIZ      4     // -
 
-#define BINFO_SET_CURRENT_DATETIME_IDX        154     // l=8 : s=154 : Set Current date/time
-#define BINFO_SET_CURRENT_DATETIME_SIZ          7     // -
+#define BINFO_SET_CURRENT_DATETIME_IDX       154     // l=8 : s=154 : Set Current date/time
+#define BINFO_SET_CURRENT_DATETIME_SIZ         7     // -
 
-#define BINFO_ECO_MODE_STATUS_IDX            162     // l=1 : s=162 : ECO mode status
-#define BINFO_ECO_MODE_STATUS_SIZ              1     // -
-#define BINFO_TIMESLOT_MODE_STATUS_IDX       163     // l=1 : s=162 : TIMESLOT mode status
-#define BINFO_TIMESLOT_MODE_STATUS_SIZ         1     // -
-
-#define BINFO_ECO_MODE_START_TIME_IDX        164     // l=2 : s=164 : Eco mode start time
+#define BINFO_ECO_MODE_START_TIME_IDX        162     // l=2 : s=162 : Eco mode start time
 #define BINFO_ECO_MODE_START_TIME_SIZ          2     //  -
 
-#define BINFO_ECO_MODE_FINISH_TIME_IDX       166     // l=2 : s=166 : Eco mode finish time
+#define BINFO_ECO_MODE_FINISH_TIME_IDX       164     // l=2 : s=164 : Eco mode finish time
 #define BINFO_ECO_MODE_FINISH_TIME_SIZ         2     //  -
 
-#define BINFO_CURRENT_DATETIME_IDX           168     // l=8 : s=168 : Current date/time
+#define BINFO_CURRENT_DATETIME_IDX           166     // l=8 : s=166 : Current date/time
 #define BINFO_CURRENT_DATETIME_SIZ             7     // -
 
-#define BINFO_MODE_LIST_TXFRQ_VALUE_IDX       176     // l=12 : s=176 : Timeslot length
-#define BINFO_MODE_LIST_TXFRQ_VALUE_SIZ        12     // -
+#define BINFO_TIMESLOT_MODE_STATUS_IDX       174     // l=1 : s=174 : TIMESLOT mode status
+#define BINFO_TIMESLOT_MODE_STATUS_SIZ         1     // -
 
-#define BINFO_TBM_TXFRQ_VALUE_IDX             188     // l=2 : s=188 : Timeslot advertising distance
-#define BINFO_TBM_TXFRQ_VALUE_SIZ               2     // -
+#define BINFO_TIMESLOT_TXFRQ_VALUE_IDX       176     // l=12 : s=176 : Timeslot length
+#define BINFO_TIMESLOT_TXFRQ_VALUE_SIZ        1     // -
+
+#define BINFO_TBM_TXFRQ_VALUE_IDX            178     // l=2 : s=178 : Timeslot advertising distance
+#define BINFO_TBM_TXFRQ_VALUE_SIZ              2     // -
 
 #define MAX_ADV_MODE_LIST                     12     // Advertising Mode List Max Index
 
