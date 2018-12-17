@@ -59,7 +59,7 @@
 #include "tracetask.h"
 
 //#define ADV_SWITCH_TIMER_APP_TIMER
-#define FREERTOS_SWITCH
+//#define FREERTOS_SWITCH
 #define TIMESLOT_DEBUG
 #define RGB_LED
 

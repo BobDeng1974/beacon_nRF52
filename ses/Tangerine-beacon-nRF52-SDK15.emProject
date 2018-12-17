@@ -158,6 +158,7 @@
       <file file_name="$(SDKDir)/components/ble/peer_manager/security_dispatcher.c" />
       <file file_name="$(SDKDir)/components/ble/peer_manager/security_manager.c" />
       <file file_name="$(SDKDir)/components/ble/ble_services/nrf_ble_bms/nrf_ble_bms.c" />
+      <file file_name="../../nRF5_SDK_15.2.0_9412b96/components/ble/ble_radio_notification/ble_radio_notification.c" />
     </folder>
     <folder Name="nRF_DFU">
       <file file_name="$(SDKDir)/components/ble/ble_services/ble_dfu/ble_dfu.c" />

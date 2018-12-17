@@ -1,21 +1,7 @@
-/** @file
- *
- * @defgroup ble_sdk_adv_beacon Advertiser Module using the radio through the sd_radio_request SoftDevice API
- * @{
- * @ingroup ble_sdk_radio_time_slot_api
- * @brief Advertiser module. This module shows an example of using periodic timeslots on the radio when the SoftDevice is running
- *
- * @details This module implements an advertiser which can be run in parallel with the S110 (thus allowing, for example, to advertise while in a connection)
- *          This module shows an example of using periodic timeslots on the radio when the SoftDevice is running
- *
- * @note This module is experimental.
- *
- */
 #ifndef TIMESLOT_H__
 #define TIMESLOT_H__
 
 #include "tb_global.h"
-
 
 typedef struct
 {
@@ -36,17 +22,13 @@ typedef struct
  *
  * @param[in]   event     received event.
  */
-void app_beacon_on_sys_evt(uint32_t event);
-
-/**@brief Timeslot signal handler
- */
-void nrf_evt_signal_handler(uint32_t event);
+void timeslot_start_on_sys_evt(uint32_t event);
 
 /**@brief Function for initializing the advertiser module.
  *
  * @param[in]   p_init     structure containing advertiser configuration information.
  */
-void app_beacon_init(ble_beacon_init_t * p_init);
+void timeslot_init(ble_beacon_init_t * p_init);
 
 /**@brief Function for starting the advertisement.
  *
@@ -59,10 +41,4 @@ void timeslot_start(void);
  */
 void timeslot_stop(void);
 
-
-/**@brief Radio GAP advertising configure
-*/
-uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params);
-
-
-#endif
+#endif // TIMESLOT_H__
