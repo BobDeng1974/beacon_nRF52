@@ -55,7 +55,6 @@
 #include "advertising.h"
 
 #include "custom_board.h"
-#include "setting.h"
 #include "tracetask.h"
 
 //#define ADV_SWITCH_TIMER_APP_TIMER

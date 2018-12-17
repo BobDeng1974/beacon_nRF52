@@ -109,7 +109,6 @@
       <file file_name="../eddystone.h" />
       <file file_name="../ibeacon.h" />
       <file file_name="../line.h" />
-      <file file_name="../setting.h" />
       <file file_name="../tb_global.h" />
       <file file_name="../tb_manager.h" />
       <file file_name="../tbm_packet.h" />
@@ -167,11 +166,6 @@
     </folder>
     <folder Name="UTF8/UTF16 converter">
       <file file_name="$(SDKDir)/external/utf_converter/utf.c" />
-    </folder>
-    <folder Name="nRF_BLE_Services">
-      <file file_name="$(SDKDir)/components/ble/ble_services/ble_bas/ble_bas.c" />
-      <file file_name="$(SDKDir)/components/ble/ble_services/ble_dis/ble_dis.c" />
-      <file file_name="$(SDKDir)/components/ble/ble_services/ble_hrs/ble_hrs.c" />
     </folder>
     <folder Name="nRF_SoftDevice">
       <file file_name="$(SDKDir)/components/softdevice/common/nrf_sdh.c" />

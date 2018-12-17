@@ -858,7 +858,7 @@ void app_error_handler_(uint32_t error_code, uint32_t line_num, const uint8_t * 
 {
   char str[256];
   sprintf(str, "Line = %d  file = %s", line_num, p_file_name);
-  print("Line = %d  file = %s", line_num, p_file_name);
+  NRF_LOG_INFO("Line = %d  file = %s", line_num, p_file_name);
   execute_error_led(LED_ON);
   execute_led(LED_OFF);
   // FIXME NVIC_SystemReset();
@@ -878,7 +878,7 @@ void app_error_handler_(uint32_t error_code, uint32_t line_num, const uint8_t * 
  */
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
-  print("Line = %d  file = %s", line_num, p_file_name);
+  NRF_LOG_INFO("Line = %d  file = %s", line_num, p_file_name);
   app_error_handler_(DEAD_BEEF, line_num, p_file_name);
 }
 
@@ -1704,7 +1704,8 @@ int main(void)
 
   timers_init();
   gpiote_init();
-  ble_stack_init();
+  //sble_stack_init();
+  timeslot_ble_stack_init();
   tb_manager_pstorage_init();
 
   err_code = nrf_pwr_mgmt_init();
@@ -1740,10 +1741,26 @@ int main(void)
   application_timers_start();
 
   // Start execution.
-  advertising_mode_reset();
 
-  advertising_init(BLE_ADV_MODE_BMS);
-  
+    timeslot_advertising_init(false);  // Initialize Nordic beacon
+    timeslot_advertising_init(true);   // Initialize iBeacon
+    timeslot_beacon_adv_init();        // Initialize TimeSlot beacon
+
+    // Notification
+    ble_radio_notification_init(APP_IRQ_PRIORITY_LOW,
+      NRF_RADIO_NOTIFICATION_DISTANCE_5500US, timeslot_on_radio_event);
+
+    // Start execution.
+    NRF_LOG_INFO("Beacon example started.");
+
+    // Start SoftDevice beacon, first Nordic type
+    m_adv_data.adv_data.p_data  = m_enc_advdata;
+    m_adv_data.adv_data.len     = m_enc_advdata_len;
+    (void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
+    (void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
+    // Start TimeSlot iBeacon
+    timeslot_start();
+
 #if defined(LED_ENABLED)
   blink_led(2);
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
@@ -1754,7 +1771,38 @@ int main(void)
     execute_pending_led(LED_OFF);
   }
 #endif
+  // Should not reach here.
+  for (;;)
+  {
+#ifdef FREERTOS_SWITCH
+    APP_ERROR_HANDLER(NRF_ERROR_FORBIDDEN);
+#else
+    UNUSED_RETURN_VALUE(NRF_LOG_PROCESS());
+    NRF_LOG_FLUSH();
+    if (NRF_LOG_PROCESS() == false)
+    {
+        nrf_pwr_mgmt_run();
+    }
+    //power_manage();
+  }
+#endif
 
+
+  advertising_mode_reset();
+
+  advertising_init(BLE_ADV_MODE_BMS);
+/*  
+#if defined(LED_ENABLED)
+  blink_led(2);
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
+    execute_pending_led(LED_ON);
+  }
+  else {
+    execute_pending_led(LED_OFF);
+  }
+#endif
+*/
   m_adv_count.value = 0;           
   m_sec_count_100ms.value = 0;     
 
@@ -1796,7 +1844,7 @@ int main(void)
   if (ble_bms_get_timeslot_status() != 0x00) timeslot_start();
 
   // App Started
-  print("Tangerin Beacon started.");
+  NRF_LOG_INFO("Tangerin Beacon started.");
 
 #ifdef FREERTOS_SWITCH
   // Start FreeRTOS scheduler.
@@ -1813,6 +1861,7 @@ int main(void)
     APP_ERROR_HANDLER(NRF_ERROR_FORBIDDEN);
 #else
     UNUSED_RETURN_VALUE(NRF_LOG_PROCESS());
+    NRF_LOG_FLUSH();
     if (NRF_LOG_PROCESS() == false)
     {
         nrf_pwr_mgmt_run();
