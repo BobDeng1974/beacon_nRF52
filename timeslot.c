@@ -238,7 +238,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
   static enum mode_t mode;
 
-  nrf_gpio_pin_toggle(9);
+  //nrf_gpio_pin_toggle(9);
 
   signal_callback_return_param.params.request.p_next  = NULL;
   signal_callback_return_param.callback_action        = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
@@ -310,13 +310,22 @@ void timeslot_on_sys_evt(uint32_t event)
             if (m_beacon.keep_running)
             {
                 // TODO: A proper solution should try again in <block_count> * m_beacon.adv_interval
-//                err_code = m_request_earliest(NRF_RADIO_PRIORITY_HIGH);
+                // err_code = m_request_earliest(NRF_RADIO_PRIORITY_HIGH);
                 err_code = m_request_normal();
                 if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
                 {
                     m_beacon.error_handler(err_code);
                 }
             }
+            break;
+        case NRF_EVT_HFCLKSTARTED :                         /**< Event indicating that the HFCLK has started. */
+            NRF_LOG_INFO("NRF_EVT_HFCLKSTARTED")
+            break;
+        case NRF_EVT_POWER_FAILURE_WARNING :                /**< Event indicating that a power failure warning has occurred. */
+            NRF_LOG_INFO("NRF_EVT_POWER_FAILURE_WARNING")
+            break;
+        case NRF_EVT_FLASH_OPERATION_ERROR :                /**< Event indicating that the ongoing flash operation has timed out with an error. */
+            NRF_LOG_INFO("NRF_EVT_FLASH_OPERATION_ERROR")
             break;
         default:
             break;

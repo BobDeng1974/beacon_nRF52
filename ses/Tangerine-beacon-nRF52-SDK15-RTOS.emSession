@@ -94,10 +94,10 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="61" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_global.h" selected="0" top="41" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="456" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/ble_advertising/ble_advertising.c" selected="0" top="425" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="7441" useTextEdit="1" useBinaryEdit="0" left="0" path="../config/sdk_config.h" selected="0" top="7398" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1334" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="1302" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1334" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="44" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="138" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="82" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="44" y="189" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s" selected="1" top="91" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="189" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s" selected="0" top="18" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="62" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="26" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="191" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/ble_advertising/ble_advertising.h" selected="0" top="134" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="164" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/common/ble_advdata.h" selected="0" top="124" codecName="Default"/>

@@ -203,36 +203,6 @@ static void timeslot_soc_evt_handler(uint32_t evt_id, void * p_context)
   timeslot_on_sys_evt(evt_id);
 }
 
-/**@brief Function for initializing the BLE stack.
- *
- * @details Initializes the SoftDevice and the BLE event interrupt.
- */
-static void timeslot_ble_stack_init(void)
-{
-    ret_code_t err_code;
-
-    err_code = nrf_sdh_enable_request();
-    APP_ERROR_CHECK(err_code);
-
-    // Configure the BLE stack using the default settings.
-    // Fetch the start address of the application RAM.
-    uint32_t ram_start = 0;
-    err_code = nrf_sdh_ble_default_cfg_set(APP_BLE_CONN_CFG_TAG, &ram_start);
-    APP_ERROR_CHECK(err_code);
-
-    // Enable BLE stack.
-    err_code = nrf_sdh_ble_enable(&ram_start);
-    APP_ERROR_CHECK(err_code);
-  
-    // Enable DCDC
-    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
-    APP_ERROR_CHECK(err_code);
-
-    // Register a handler for sys events.
-    NRF_SDH_SOC_OBSERVER(m_soc_observer, BLE_ADV_SOC_OBSERVER_PRIO, timeslot_soc_evt_handler, NULL);
-}
-
-
 /**@brief Function for initializing logging. */
 static void timeslot_log_init(void)
 {
@@ -308,7 +278,6 @@ static void timeslot_beacon_adv_init(void)
 /**@brief Set advertising data for every advertising event. */
 static void timeslot_on_radio_event(bool radio_active) 
 {
-  nrf_gpio_pin_toggle(9);
     static bool send_ibeacon = true;
     if (radio_active) 
     {
@@ -325,49 +294,6 @@ static void timeslot_on_radio_event(bool radio_active)
       send_ibeacon = !send_ibeacon;
     }
 }
-
-/**
- * @brief Function for application main entry.
- */
-int timeslot_main(void)
-{
-    nrf_gpio_cfg_output(9);
-    nrf_gpio_pin_set(9);
-
-    // Initialize.
-    timeslot_log_init();
-    timeslot_timers_init();
-    timeslot_power_management_init();
-    timeslot_ble_stack_init();
-    timeslot_advertising_init(false);  // Initialize Nordic beacon
-    timeslot_advertising_init(true);   // Initialize iBeacon
-    timeslot_beacon_adv_init();        // Initialize TimeSlot beacon
-
-    // Notification
-    ble_radio_notification_init(APP_IRQ_PRIORITY_LOW,
-      NRF_RADIO_NOTIFICATION_DISTANCE_5500US, timeslot_on_radio_event);
-
-    // Start execution.
-    NRF_LOG_INFO("Beacon example started.");
-
-    // Start SoftDevice beacon, first Nordic type
-    m_adv_data.adv_data.p_data  = m_enc_advdata;
-    m_adv_data.adv_data.len     = m_enc_advdata_len;
-    (void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
-    (void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
-    // Start TimeSlot iBeacon
-    timeslot_start();
-
-    // Enter main loop.
-    for (;; )
-    {
-        timeslot_idle_state_handle();
-    }
-}
-
-
-
-
 //========================================================
 
 
@@ -498,8 +424,8 @@ static void save_15sec_timestamp()
   
   uint32_t err_code;
   err_code = tb_manager_settings_store();
-  APP_ERROR_CHECK(err_code);
-        
+  if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
+  //APP_ERROR_CHECK(err_code);
 }
 
 /**@brief
@@ -535,8 +461,8 @@ static void calc_rotmm_save_15sec_tgsec_timestamp()
 
   uint32_t err_code;
   err_code = tb_manager_settings_store();
-  APP_ERROR_CHECK(err_code);
-        
+  if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
+  //APP_ERROR_CHECK(err_code);
 }
 
 /**@brief
@@ -686,9 +612,10 @@ static void time_ecomodecheck_count_hanlder(void * p_context)
       }
     }
   }
-  m_eco_adv_stop = bEco_Mode;
   NRF_LOG_INFO("ECO mode = %d %02X:%02X", m_eco_adv_stop, m_pre_time.hours, m_pre_time.minutes);
   NRF_LOG_INFO("(%02X:%02X-%02X:%02X)", m_eco_start_time.dec.Hours, m_eco_start_time.dec.Minutes, m_eco_finish_time.dec.Hours, m_eco_finish_time.dec.Minutes);  
+  return;
+  m_eco_adv_stop = bEco_Mode;
 }
 
 
@@ -1179,7 +1106,7 @@ static void services_init(void)
 
   // Timeslot Mode
   if (_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] != 0x00) m_timesot_mode = true;
-  //m_timesot_mode = true;    // ##DEBUG##
+  m_timesot_mode = true;    // ##DEBUG##
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
@@ -1364,19 +1291,6 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
   on_ble_evt(p_ble_evt);
 }
 
-
-/**@brief Function for dispatching a system event to interested modules.
- *
- * @details This function is called from the System event interrupt handler after a system
- *          event has been received.
- *
- * @param[in]   sys_evt   System stack event.
- */
-static void soc_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
-{
-  nrf_evt_signal_handler(p_ble_evt);
-}
-
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
   Fs_sys_event_handler(sys_evt);
@@ -1388,26 +1302,30 @@ static void sys_evt_dispatch(uint32_t sys_evt)
  */
 static void ble_stack_init(void)
 {
-  uint32_t err_code;
+    ret_code_t err_code;
 
-  err_code = nrf_sdh_enable_request();
-  APP_ERROR_CHECK(err_code);
+    err_code = nrf_sdh_enable_request();
+    APP_ERROR_CHECK(err_code);
 
-  // Configure the BLE stack using the default settings.
-  // Fetch the start address of the application RAM.
-  uint32_t ram_start = 0;
-  err_code = nrf_sdh_ble_default_cfg_set(APP_BLE_CONN_CFG_TAG, &ram_start);
-  APP_ERROR_CHECK(err_code);
+    // Configure the BLE stack using the default settings.
+    // Fetch the start address of the application RAM.
+    uint32_t ram_start = 0;
+    err_code = nrf_sdh_ble_default_cfg_set(APP_BLE_CONN_CFG_TAG, &ram_start);
+    APP_ERROR_CHECK(err_code);
 
-  //Enable BLE SDH to enable events from BLE.
-  err_code = nrf_sdh_ble_enable(&ram_start);
-  APP_ERROR_CHECK(err_code);
+    // Enable BLE stack.
+    err_code = nrf_sdh_ble_enable(&ram_start);
+    APP_ERROR_CHECK(err_code);
+  
+    // Enable DCDC
+    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
+    APP_ERROR_CHECK(err_code);
 
-  // Register handler for BLE events.
-  //NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
-//  NRF_SDH_SOC_OBSERVER(m_soc_observer, APP_SOC_OBSERVER_PRIO, soc_evt_handler, NULL);
+    // Register a handler for sys events.
+    NRF_SDH_SOC_OBSERVER(m_soc_observer, BLE_ADV_SOC_OBSERVER_PRIO, timeslot_soc_evt_handler, NULL);
+    // Register handler for BLE events.
+    NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 }
-
 
 /**@brief Function for power management.
  */
@@ -1704,8 +1622,7 @@ int main(void)
 
   timers_init();
   gpiote_init();
-  //sble_stack_init();
-  timeslot_ble_stack_init();
+  ble_stack_init();
   tb_manager_pstorage_init();
 
   err_code = nrf_pwr_mgmt_init();
@@ -1741,26 +1658,21 @@ int main(void)
   application_timers_start();
 
   // Start execution.
+  advertising_mode_reset();
 
+#ifdef TIMESLOT_MODE
+  advertising_init(BLE_ADV_MODE_BMS);
+#else
+  if (ble_bms_get_timeslot_status() != 0x00) {
     timeslot_advertising_init(false);  // Initialize Nordic beacon
     timeslot_advertising_init(true);   // Initialize iBeacon
     timeslot_beacon_adv_init();        // Initialize TimeSlot beacon
-
-    // Notification
-    ble_radio_notification_init(APP_IRQ_PRIORITY_LOW,
-      NRF_RADIO_NOTIFICATION_DISTANCE_5500US, timeslot_on_radio_event);
-
-    // Start execution.
-    NRF_LOG_INFO("Beacon example started.");
-
-    // Start SoftDevice beacon, first Nordic type
-    m_adv_data.adv_data.p_data  = m_enc_advdata;
-    m_adv_data.adv_data.len     = m_enc_advdata_len;
-    (void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
-    (void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
-    // Start TimeSlot iBeacon
-    timeslot_start();
-
+  }
+  else {
+    advertising_init(BLE_ADV_MODE_BMS);
+  }
+#endif
+  
 #if defined(LED_ENABLED)
   blink_led(2);
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
@@ -1771,38 +1683,7 @@ int main(void)
     execute_pending_led(LED_OFF);
   }
 #endif
-  // Should not reach here.
-  for (;;)
-  {
-#ifdef FREERTOS_SWITCH
-    APP_ERROR_HANDLER(NRF_ERROR_FORBIDDEN);
-#else
-    UNUSED_RETURN_VALUE(NRF_LOG_PROCESS());
-    NRF_LOG_FLUSH();
-    if (NRF_LOG_PROCESS() == false)
-    {
-        nrf_pwr_mgmt_run();
-    }
-    //power_manage();
-  }
-#endif
 
-
-  advertising_mode_reset();
-
-  advertising_init(BLE_ADV_MODE_BMS);
-/*  
-#if defined(LED_ENABLED)
-  blink_led(2);
-  uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
-    execute_pending_led(LED_ON);
-  }
-  else {
-    execute_pending_led(LED_OFF);
-  }
-#endif
-*/
   m_adv_count.value = 0;           
   m_sec_count_100ms.value = 0;     
 
@@ -1817,15 +1698,7 @@ int main(void)
   // once build all advertising packet data
   build_all_data();
 
-#ifdef FREERTOS_SWITCH
-  // Create a FreeRTOS task for the BLE stack.
-  // The task will run advertising_start() before entering its loop.
-  nrf_sdh_freertos_init(advertising_start, &erase_bonds);
-#else
-  advertising_start();
-#endif
-
-  // Start execution.
+  // FreeRTOS Control Task Initialize
 #ifdef FREERTOS_SWITCH
   #ifdef TASK_ADV_RESUME
     if (pdPASS != xTaskCreate(tsk_Advertising_start, "vAdvertising_start", 256, NULL, 1, &m_advertising_start)) 
@@ -1840,10 +1713,29 @@ int main(void)
   #endif
 #endif
 
+#ifdef TIMESLOT_MODE
+  #ifdef FREERTOS_SWITCH
+    // Create a FreeRTOS task for the BLE stack.
+    // The task will run advertising_start() before entering its loop.
+    nrf_sdh_freertos_init(advertising_start, &erase_bonds);
+  #else
+    advertising_start();
+  #endif
+#else
+  // Notification
+  ble_radio_notification_init(APP_IRQ_PRIORITY_LOW, NRF_RADIO_NOTIFICATION_DISTANCE_5500US, timeslot_on_radio_event);
+
+  // Start SoftDevice beacon,
+  //m_adv_data.adv_data.p_data  = m_enc_advdata;
+  //m_adv_data.adv_data.len     = m_enc_advdata_len;
+  //(void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
+  //(void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
+  advertising_start();
+
   // Timeslot Started
   if (ble_bms_get_timeslot_status() != 0x00) timeslot_start();
-
-  // App Started
+#endif
+  // Start execution.
   NRF_LOG_INFO("Tangerin Beacon started.");
 
 #ifdef FREERTOS_SWITCH
@@ -1857,16 +1749,18 @@ int main(void)
   // Should not reach here.
   for (;;)
   {
-#ifdef FREERTOS_SWITCH
+  #ifdef FREERTOS_SWITCH
     APP_ERROR_HANDLER(NRF_ERROR_FORBIDDEN);
-#else
+  #else
     UNUSED_RETURN_VALUE(NRF_LOG_PROCESS());
     NRF_LOG_FLUSH();
     if (NRF_LOG_PROCESS() == false)
     {
         nrf_pwr_mgmt_run();
     }
-    //power_manage();
+  #ifdef CONSUMPTION_CURRENT_EXAMINATION
+    power_manage();
+  #endif
 #endif
   }
 }

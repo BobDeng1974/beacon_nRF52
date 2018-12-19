@@ -123,11 +123,12 @@ void advertising_start(void)
   m_adv_params.filter_policy = BLE_GAP_ADV_FP_ANY;
 
   // support frequency less than 100 msec 
-  if (txFrequencyValue_msec < 100) {
-    txFrequencyValue = BLE_GAP_ADV_INTERVAL_MIN;  //BLE_GAP_ADV_NONCON_INTERVAL_MIN;
-    timeout = 100;
-  }
-
+  //if (txFrequencyValue_msec < 100) {
+  //  txFrequencyValue = BLE_GAP_ADV_INTERVAL_MIN;  //BLE_GAP_ADV_NONCON_INTERVAL_MIN;
+  //  timeout = 100;
+  //}
+  txFrequencyValue = APP_ADV_INTERVAL_1111;
+  txFrequencyValue_msec = APP_ADV_INTERVAL_1111_MSEC;
   m_adv_params.interval    = txFrequencyValue + ADV_INTERVAL_MARGIN;
   //m_adv_params.duration    = timeout + ADV_TIMEOUT_MARGIN;
 
@@ -216,6 +217,7 @@ void start_adv_switch_timer(uint8_t txFreq)
   uint32_t             err_code;
 
   uint16_t txFrequencyValue = get_beacon_frequency(txFreq, TIME_UNIT_MSEC); 
+  txFrequencyValue = APP_ADV_INTERVAL_1111_MSEC;
 
 #ifndef ADV_SWITCH_TIMER_APP_TIMER
   // Create adv_switch timer.
