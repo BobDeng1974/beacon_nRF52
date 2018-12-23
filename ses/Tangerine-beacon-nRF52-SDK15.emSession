@@ -61,6 +61,8 @@
    <Watchpoint numelements="10" expression="m_data_id_str" evalMode="2" name="m_data_id_str" radix="16" linenumber="506" filename="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" list=""/>
    <Watchpoint numelements="2" expression="m_data_action_str" evalMode="2" name="m_data_action_str" radix="16" linenumber="507" filename="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" list=""/>
    <Watchpoint numelements="0" expression="p_pm_evt->params.peer_data_update_failed.error" evalMode="0" name="p_pm_evt->params.peer_data_update_failed.error" radix="-1" linenumber="508" filename="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" list=""/>
+   <Watchpoint numelements="40" expression="m_adv_pdu" evalMode="2" name="m_adv_pdu" radix="16" linenumber="56" filename="../timeslot.c" list=""/>
+   <Watchpoint numelements="40" expression="adv_pdu" evalMode="2" name="adv_pdu" radix="-1" linenumber="150" filename="../timeslot.c" list=""/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -73,19 +75,22 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="452" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="414" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="4" y="258" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="232" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="330" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="286" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/util/app_error_weak.c" selected="0" top="56" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1598" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="1549" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="4" y="268" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="210" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="67" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="1" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/util/app_error_weak.c" selected="0" top="29" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="806" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/s132/headers/nrf_soc.h" selected="0" top="763" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="188" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s" selected="0" top="58" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="188" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s" selected="0" top="140" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="340" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="312" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="357" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/common/nrf_sdh.c" selected="0" top="323" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="108" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/fds/fds.c" selected="0" top="75" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_data_storage.c" selected="0" top="66" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="268" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_database.c" selected="0" top="235" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager.c" selected="0" top="67" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="248" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" selected="0" top="215" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="357" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/common/nrf_sdh.c" selected="0" top="323" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="108" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/fds/fds.c" selected="0" top="75" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_data_storage.c" selected="0" top="66" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="268" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_database.c" selected="0" top="235" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager.c" selected="0" top="67" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="248" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" selected="0" top="215" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="348" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="323" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="220" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/s132/headers/ble_gap.h" selected="0" top="171" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="377" useTextEdit="1" useBinaryEdit="0" left="0" path="../line.c" selected="0" top="305" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="Tangerine-beacon-nRF52-SDK15" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/beacon_nRF52" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

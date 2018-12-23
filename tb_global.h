@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stddef.h>
+#include <time.h>
 
 #include "system_nrf52.h"
 #include "nordic_common.h"
@@ -70,6 +71,12 @@
   #include "semphr.h"
 #endif
 
+#define bcd2bin(x)  const_bcd2bin(x)
+#define bin2bcd(x)  const_bin2bcd(x)
+
+#define const_bcd2bin(x)	(((x) & 0x0f) + ((x) >> 4) * 10)
+#define const_bin2bcd(x)	((((x) / 10) << 4) + (x) % 10)
+
 //----------------------------------------------------------------------------
 // version number
 //----------------------------------------------------------------------------
@@ -109,6 +116,7 @@
 //----------------------------------------------------------------------------
 extern  uint8_t   m_tbm_scan_mode;
 extern  uint8_t   m_timesot_mode;
+extern  uint8_t   m_advertising_packet_type;
 extern  uint8_t   m_eco_adv_stop;
 extern  ble_gap_addr_t m_device_addr;  // 48-bit address, LSB format
 extern  ble_advertising_t m_advertising;        /**< Advertising module instance. BLE_ADVERTISING_DEF(m_advertising); */

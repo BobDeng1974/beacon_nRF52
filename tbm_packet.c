@@ -344,10 +344,32 @@ void bms_advertising_init(ble_bms_t m_bms)
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_adv_params.duration        = 0;       // Never time out.
 
-  if (ble_bms_get_timeslot_status() != 0x00) {
-    radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-  }
+#ifndef TIMESLOT_DEBUG
+  if (ble_bms_get_timeslot_status() == 0x00) {
 
+    radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
+    {  
+      ble_advertising_init_t init;
+
+      memset(&init, 0, sizeof(init));
+
+      init.advdata.name_type               = BLE_ADVDATA_NO_NAME;
+      init.advdata.include_appearance      = false;
+      init.advdata.flags                   = flags;
+      init.advdata.p_manuf_specific_data   = &tangerine_data;
+
+      init.config.ble_adv_fast_enabled  = true;
+      init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
+      init.config.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
+
+      init.evt_handler = on_adv_evt;
+
+      err_code = ble_advertising_init(&m_advertising, &init);
+      APP_ERROR_CHECK(err_code);
+
+      ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
+    }
+#endif
   err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
   APP_ERROR_CHECK(err_code);
 
@@ -361,14 +383,21 @@ void bms_advertising_init(ble_bms_t m_bms)
   err_code = ble_advdata_encode(&scanrsp, m_adv_data.scan_rsp_data.p_data, &m_adv_data.scan_rsp_data.len);
   APP_ERROR_CHECK(err_code);
 
+  memcpy(&m_ble_adv_data, &m_adv_data, sizeof(ble_gap_adv_data_t));
+
+  //
+  // Set Timeslot Advertising PDU packet
+  //
+  if (ble_bms_get_timeslot_status() != 0x00) {
+    radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
+    return;
+  }
+
   //
   // Set AdvData and ScanResponseData
   //
   err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
   APP_ERROR_CHECK(err_code);
-
-  memcpy(&m_ble_adv_data, &m_adv_data, sizeof(ble_gap_adv_data_t));
-
   //
   // Update TxPower for Manager Packet
   //

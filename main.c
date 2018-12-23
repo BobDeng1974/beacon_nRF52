@@ -59,7 +59,7 @@ STATIC_ASSERT(IS_SRVC_CHANGED_CHARACT_PRESENT);   /** When having DFU Service su
 // ---------------------------------------------------------------------------------------
 #define APP_BLE_CONN_CFG_TAG            1                                  /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define TS_ADV_INTERVAL                 100                               /**< The advertising interval for time-slot based advertisement in ms */
+#define TS_ADV_INTERVAL                 7625                              /**< The advertising interval for time-slot based advertisement in ms */
 #define BLE_ADV_INTERVAL                75                                /**< The advertising interval for BLE-based non-connectable advertisement in ms */
 #define BASE_ADV_INTERVAL               MSEC_TO_UNITS(BLE_ADV_INTERVAL, UNIT_0_625_MS) /**< This value can vary between 20ms to 10.24s). */
 
@@ -281,6 +281,7 @@ static void timeslot_on_radio_event(bool radio_active)
     static bool send_ibeacon = true;
     if (radio_active) 
     {
+      nrf_gpio_pin_toggle(9);
       if (send_ibeacon)
       {
         m_adv_data.adv_data.p_data  = m_enc_advdata2;
@@ -314,6 +315,7 @@ TaskHandle_t    m_LED_control;
 
 uint8_t         m_tbm_scan_mode = false;
 uint8_t         m_timesot_mode = false;
+uint8_t         m_advertising_packet_type = 0x00;
 uint8_t         m_eco_adv_stop = false;
 ble_gap_addr_t  m_device_addr;              // 48-bit address, LSB format
 
@@ -422,10 +424,12 @@ static void save_15sec_timestamp()
   _beacon_info[BINFO_15SEC_TIMESTAMP_IDX+6] = m_line_timestamp.array[6];
   _beacon_info[BINFO_15SEC_TIMESTAMP_IDX+7] = m_line_timestamp.array[7];
   
+#ifdef NO_FLASH_SAVE_TIMESTAMP
   uint32_t err_code;
   err_code = tb_manager_settings_store();
   if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
-  //APP_ERROR_CHECK(err_code);
+  APP_ERROR_CHECK(err_code);
+#endif
 }
 
 /**@brief
@@ -459,10 +463,12 @@ static void calc_rotmm_save_15sec_tgsec_timestamp()
   _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX+2] = rot_mm[2];
   _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX+3] = rot_mm[3];      
 
+#ifdef NO_FLASH_SAVE_TIMESTAMP
   uint32_t err_code;
   err_code = tb_manager_settings_store();
   if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
-  //APP_ERROR_CHECK(err_code);
+  APP_ERROR_CHECK(err_code);
+#endif
 }
 
 /**@brief
@@ -508,10 +514,6 @@ static void time_15000ms_count_hanlder(void * p_context)
 #endif
   NRF_LOG_INFO("time_15000ms_count_hanlder");
 
-  // Not count timecounter for sbeacon and LINE beacon if not be ACTIVE
-  /* if (get_current_advmode() == BLE_ADV_MODE_BMS) { */
-  /*   return; */
-  /* } */
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if ( g_startup_stage == 1 ||
        _beacon_info[BINFO_STATUS_VALUE_IDX] != 4) {
@@ -521,6 +523,8 @@ static void time_15000ms_count_hanlder(void * p_context)
   if (ble_line_beacon_enablep() == 1) {
     m_line_timestamp.value++;
     save_15sec_timestamp();
+    if (ble_bms_get_timeslot_status() != 0x00) set_line_beacon_packet();
+    if (ble_bms_get_timeslot_status() != 0x00) set_line_ibeacon_packet();
   }
   if (ble_tgsec_ibeacon_enablep() == 1) {
     m_tgsec_timestamp.value++;
@@ -1103,9 +1107,28 @@ static void services_init(void)
   uint8_t firmware_version[2] = {APP_FIRMWARE_VERSION_VALUE};
   _beacon_info[BINFO_VERSION_VALUE_IDX]   = firmware_version[0];
   _beacon_info[BINFO_VERSION_VALUE_IDX+1] = firmware_version[1];
-
   // Timeslot Mode
-  if (_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] != 0x00) m_timesot_mode = true;
+  uint8_t timeslot_mode = _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX];
+  if (timeslot_mode != 0x00) {
+    m_timesot_mode = true;
+    switch(timeslot_mode & 0x0f) {
+    case 0 :  // TGR
+      m_advertising_packet_type = 0x40; break;
+    case 1 :  // iBeacon + TGR
+      m_advertising_packet_type = 0x01; break;
+    case 2 :  // Secure iBeacon + TGR
+      m_advertising_packet_type = 0x20; break;
+    case 3 :  // LINE + TGR
+      m_advertising_packet_type = 0x10; break;
+    case 4 :  // LINE + iBeacon + TGR
+      m_advertising_packet_type = 0x11; break;
+    case 5 :  // LINE + Secure iBeacon + TGR
+      m_advertising_packet_type = 0x30; break;
+    default :
+      m_advertising_packet_type = 0x40; break;
+    }  
+  }
+  m_advertising_packet_type = 0x10;    // ##DEBUG##
   m_timesot_mode = true;    // ##DEBUG##
 
   // DFU Services
@@ -1590,7 +1613,7 @@ void clock_init(void)
 /**@brief F unction for application main entry.
  */
 int main(void)
- {
+{
   uint32_t err_code;
   bool erase_bonds;
 
@@ -1672,6 +1695,7 @@ int main(void)
     advertising_init(BLE_ADV_MODE_BMS);
   }
 #endif
+    advertising_init(BLE_ADV_MODE_BMS);
   
 #if defined(LED_ENABLED)
   blink_led(2);
@@ -1730,13 +1754,15 @@ int main(void)
   //m_adv_data.adv_data.len     = m_enc_advdata_len;
   //(void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
   //(void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
-  advertising_start();
+  
+  
+  ////advertising_start();
 
   // Timeslot Started
   if (ble_bms_get_timeslot_status() != 0x00) timeslot_start();
 #endif
   // Start execution.
-  NRF_LOG_INFO("Tangerin Beacon started.");
+    NRF_LOG_INFO("Tangerin Beacon started.");
 
 #ifdef FREERTOS_SWITCH
   // Start FreeRTOS scheduler.

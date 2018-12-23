@@ -387,7 +387,11 @@ uint8_t* ble_bms_get_beacon_info(void)
 
 uint8_t ble_ibeacon_enablep() 
 {
-  if (BMS_FLG_GET(m_beacon_info[ADVERTISE_SETTING_IDX], BMS_IBEACON_ENABLED) != 0) {
+  uint8_t bAdvSetting = m_beacon_info[ADVERTISE_SETTING_IDX];
+  
+  if (ble_bms_get_timeslot_status() != 0x00) bAdvSetting = m_advertising_packet_type;
+
+  if (BMS_FLG_GET(bAdvSetting, BMS_IBEACON_ENABLED) != 0) {
     return 1;
   }
   else {
@@ -439,7 +443,11 @@ uint8_t ble_eddystone_tlm_enablep()
 
 uint8_t ble_line_beacon_enablep() 
 {
-  if (BMS_FLG_GET(m_beacon_info[ADVERTISE_SETTING_IDX], BMS_LINE_BEACON_ENABLED) != 0) {
+  uint8_t bAdvSetting = m_beacon_info[ADVERTISE_SETTING_IDX];
+  
+  if (ble_bms_get_timeslot_status() != 0x00) bAdvSetting = m_advertising_packet_type;
+
+  if (BMS_FLG_GET(bAdvSetting, BMS_LINE_BEACON_ENABLED) != 0) {
     return 1;
   }
   else {
@@ -449,7 +457,11 @@ uint8_t ble_line_beacon_enablep()
 
 uint8_t ble_tgsec_ibeacon_enablep() 
 {
-  if (BMS_FLG_GET(m_beacon_info[ADVERTISE_SETTING_IDX], BMS_TGSEC_IBEACON_ENABLED) != 0) {
+  uint8_t bAdvSetting = m_beacon_info[ADVERTISE_SETTING_IDX];
+  
+  if (ble_bms_get_timeslot_status() != 0x00) bAdvSetting = m_advertising_packet_type;
+
+  if (BMS_FLG_GET(bAdvSetting, BMS_TGSEC_IBEACON_ENABLED) != 0) {
     return 1;
   }
   else {

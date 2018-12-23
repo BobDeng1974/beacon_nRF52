@@ -41,4 +41,6 @@ void timeslot_start(void);
  */
 void timeslot_stop(void);
 
+void radio_pdu_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params,  uint8_t *adv_pdu);
+
 #endif // TIMESLOT_H__

@@ -7,6 +7,7 @@
 #define ADV_TYPE_LEN 2
 
 #define APP_DEVICE_TYPE               0x02                              /**< 0x02 refers to Beacon. */
+#define APP_PDU_INFO_LENGTH            40
 
 #define ADV_CHANNEL_37                 37
 #define ADV_CHANNEL_38                 38
@@ -43,33 +44,9 @@ enum mode_t
   ADV_DONE                                                  /** Done advertising*/
 };
 
-//----------------------------------
-#define APP_PDU_INFO_LENGTH             40    
-static uint8_t m_adv_pdu[APP_PDU_INFO_LENGTH];
-uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params)
-{
-  int mode = get_current_advmode();
+static  uint8_t m_adv_pdu[APP_PDU_INFO_LENGTH];
+static  uint8_t line_packet_sw = false;
 
-  memset(m_adv_pdu, 0x00, APP_PDU_INFO_LENGTH);
-
-  // Packer header
-  m_adv_pdu[0] = p_adv_params->properties.type;    // Advertisement type ADV_NONCONN_IND
-  m_adv_pdu[1] = p_adv_data->adv_data.len + sizeof(m_device_addr.addr); 
-
-  // Advertising Address
-  m_adv_pdu[2] = m_device_addr.addr[5];
-  m_adv_pdu[3] = m_device_addr.addr[4];
-  m_adv_pdu[4] = m_device_addr.addr[3];
-  m_adv_pdu[5] = m_device_addr.addr[2];
-  m_adv_pdu[6] = m_device_addr.addr[1];
-  m_adv_pdu[7] = m_device_addr.addr[0];
-
-  // Advertising Data
-  memcpy(&m_adv_pdu[8], p_adv_data->adv_data.p_data, p_adv_data->adv_data.len);
-    
-  return &m_adv_pdu[0];
-}
-//----------------------------------
 
 nrf_radio_request_t * m_configure_next_event(void)
 {
@@ -77,7 +54,7 @@ nrf_radio_request_t * m_configure_next_event(void)
     m_beacon.timeslot_request.params.normal.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
 //    m_beacon.timeslot_request.params.normal.priority    = NRF_RADIO_PRIORITY_HIGH;
     m_beacon.timeslot_request.params.normal.priority    = NRF_RADIO_PRIORITY_NORMAL;
-    m_beacon.timeslot_request.params.normal.distance_us = (m_beacon.adv_interval+rand()%10) * 1000;
+    m_beacon.timeslot_request.params.normal.distance_us = m_beacon.adv_interval * 10;
     m_beacon.timeslot_request.params.normal.length_us   = m_beacon.slot_length;
     return &m_beacon.timeslot_request;
 }
@@ -97,12 +74,50 @@ uint32_t m_request_normal(void)
     m_beacon.timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_NORMAL;
     m_beacon.timeslot_request.params.normal.hfclk         = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
     m_beacon.timeslot_request.params.normal.priority      = NRF_RADIO_PRIORITY_NORMAL;
-    m_beacon.timeslot_request.params.normal.distance_us   = (m_beacon.adv_interval+rand()%10) * 1000 * 2;
+    m_beacon.timeslot_request.params.normal.distance_us   = m_beacon.adv_interval * 10 * 2;
     m_beacon.timeslot_request.params.normal.length_us     = m_beacon.slot_length;
     return sd_radio_request(&m_beacon.timeslot_request);
 }
 
-    uint8_t ocnt    = 0;
+void radio_pdu_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params,  uint8_t *adv_pdu)
+{
+  memset(adv_pdu, 0x00, APP_PDU_INFO_LENGTH);
+
+  // Packer header
+  *adv_pdu = 0x60;                             // Advertisement type ADV_NONCONN_IND
+  *(adv_pdu+1) = p_adv_data->adv_data.len + sizeof(m_device_addr.addr); 
+
+  // Advertising Address
+  memcpy(adv_pdu+3, m_device_addr.addr, 6);
+  *(adv_pdu+3) = *(adv_pdu+3) + 1;
+
+  // Advertising Data
+  memcpy(adv_pdu+9, p_adv_data->adv_data.p_data, p_adv_data->adv_data.len);
+}
+
+uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params)
+{
+  memset(m_adv_pdu, 0x00, APP_PDU_INFO_LENGTH);
+
+  // Packer header
+  m_adv_pdu[0] = p_adv_params->properties.type;    // Advertisement type ADV_NONCONN_IND
+  m_adv_pdu[0] = 0x60;                             // Advertisement type ADV_NONCONN_IND
+  m_adv_pdu[1] = p_adv_data->adv_data.len + sizeof(m_device_addr.addr); 
+
+  // Advertising Address
+  m_adv_pdu[3] = m_device_addr.addr[0] + 1;
+  m_adv_pdu[4] = m_device_addr.addr[1];
+  m_adv_pdu[5] = m_device_addr.addr[2];
+  m_adv_pdu[6] = m_device_addr.addr[3];
+  m_adv_pdu[7] = m_device_addr.addr[4];
+  m_adv_pdu[8] = m_device_addr.addr[5];
+
+  // Advertising Data
+  memcpy(&m_adv_pdu[9], p_adv_data->adv_data.p_data, p_adv_data->adv_data.len);
+    
+  return &m_adv_pdu[0];
+}
+
 static uint8_t * m_get_adv_packet(void)
 {
     static uint8_t adv_pdu[40];
@@ -136,7 +151,6 @@ static uint8_t * m_get_adv_packet(void)
     adv_pdu[offset++] =  0;                                // Beacon data length field (will be filled later).
     beacon_data_len_start_idx = offset;
     memcpy(&adv_pdu[offset], &m_beacon.uuid, sizeof(ble_uuid128_t));
-    adv_pdu[offset] = ocnt++;
     offset += sizeof(ble_uuid128_t);
     offset += uint16_encode(m_beacon.major, &adv_pdu[offset]);
     offset += uint16_encode(m_beacon.minor, &adv_pdu[offset]);
@@ -147,7 +161,7 @@ static uint8_t * m_get_adv_packet(void)
     adv_pdu[ADV_DATA_LENGTH_IDX]         = offset - manuf_data_len_start_idx;
     adv_pdu[beacon_data_len_start_idx-1] = offset - beacon_data_len_start_idx;
     
-    return &adv_pdu[0];
+    return &m_adv_pdu[0];
 }
 
 static void m_set_adv_ch(uint32_t channel)
@@ -169,9 +183,12 @@ static void m_set_adv_ch(uint32_t channel)
     }
 }
 
+
 static void m_configure_radio()
 {
-    uint8_t * p_adv_pdu = m_get_adv_packet();
+    uint8_t * p_adv_pdu = get_line_beacon_packet();
+    if (line_packet_sw) p_adv_pdu = get_line_ibeacon_packet();
+    line_packet_sw = !line_packet_sw;
 
     NRF_RADIO->POWER        = 1;
     NRF_RADIO->PCNF0        =   (((1UL) << RADIO_PCNF0_S0LEN_Pos                               ) & RADIO_PCNF0_S0LEN_Msk)
@@ -241,7 +258,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   //nrf_gpio_pin_toggle(9);
 
   signal_callback_return_param.params.request.p_next  = NULL;
-  signal_callback_return_param.callback_action        = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+  signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
   switch (signal_type)
   {
@@ -265,11 +282,11 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
             if (m_beacon.keep_running)
             {
                 signal_callback_return_param.params.request.p_next = m_configure_next_event();
-                signal_callback_return_param.callback_action       = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
+                signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
             }
             else
             {
-                signal_callback_return_param.callback_action       = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
+                signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
             }
             break;
         }
