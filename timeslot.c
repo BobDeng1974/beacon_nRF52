@@ -65,7 +65,7 @@ uint32_t m_request_earliest(enum NRF_RADIO_PRIORITY priority)
     m_beacon.timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
     m_beacon.timeslot_request.params.earliest.priority    = priority;
     m_beacon.timeslot_request.params.earliest.length_us   = m_beacon.slot_length;
-    m_beacon.timeslot_request.params.earliest.timeout_us  = 1000000;
+    m_beacon.timeslot_request.params.earliest.timeout_us  = m_beacon.adv_interval * 10;
     return sd_radio_request(&m_beacon.timeslot_request);
 }
 
@@ -255,7 +255,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
   static enum mode_t mode;
 
-  //nrf_gpio_pin_toggle(9);
+  nrf_gpio_pin_toggle(9);
 
   signal_callback_return_param.params.request.p_next  = NULL;
   signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;

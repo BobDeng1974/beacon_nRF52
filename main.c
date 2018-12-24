@@ -22,8 +22,8 @@ STATIC_ASSERT(IS_SRVC_CHANGED_CHARACT_PRESENT);   /** When having DFU Service su
 #define APP_SOC_OBSERVER_PRIO             1                                           /**< Applications' SoC observer priority. You shouldn't need to modify this value. */
 #define APP_BLE_CONN_CFG_TAG              1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define TS_ADV_INTERVAL                   100                                         /**< The advertising interval for time-slot based advertisement in ms */
-#define BLE_ADV_INTERVAL                  76.25                                       /**< The advertising interval for BLE-based non-connectable advertisement in ms */
+#define TS_ADV_INTERVAL                   7625                                        /**< The advertising interval for time-slot based advertisement in ms */
+#define BLE_ADV_INTERVAL                  100                                         /**< The advertising interval for BLE-based non-connectable advertisement in ms */
 #define BASE_ADV_INTERVAL                 MSEC_TO_UNITS(BLE_ADV_INTERVAL, UNIT_0_625_MS) /**< This value can vary between 20ms to 10.24s). */
 
 #define APP_TIMER_MAX_TIMERS              6                                           /**< Maximum number of simultaneously created timers. */
@@ -57,37 +57,24 @@ STATIC_ASSERT(IS_SRVC_CHANGED_CHARACT_PRESENT);   /** When having DFU Service su
 // ---------------------------------------------------------------------------------------
 // timelost test
 // ---------------------------------------------------------------------------------------
-#define APP_BLE_CONN_CFG_TAG            1                                  /**< A tag identifying the SoftDevice BLE configuration. */
-
-#define TS_ADV_INTERVAL                 7625                              /**< The advertising interval for time-slot based advertisement in ms */
-#define BLE_ADV_INTERVAL                75                                /**< The advertising interval for BLE-based non-connectable advertisement in ms */
-#define BASE_ADV_INTERVAL               MSEC_TO_UNITS(BLE_ADV_INTERVAL, UNIT_0_625_MS) /**< This value can vary between 20ms to 10.24s). */
-
-#define APP_BEACON_INFO_LENGTH          0x17                               /**< Total length of information advertised by the Beacon. */
-#define APP_ADV_DATA_LENGTH             0x15                               /**< Length of manufacturer specific data in the advertisement. */
-#define APP_DEVICE_TYPE                 0x02                               /**< 0x02 refers to Beacon. */
-#define APP_MEASURED_RSSI               0xC3                               /**< The Beacon's measured RSSI at 1 meter distance in dBm. */
-#define APP_COMPANY_IDENTIFIER          0x0059                             /**< Company identifier for Nordic Semiconductor ASA. as per www.bluetooth.org. */
-#define APP_APPLE_IDENTIFIER            0x004C                            /**< Company identifier for Apple. as per www.bluetooth.org. */
-#define APP_MAJOR_VALUE                 0x01, 0x02                         /**< Major value used to identify Beacons. */
-#define APP_MINOR_VALUE                 0x03, 0x04                         /**< Minor value used to identify Beacons. */
+#define APP_BEACON_INFO_LENGTH          0x17                                /**< Total length of information advertised by the Beacon. */
+#define APP_ADV_DATA_LENGTH             0x15                                /**< Length of manufacturer specific data in the advertisement. */
+#define APP_DEVICE_TYPE                 0x02                                /**< 0x02 refers to Beacon. */
+#define APP_MEASURED_RSSI               0xC3                                /**< The Beacon's measured RSSI at 1 meter distance in dBm. */
+#define APP_COMPANY_IDENTIFIER          0x0059                              /**< Company identifier for Nordic Semiconductor ASA. as per www.bluetooth.org. */
+#define APP_APPLE_IDENTIFIER            0x004C                              /**< Company identifier for Apple. as per www.bluetooth.org. */
+#define APP_MAJOR_VALUE                 0x01, 0x02                          /**< Major value used to identify Beacons. */
+#define APP_MINOR_VALUE                 0x03, 0x04                          /**< Minor value used to identify Beacons. */
 #define APP_BEACON_UUID                 0x01, 0x12, 0x23, 0x34, \
                                         0x45, 0x56, 0x67, 0x78, \
                                         0x89, 0x9a, 0xab, 0xbc, \
-                                        0xcd, 0xde, 0xef, 0xf0            /**< Proprietary UUID for Beacon. */
+                                        0xcd, 0xde, 0xef, 0xf0              /**< Proprietary UUID for Beacon. */
 
-#define DEAD_BEEF                       0xDEADBEEF                         /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
-
-#if defined(USE_UICR_FOR_MAJ_MIN_VALUES)
-#define MAJ_VAL_OFFSET_IN_BEACON_INFO   18                                 /**< Position of the MSB of the Major Value in m_beacon_info array. */
-#define UICR_ADDRESS                    0x10001080                         /**< Address of the UICR register used by this example. The major and minor versions to be encoded into the advertising data will be picked up from this location. */
-#endif
-
-static ble_gap_adv_params_t timeslot_m_adv_params;                                  /**< Parameters to be passed to the stack when starting advertising. */
-static uint8_t              timeslot_m_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET; /**< Advertising handle used to identify an advertising set. */
-static uint8_t              m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set. */
-static uint8_t              m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set (iBeacon). */
-static uint16_t             m_enc_advdata_len  = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
+static ble_gap_adv_params_t             timeslot_m_adv_params;              /**< Parameters to be passed to the stack when starting advertising. */
+static uint8_t                          timeslot_m_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET; /**< Advertising handle used to identify an advertising set. */
+static uint8_t                          m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set. */
+static uint8_t                          m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set (iBeacon). */
+static uint16_t                         m_enc_advdata_len  = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
 
 /**@brief Struct that contains pointers to the encoded advertising data. */
 static ble_gap_adv_data_t m_adv_data =
@@ -140,27 +127,6 @@ static void timeslot_advertising_init(bool is_ibeacon)
     {
         manuf_specific_data.company_identifier = APP_COMPANY_IDENTIFIER;
     }
-#if defined(USE_UICR_FOR_MAJ_MIN_VALUES)
-    // If USE_UICR_FOR_MAJ_MIN_VALUES is defined, the major and minor values will be read from the
-    // UICR instead of using the default values. The major and minor values obtained from the UICR
-    // are encoded into advertising data in big endian order (MSB First).
-    // To set the UICR used by this example to a desired value, write to the address 0x10001080
-    // using the nrfjprog tool. The command to be used is as follows.
-    // nrfjprog --snr <Segger-chip-Serial-Number> --memwr 0x10001080 --val <your major/minor value>
-    // For example, for a major value and minor value of 0xabcd and 0x0102 respectively, the
-    // the following command should be used.
-    // nrfjprog --snr <Segger-chip-Serial-Number> --memwr 0x10001080 --val 0xabcd0102
-    uint16_t major_value = ((*(uint32_t *)UICR_ADDRESS) & 0xFFFF0000) >> 16;
-    uint16_t minor_value = ((*(uint32_t *)UICR_ADDRESS) & 0x0000FFFF);
-
-    uint8_t index = MAJ_VAL_OFFSET_IN_BEACON_INFO;
-
-    m_beacon_info[index++] = MSB_16(major_value);
-    m_beacon_info[index++] = LSB_16(major_value);
-
-    m_beacon_info[index++] = MSB_16(minor_value);
-    m_beacon_info[index++] = LSB_16(minor_value);
-#endif
 
     manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
     manuf_specific_data.data.size   = APP_BEACON_INFO_LENGTH;
@@ -281,7 +247,7 @@ static void timeslot_on_radio_event(bool radio_active)
     static bool send_ibeacon = true;
     if (radio_active) 
     {
-      nrf_gpio_pin_toggle(9);
+      //nrf_gpio_pin_toggle(9);
       if (send_ibeacon)
       {
         m_adv_data.adv_data.p_data  = m_enc_advdata2;
@@ -1691,11 +1657,9 @@ int main(void)
     timeslot_advertising_init(true);   // Initialize iBeacon
     timeslot_beacon_adv_init();        // Initialize TimeSlot beacon
   }
-  else {
-    advertising_init(BLE_ADV_MODE_BMS);
-  }
 #endif
-    advertising_init(BLE_ADV_MODE_BMS);
+
+  //advertising_init(BLE_ADV_MODE_BMS);
   
 #if defined(LED_ENABLED)
   blink_led(2);
@@ -1750,10 +1714,10 @@ int main(void)
   ble_radio_notification_init(APP_IRQ_PRIORITY_LOW, NRF_RADIO_NOTIFICATION_DISTANCE_5500US, timeslot_on_radio_event);
 
   // Start SoftDevice beacon,
-  //m_adv_data.adv_data.p_data  = m_enc_advdata;
-  //m_adv_data.adv_data.len     = m_enc_advdata_len;
-  //(void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
-  //(void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
+  m_adv_data.adv_data.p_data  = m_enc_advdata;
+  m_adv_data.adv_data.len     = m_enc_advdata_len;
+  (void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
+  (void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
   
   
   ////advertising_start();

@@ -1,6 +1,7 @@
 #include "line.h"
 #include "sha.h"
 
+
 static uint8_t        m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded advertising set. */
 static uint8_t        m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded scan response data set. */
 
@@ -47,6 +48,10 @@ static uint8_t line_beacon_service_frame[APP_LINE_BEACON_SERVICE_FRAME_LENGTH] =
 };
 
 static  uint8_t secmsg[LINE_SECMSG_LENGTH];  /**< LINE Beacon Packet Secure Message */
+
+#define LINE_BEACON_PDU_LENGTH        40    
+static  uint8_t m_pdu_line_beacon[LINE_BEACON_PDU_LENGTH];
+static  uint8_t m_pdu_line_ibeacon[LINE_BEACON_PDU_LENGTH];
 
 
 /* private functions */
@@ -324,3 +329,96 @@ static void sha256_encoding(const uint8_t *in_data, unsigned int in_count, uint8
   SHA256Result(psha_context, digest);
 }
 
+/**@brief LINE ibeacon initialization
+ */
+void set_line_ibeacon_packet()
+{
+  uint32_t      err_code;
+  ble_advdata_t advdata;
+  uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED | BLE_GAP_ADV_FLAG_LE_GENERAL_DISC_MODE;
+  uint8_t       *_beacon_info = ble_bms_get_beacon_info();
+
+  if (g_is_startup == 1) build_line_ibeacon_data();
+
+  // iBeacon Advertising Data
+  ble_advdata_manuf_data_t manuf_specific_data;
+  manuf_specific_data.company_identifier = APP_COMPANY_IDENTIFIER;
+  manuf_specific_data.data.p_data        = (uint8_t *) line_ibeacon_info;
+  manuf_specific_data.data.size          = APP_LINE_IBEACON_INFO_LENGTH;
+
+  // Build and set advertising data
+  memset(&advdata, 0, sizeof(advdata));
+  advdata.name_type               = BLE_ADVDATA_NO_NAME;
+  advdata.include_appearance      = false;
+  advdata.flags                   = flags;
+  advdata.p_manuf_specific_data   = &manuf_specific_data;
+  
+  m_adv_data.adv_data.len = 0x1f;     // Bug v41107 len=0x03 
+
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
+  APP_ERROR_CHECK(err_code);
+
+  memset(&m_adv_params, 0, sizeof(m_adv_params));
+
+  // Set Timeslot Advertising PDU packet
+  radio_pdu_configure(&m_adv_data, &m_adv_params, &m_pdu_line_ibeacon);
+}
+
+uint8_t * get_line_ibeacon_packet(void)
+{
+  return &m_pdu_line_ibeacon;
+}
+
+/**@brief LINE Beacon Packet initialization
+ */
+void set_line_beacon_packet()
+{
+  uint32_t      err_code;
+  
+  // service uuid
+  uint16_union_t service_uuid;
+  uint8_t uuid_tmp[] = {LINE_BEACON_SERVICE_UUID};
+  service_uuid.array[0] = uuid_tmp[0];
+  service_uuid.array[1] = uuid_tmp[1];
+
+  // Ad Structure #1
+  // Complete list of 16bit service UUID
+  ble_uuid_t uuids[] = {{service_uuid.value, BLE_UUID_TYPE_BLE}};
+  ble_advdata_uuid_list_t uuid_list = {1, uuids};
+
+  ble_advdata_t advdata;
+  uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED | BLE_GAP_ADV_FLAG_LE_GENERAL_DISC_MODE;
+
+  memset(&advdata, 0, sizeof(advdata));
+  advdata.name_type               = BLE_ADVDATA_NO_NAME;
+  advdata.include_appearance      = false;
+  advdata.flags                   = flags;
+  advdata.uuids_complete          = uuid_list;
+
+  //if (g_is_startup == 1)
+  build_line_beacon_packet_servicedata();
+
+  // Ad Structure #2
+  // Service Data
+  ble_advdata_service_data_t service_data;
+  
+  service_data.service_uuid = service_uuid.value;
+
+  uint8_array_t data = {APP_LINE_BEACON_SERVICE_FRAME_LENGTH, line_beacon_service_frame};
+  service_data.data = data;
+  advdata.p_service_data_array = &service_data;
+  advdata.service_data_count = 1;
+
+  // set adv frame and service frame to ble packet
+  m_adv_data.adv_data.len = 0x1f;     // Bug v41107 len=0x03 
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
+  APP_ERROR_CHECK(err_code);
+
+  // Set Timeslot Advertising PDU packet
+  radio_pdu_configure(&m_adv_data, &m_adv_params, &m_pdu_line_beacon);
+}
+
+uint8_t * get_line_beacon_packet(void)
+{
+  return &m_pdu_line_beacon;
+}

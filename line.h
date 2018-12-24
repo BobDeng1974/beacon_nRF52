@@ -28,12 +28,17 @@
 #define LINE_SECMSG_ORIGIN_LENGTH             26
 #define LINE_SECMSG_LENGTH                     7
 
-
 void build_line_ibeacon_data(void);
 void line_ibeacon_advertising_init();
 
 void build_line_beacon_packet_servicedata(void);
 void line_beacon_packet_advertising_init();
+
+void set_line_ibeacon_packet(void);
+uint8_t * get_line_ibeacon_packet(void);
+
+void set_line_beacon_packet(void);
+uint8_t * get_line_beacon_packet(void);
 
 void line_sha256_init(void);
 
