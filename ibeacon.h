@@ -20,5 +20,8 @@
 void build_ibeacon_data(void);
 void ibeacon_advertising_init();
 
+void set_ibeacon_packet(void);
+uint8_t * get_ibeacon_packet(void);
+
 
 #endif /* _IBEACON_H_ */

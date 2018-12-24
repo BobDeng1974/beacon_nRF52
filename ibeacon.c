@@ -1,6 +1,8 @@
 #include "ibeacon.h"
 
-static uint8_t clbeacon_info[APP_CLBEACON_INFO_LENGTH] =                /**< Information advertised by the iBeacon. */
+#define IBEACON_PDU_LENGTH        40    
+
+static uint8_t  clbeacon_info[APP_CLBEACON_INFO_LENGTH] =         /**< Information advertised by the iBeacon. */
 {
     APP_DEVICE_TYPE,     // Manufacturer specific information. Specifies the device type in this implementation.
     APP_IBEACON_UUID,    // 128 bit UUID value.
@@ -9,6 +11,9 @@ static uint8_t clbeacon_info[APP_CLBEACON_INFO_LENGTH] =                /**< Inf
     APP_MEASURED_RSSI    // Manufacturer specific information. The iBeacon's measured TX power in this implementation.
 };
 
+static uint8_t  m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded advertising set. */
+static uint8_t  m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded scan response data set. */
+static uint8_t  m_pdu_ibeacon[IBEACON_PDU_LENGTH];
 
 /**@brief Building Tangerine iBeacon advertising data
 */
@@ -53,12 +58,8 @@ void build_ibeacon_data(void)
 
 }
 
-
 /**@brief ibeacon initialization
  */
-static uint8_t              m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded advertising set. */
-static uint8_t              m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded scan response data set. */
-
 /**@brief Struct that contains pointers to the encoded advertising data. */
 static ble_gap_adv_data_t m_adv_data =
 {
@@ -78,7 +79,6 @@ void ibeacon_advertising_init()
 {
   uint32_t      err_code;
   ble_advdata_t advdata;
-  ble_advdata_t scanrsp;
   //uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED;
   uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED | BLE_GAP_ADV_FLAG_LE_GENERAL_DISC_MODE;
 
@@ -109,6 +109,17 @@ void ibeacon_advertising_init()
   err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
   APP_ERROR_CHECK(err_code);
 
+  //
+  // Set Timeslot Advertising PDU packet
+  //
+  if (ble_bms_get_timeslot_status() != 0x00) {
+    radio_gap_adv_set_configure(&m_adv_data);
+    return;
+  }
+
+  //
+  // Set AdvData and ScanResponseData
+  //
   memset(&m_adv_params, 0, sizeof(m_adv_params));
 
   m_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
@@ -118,16 +129,6 @@ void ibeacon_advertising_init()
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_adv_params.duration        = 0;       // Never time out.
 
-  //
-  // Set Timeslot Advertising PDU packet
-  //
-  if (ble_bms_get_timeslot_status() != 0x00) {
-    radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-  }
-
-  //
-  // Set AdvData and ScanResponseData
-  //
   err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
   APP_ERROR_CHECK(err_code);
 
@@ -141,3 +142,44 @@ void ibeacon_advertising_init()
   APP_ERROR_CHECK(err_code);
 }
 
+/**@brief LINE Beacon Packet initialization
+ */
+void set_ibeacon_packet(void)
+{
+  uint32_t      err_code;
+  ble_advdata_t advdata;
+  uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED | BLE_GAP_ADV_FLAG_LE_GENERAL_DISC_MODE;
+
+  /* // RSSI */
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+
+  build_ibeacon_data();
+
+  // iBeacon Advertising Data
+  ble_advdata_manuf_data_t manuf_specific_data;
+  manuf_specific_data.company_identifier = APP_COMPANY_IDENTIFIER;
+  manuf_specific_data.data.p_data        = (uint8_t *) clbeacon_info;
+  manuf_specific_data.data.size          = APP_CLBEACON_INFO_LENGTH;
+
+  // Build and set advertising data
+  memset(&advdata, 0, sizeof(advdata));
+  advdata.name_type               = BLE_ADVDATA_NO_NAME;
+  advdata.include_appearance      = false;
+  advdata.flags                   = flags;
+  advdata.p_manuf_specific_data   = &manuf_specific_data;
+  
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
+  APP_ERROR_CHECK(err_code);
+
+  // Set AdvData
+  err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
+  APP_ERROR_CHECK(err_code);
+
+  // Set Timeslot Advertising PDU packet
+  radio_pdu_configure(&m_adv_data, &m_adv_params, &m_pdu_ibeacon);
+}
+
+uint8_t * get_ibeacon_packet(void)
+{
+  return &m_pdu_ibeacon;
+}

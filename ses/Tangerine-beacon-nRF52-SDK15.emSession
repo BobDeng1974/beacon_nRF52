@@ -69,6 +69,7 @@
    <Watchpoint numelements="40" expression="m_pdu_line_beacon" evalMode="2" name="m_pdu_line_beacon" radix="16" linenumber="53" filename="../line.c" list=""/>
    <Watchpoint numelements="40" expression="m_pdu_line_ibeacon" evalMode="2" name="m_pdu_line_ibeacon" radix="-1" linenumber="54" filename="../line.c" list=""/>
    <Watchpoint numelements="190" expression="m_beacon_info" evalMode="2" name="m_beacon_info" radix="16" linenumber="446" filename="../tb_manager.c" list=""/>
+   <Watchpoint numelements="0" expression="m_beacon" evalMode="0" name="m_beacon" radix="16" linenumber="77" filename="../timeslot.c" list=""/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -81,12 +82,12 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="12" y="278" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="238" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1589" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1256" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="163" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="351" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="90" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="60" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="257" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="231" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/util/app_error_weak.c" selected="0" top="69" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="2" y="244" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/s132/headers/nrf_soc.h" selected="0" top="204" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="188" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s" selected="0" top="140" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="244" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/s132/headers/nrf_soc.h" selected="0" top="204" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="188" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s" selected="0" top="102" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="445" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="416" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="357" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/common/nrf_sdh.c" selected="0" top="323" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="108" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/fds/fds.c" selected="0" top="75" codecName="Default"/>
@@ -98,6 +99,7 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="245" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/s132/headers/ble_gap.h" selected="0" top="215" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="420" useTextEdit="1" useBinaryEdit="0" left="0" path="../line.c" selected="0" top="351" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="38" useTextEdit="1" useBinaryEdit="0" left="0" path="../line.h" selected="0" top="7" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.h" selected="0" top="0" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="Tangerine-beacon-nRF52-SDK15" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/beacon_nRF52" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

@@ -239,6 +239,17 @@ void eddtystone_advertising_init(ble_advertising_mode_t eddystone_mode)
   err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
   APP_ERROR_CHECK(err_code);
 
+  //
+  // Set Timeslot Advertising PDU packet
+  //
+  if (ble_bms_get_timeslot_status() != 0x00) {
+    radio_gap_adv_set_configure(&m_adv_data);
+    return;
+  }
+
+  //
+  // Set AdvData and ScanResponseData
+  //
   memset(&m_adv_params, 0, sizeof(m_adv_params));
 
   m_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
@@ -248,16 +259,6 @@ void eddtystone_advertising_init(ble_advertising_mode_t eddystone_mode)
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_adv_params.duration        = 0;       // Never time out.
 
-  //
-  // Set Timeslot Advertising PDU packet
-  //
-  if (ble_bms_get_timeslot_status() != 0x00) {
-    radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-  }
-
-  //
-  // Set AdvData and ScanResponseData
-  //
   err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &m_adv_data, &m_adv_params);
   APP_ERROR_CHECK(err_code);
 

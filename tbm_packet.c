@@ -1,7 +1,7 @@
 #include "tbm_packet.h"
 
 
-static uint8_t bms_info[APP_BMS_INFO_LENGTH] = /**< Information advertised by BMS. */
+static uint8_t bms_info[APP_BMS_INFO_LENGTH] =                  /**< Information advertised by BMS. */
 {
     0x00, 0x00,                                                  // Service ID : 2 bytes
     0x00, 0x00, 0x00, 0x00,                                      // Serial ID : 4 bytes
@@ -11,6 +11,9 @@ static uint8_t bms_info[APP_BMS_INFO_LENGTH] = /**< Information advertised by BM
     0x00,                                                        // Tx Power/Frequency 1 byte
     APP_FIRMWARE_VERSION_VALUE                                   // 2 bytes
 }; // 24bytes
+
+static uint8_t m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded advertising set. */
+static uint8_t m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded scan response data set. */
 
 static uint8_t prev_status = 1;
 
@@ -249,9 +252,6 @@ void build_bms_data(void)
   bms_info[23] = _beacon_info[BINFO_VERSION_VALUE_IDX+1];
 }
 
-static uint8_t              m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded advertising set. */
-static uint8_t              m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];                           /**< Buffer for storing an encoded scan response data set. */
-
 /**@brief Function for handling advertising events.
  *
  * @details This function will be called for advertising events which are passed to the application.
@@ -275,7 +275,6 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
             break;
     }
 }
-
 
 /**@brief Struct that contains pointers to the encoded advertising data. */
 static ble_gap_adv_data_t m_adv_data =
@@ -334,45 +333,6 @@ void bms_advertising_init(ble_bms_t m_bms)
   advdata.flags                   = flags;
   advdata.p_manuf_specific_data   = &tangerine_data;
 
-  // Initialize advertising parameters (used when starting advertising).
-  memset(&m_adv_params, 0, sizeof(m_adv_params));
-
-  m_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
-  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
-  m_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
-  m_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
-  m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
-  m_adv_params.duration        = 0;       // Never time out.
-
-#ifndef TIMESLOT_DEBUG
-  if (ble_bms_get_timeslot_status() == 0x00) {
-
-    radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
-    {  
-      ble_advertising_init_t init;
-
-      memset(&init, 0, sizeof(init));
-
-      init.advdata.name_type               = BLE_ADVDATA_NO_NAME;
-      init.advdata.include_appearance      = false;
-      init.advdata.flags                   = flags;
-      init.advdata.p_manuf_specific_data   = &tangerine_data;
-
-      init.config.ble_adv_fast_enabled  = true;
-      init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
-      init.config.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
-
-      init.evt_handler = on_adv_evt;
-
-      err_code = ble_advertising_init(&m_advertising, &init);
-      APP_ERROR_CHECK(err_code);
-
-      ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
-    }
-#endif
-  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
-  APP_ERROR_CHECK(err_code);
-
   //
   // Build and set advertising scan response
   //
@@ -389,9 +349,22 @@ void bms_advertising_init(ble_bms_t m_bms)
   // Set Timeslot Advertising PDU packet
   //
   if (ble_bms_get_timeslot_status() != 0x00) {
-    radio_gap_adv_set_configure(&m_adv_data, &m_adv_params);
+    radio_gap_adv_set_configure(&m_adv_data);
     return;
   }
+
+  // Initialize advertising parameters (used when starting advertising).
+  memset(&m_adv_params, 0, sizeof(m_adv_params));
+
+  m_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
+  m_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED; // Tangerine PacketはConnectable
+  m_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
+  m_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
+  m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
+  m_adv_params.duration        = 0;       // Never time out.
+
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
+  APP_ERROR_CHECK(err_code);
 
   //
   // Set AdvData and ScanResponseData

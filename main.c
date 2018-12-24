@@ -53,220 +53,9 @@ STATIC_ASSERT(IS_SRVC_CHANGED_CHARACT_PRESENT);   /** When having DFU Service su
 
 #define DEAD_BEEF                         0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-//========================================================
-// ---------------------------------------------------------------------------------------
-// timelost test
-// ---------------------------------------------------------------------------------------
-#define APP_BEACON_INFO_LENGTH          0x17                                /**< Total length of information advertised by the Beacon. */
-#define APP_ADV_DATA_LENGTH             0x15                                /**< Length of manufacturer specific data in the advertisement. */
-#define APP_DEVICE_TYPE                 0x02                                /**< 0x02 refers to Beacon. */
-#define APP_MEASURED_RSSI               0xC3                                /**< The Beacon's measured RSSI at 1 meter distance in dBm. */
-#define APP_COMPANY_IDENTIFIER          0x0059                              /**< Company identifier for Nordic Semiconductor ASA. as per www.bluetooth.org. */
-#define APP_APPLE_IDENTIFIER            0x004C                              /**< Company identifier for Apple. as per www.bluetooth.org. */
-#define APP_MAJOR_VALUE                 0x01, 0x02                          /**< Major value used to identify Beacons. */
-#define APP_MINOR_VALUE                 0x03, 0x04                          /**< Minor value used to identify Beacons. */
-#define APP_BEACON_UUID                 0x01, 0x12, 0x23, 0x34, \
-                                        0x45, 0x56, 0x67, 0x78, \
-                                        0x89, 0x9a, 0xab, 0xbc, \
-                                        0xcd, 0xde, 0xef, 0xf0              /**< Proprietary UUID for Beacon. */
-
-static ble_gap_adv_params_t             timeslot_m_adv_params;              /**< Parameters to be passed to the stack when starting advertising. */
-static uint8_t                          timeslot_m_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET; /**< Advertising handle used to identify an advertising set. */
-static uint8_t                          m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set. */
-static uint8_t                          m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set (iBeacon). */
-static uint16_t                         m_enc_advdata_len  = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
-
-/**@brief Struct that contains pointers to the encoded advertising data. */
-static ble_gap_adv_data_t m_adv_data =
-{
-    .adv_data =
-    {
-        .p_data = m_enc_advdata,
-        .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
-    },
-    .scan_rsp_data =
-    {
-        .p_data = NULL,
-        .len    = 0
-
-    }
-};
-
-
-static uint8_t m_beacon_info[APP_BEACON_INFO_LENGTH] =                    /**< Information advertised by the Beacon. */
-{
-    APP_DEVICE_TYPE,     // Manufacturer specific information. Specifies the device type in this
-                         // implementation.
-    APP_ADV_DATA_LENGTH, // Manufacturer specific information. Specifies the length of the
-                         // manufacturer specific data in this implementation.
-    APP_BEACON_UUID,     // 128 bit UUID value.
-    APP_MAJOR_VALUE,     // Major arbitrary value that can be used to distinguish between Beacons.
-    APP_MINOR_VALUE,     // Minor arbitrary value that can be used to distinguish between Beacons.
-    APP_MEASURED_RSSI    // Manufacturer specific information. The Beacon's measured TX power in
-                         // this implementation.
-};
-
-/**@brief Function for initializing the Advertising functionality.
- *
- * @details Encodes the required advertising data and passes it to the stack.
- *          Also builds a structure to be passed to the stack when starting advertising.
- */
-static void timeslot_advertising_init(bool is_ibeacon)
-{
-    uint32_t      err_code;
-    ble_advdata_t advdata;
-    uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED;
-
-    ble_advdata_manuf_data_t manuf_specific_data;
-
-    if (is_ibeacon)
-    {
-        manuf_specific_data.company_identifier = APP_APPLE_IDENTIFIER;
-    }
-    else
-    {
-        manuf_specific_data.company_identifier = APP_COMPANY_IDENTIFIER;
-    }
-
-    manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
-    manuf_specific_data.data.size   = APP_BEACON_INFO_LENGTH;
-
-    // Build and set advertising data.
-    memset(&advdata, 0, sizeof(advdata));
-
-    advdata.name_type             = BLE_ADVDATA_NO_NAME;
-    advdata.flags                 = flags;
-    advdata.p_manuf_specific_data = &manuf_specific_data;
-
-    if (is_ibeacon)
-    {
-        err_code = ble_advdata_encode(&advdata, m_enc_advdata2, &m_enc_advdata_len);
-        APP_ERROR_CHECK(err_code);
-    }
-    else
-    {
-        err_code = ble_advdata_encode(&advdata, m_enc_advdata, &m_enc_advdata_len);
-        APP_ERROR_CHECK(err_code);
-
-        // Initialize advertising parameters (used when starting advertising).
-        memset(&timeslot_m_adv_params, 0, sizeof(timeslot_m_adv_params));
-
-        timeslot_m_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED;
-        timeslot_m_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
-        timeslot_m_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
-        timeslot_m_adv_params.interval        = BASE_ADV_INTERVAL;
-        timeslot_m_adv_params.duration        = 0;       // Never time out.
-    }
-}
-
-/**@brief Function for handling SoC events.
- *
- * @param[in]   evt_id      Stack SoC event.
- * @param[in]   p_context   Unused.
- */
-static void timeslot_soc_evt_handler(uint32_t evt_id, void * p_context)
-{
-  timeslot_on_sys_evt(evt_id);
-}
-
-/**@brief Function for initializing logging. */
-static void timeslot_log_init(void)
-{
-    ret_code_t err_code = NRF_LOG_INIT(NULL);
-    APP_ERROR_CHECK(err_code);
-
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
-}
-
-/**@brief Function for initializing timers. */
-static void timeslot_timers_init(void)
-{
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
-}
-
-
-/**@brief Function for initializing power management.
- */
-static void timeslot_power_management_init(void)
-{
-    ret_code_t err_code;
-    err_code = nrf_pwr_mgmt_init();
-    APP_ERROR_CHECK(err_code);
-}
-
-
-/**@brief Function for handling the idle state (main loop).
- *
- * @details If there is no pending log operation, then sleep until next the next event occurs.
- */
-static void timeslot_idle_state_handle(void)
-{
-    if (NRF_LOG_PROCESS() == false)
-    {
-        nrf_pwr_mgmt_run();
-    }
-}
-
-/**@brief Function for handling a BeaconAdvertiser error.
- *
- * @param[in]   nrf_error   Error code containing information about what went wrong.
- */
-static void timeslot_beacon_advertiser_error_handler(uint32_t nrf_error)
-{
-    NRF_LOG_INFO("beacon_advertiser_error_handler 0x%08x.\r\n", nrf_error);
-    APP_ERROR_HANDLER(nrf_error);
-}
-
-/**@brief Function for initializing Beacon advertiser.
- */
-static void timeslot_beacon_adv_init(void)
-{
-    static uint8_t beacon_uuid[] = {APP_BEACON_UUID};
-    static ble_beacon_init_t beacon_init;
-    
-    memcpy(beacon_init.uuid.uuid128, beacon_uuid, sizeof(beacon_uuid));
-    beacon_init.adv_interval  = TS_ADV_INTERVAL;
-    beacon_init.major         = APP_MAJOR_VALUE;
-    beacon_init.minor         = APP_MINOR_VALUE;
-    beacon_init.manuf_id      = APP_APPLE_IDENTIFIER;
-    beacon_init.rssi          = APP_MEASURED_RSSI;
-    beacon_init.error_handler = timeslot_beacon_advertiser_error_handler;
-    
-    uint32_t err_code = sd_ble_gap_addr_get(&beacon_init.beacon_addr);
-    APP_ERROR_CHECK(err_code);
-    beacon_init.beacon_addr.addr[0] += 0x01;
-    
-    timeslot_init(&beacon_init);
-}
-
-
-/**@brief Set advertising data for every advertising event. */
-static void timeslot_on_radio_event(bool radio_active) 
-{
-    static bool send_ibeacon = true;
-    if (radio_active) 
-    {
-      //nrf_gpio_pin_toggle(9);
-      if (send_ibeacon)
-      {
-        m_adv_data.adv_data.p_data  = m_enc_advdata2;
-      }
-      else
-      {
-        m_adv_data.adv_data.p_data  = m_enc_advdata;
-      }
-      m_adv_data.adv_data.len = m_enc_advdata_len;
-      (void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, NULL);
-      send_ibeacon = !send_ibeacon;
-    }
-}
-//========================================================
-
-
-// ---------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // static global variables
-// ---------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 NRF_BLE_GATT_DEF(m_gatt);                   /**< GATT module instance. */
 ble_advertising_t     m_advertising;        /**< Advertising module instance. BLE_ADVERTISING_DEF(m_advertising); */
 static ble_dfu_t      m_dfus;               /**< Structure used to identify the DFU service. */
@@ -370,6 +159,169 @@ uint8_t m_adc_status = true;
   APP_TIMER_DEF(m_ecomodecheck_count_timer_id);
   static void m_ecomodecheck_count_timer(void * p_context);
 #endif
+
+//------------------------------------------------------------------------------
+//  timelost
+//------------------------------------------------------------------------------
+#define APP_BEACON_INFO_LENGTH          0x17                                /**< Total length of information advertised by the Beacon. */
+#define APP_ADV_DATA_LENGTH             0x15                                /**< Length of manufacturer specific data in the advertisement. */
+#define APP_DEVICE_TYPE                 0x02                                /**< 0x02 refers to Beacon. */
+#define APP_MEASURED_RSSI               0xC3                                /**< The Beacon's measured RSSI at 1 meter distance in dBm. */
+#define APP_COMPANY_IDENTIFIER          0x0059                              /**< Company identifier for Nordic Semiconductor ASA. as per www.bluetooth.org. */
+#define APP_APPLE_IDENTIFIER            0x004C                              /**< Company identifier for Apple. as per www.bluetooth.org. */
+#define APP_MAJOR_VALUE                 0x01, 0x02                          /**< Major value used to identify Beacons. */
+#define APP_MINOR_VALUE                 0x03, 0x04                          /**< Minor value used to identify Beacons. */
+#define APP_BEACON_UUID                 0x01, 0x12, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78, 0x89, 0x9a, 0xab, 0xbc, 0xcd, 0xde, 0xef, 0xf0              /**< Proprietary UUID for Beacon. */
+
+static ble_gap_adv_params_t             m_sd_adv_params;                    /**< Parameters to be passed to the stack when starting advertising. */
+static uint8_t                          m_sd_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET; /**< Advertising handle used to identify an advertising set. */
+static uint8_t                          m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set. */
+static uint8_t                          m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set (iBeacon). */
+static uint16_t                         m_enc_advdata_len  = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
+
+/**@brief Struct that contains pointers to the encoded advertising data. */
+static ble_gap_adv_data_t m_adv_data =
+{
+    .adv_data =
+    {
+        .p_data = m_enc_advdata,
+        .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
+    },
+    .scan_rsp_data =
+    {
+        .p_data = NULL,
+        .len    = 0
+    }
+};
+
+static uint8_t m_beacon_info[APP_BEACON_INFO_LENGTH] =                    /**< Information advertised by the Beacon. */
+{
+    APP_DEVICE_TYPE,     // Manufacturer specific information. Specifies the device type in this
+                         // implementation.
+    APP_ADV_DATA_LENGTH, // Manufacturer specific information. Specifies the length of the
+                         // manufacturer specific data in this implementation.
+    APP_BEACON_UUID,     // 128 bit UUID value.
+    APP_MAJOR_VALUE,     // Major arbitrary value that can be used to distinguish between Beacons.
+    APP_MINOR_VALUE,     // Minor arbitrary value that can be used to distinguish between Beacons.
+    APP_MEASURED_RSSI    // Manufacturer specific information. The Beacon's measured TX power in
+                         // this implementation.
+};
+
+/**@brief Function for initializing the Advertising functionality.
+ *
+ * @details Encodes the required advertising data and passes it to the stack.
+ *          Also builds a structure to be passed to the stack when starting advertising.
+ */
+static void softdevice_advertising_init(bool is_ibeacon)
+{
+  uint32_t      err_code;
+  ble_advdata_t advdata;
+  uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED;
+
+  ble_advdata_manuf_data_t manuf_specific_data;
+
+  if (is_ibeacon)
+  {
+    manuf_specific_data.company_identifier = APP_APPLE_IDENTIFIER;
+  }
+  else
+  {
+    manuf_specific_data.company_identifier = APP_COMPANY_IDENTIFIER;
+  }
+
+  manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
+  manuf_specific_data.data.size   = APP_BEACON_INFO_LENGTH;
+
+  // Build and set advertising data.
+  memset(&advdata, 0, sizeof(advdata));
+
+  advdata.name_type             = BLE_ADVDATA_NO_NAME;
+  advdata.flags                 = flags;
+  advdata.p_manuf_specific_data = &manuf_specific_data;
+
+  if (is_ibeacon)
+  {
+    err_code = ble_advdata_encode(&advdata, m_enc_advdata2, &m_enc_advdata_len);
+    APP_ERROR_CHECK(err_code);
+  }
+  else
+  {
+    err_code = ble_advdata_encode(&advdata, m_enc_advdata, &m_enc_advdata_len);
+    APP_ERROR_CHECK(err_code);
+
+    // Initialize advertising parameters (used when starting advertising).
+    memset(&m_sd_adv_params, 0, sizeof(m_sd_adv_params));
+
+    m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED;
+    m_sd_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
+    m_sd_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
+    m_sd_adv_params.interval        = BASE_ADV_INTERVAL;
+    m_sd_adv_params.duration        = 0;       // Never time out.
+  }
+}
+
+/**@brief Function for handling SoC events.
+ *
+ * @param[in]   evt_id      Stack SoC event.
+ * @param[in]   p_context   Unused.
+ */
+static void timeslot_soc_evt_handler(uint32_t evt_id, void * p_context)
+{
+  timeslot_on_sys_evt(evt_id);
+}
+
+/**@brief Function for handling a BeaconAdvertiser error.
+ *
+ * @param[in]   nrf_error   Error code containing information about what went wrong.
+ */
+static void timeslot_beacon_advertiser_error_handler(uint32_t nrf_error)
+{
+  NRF_LOG_INFO("beacon_advertiser_error_handler 0x%08x.\r\n", nrf_error);
+  APP_ERROR_HANDLER(nrf_error);
+}
+
+/**@brief Function for initializing Beacon advertiser.
+ */
+static void timeslot_beacon_adv_init(void)
+{
+  static uint8_t beacon_uuid[] = {APP_BEACON_UUID};
+  static ble_beacon_init_t beacon_init;
+    
+  memcpy(beacon_init.uuid.uuid128, beacon_uuid, sizeof(beacon_uuid));
+  beacon_init.adv_interval  = TS_ADV_INTERVAL;
+  beacon_init.major         = APP_MAJOR_VALUE;
+  beacon_init.minor         = APP_MINOR_VALUE;
+  beacon_init.manuf_id      = APP_APPLE_IDENTIFIER;
+  beacon_init.rssi          = APP_MEASURED_RSSI;
+  beacon_init.error_handler = timeslot_beacon_advertiser_error_handler;
+    
+  uint32_t err_code = sd_ble_gap_addr_get(&beacon_init.beacon_addr);
+  APP_ERROR_CHECK(err_code);
+  beacon_init.beacon_addr.addr[0] += 0x01;
+    
+  timeslot_init(&beacon_init);
+}
+
+/**@brief Set advertising data for every advertising event. */
+static void timeslot_on_radio_event(bool radio_active) 
+{
+  static bool send_ibeacon = true;
+  if (radio_active) 
+  {
+    nrf_gpio_pin_toggle(9);
+    if (send_ibeacon)
+    {
+      m_adv_data.adv_data.p_data  = m_enc_advdata2;
+    }
+    else
+    {
+      m_adv_data.adv_data.p_data  = m_enc_advdata;
+    }
+    m_adv_data.adv_data.len = m_enc_advdata_len;
+    (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, NULL);
+    send_ibeacon = !send_ibeacon;
+  }
+}
 
 //-----------------------------------------------------------------------------
 // functions
@@ -489,12 +441,15 @@ static void time_15000ms_count_hanlder(void * p_context)
   if (ble_line_beacon_enablep() == 1) {
     m_line_timestamp.value++;
     save_15sec_timestamp();
-    if (ble_bms_get_timeslot_status() != 0x00) set_line_beacon_packet();
-    if (ble_bms_get_timeslot_status() != 0x00) set_line_ibeacon_packet();
+    if (ble_bms_get_timeslot_status() != 0x00) {
+      set_line_beacon_packet();
+      set_line_ibeacon_packet();
+    }
   }
   if (ble_tgsec_ibeacon_enablep() == 1) {
     m_tgsec_timestamp.value++;
     calc_rotmm_save_15sec_tgsec_timestamp();
+    if (ble_bms_get_timeslot_status() != 0x00) set_ibeacon_packet();
   }
 }
 
@@ -521,6 +476,21 @@ static void time_60000ms_count_hanlder(void * p_context)
   #else
     app_timer_stop(m_60000ms_count_timer_id);
   #endif
+  }
+
+#if defined(LED_ENABLED)
+  if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
+    execute_pending_led(LED_ON);
+  }
+  else {
+    execute_pending_led(LED_OFF);
+  }
+#endif
+
+  return;
+  // Timeslot Started
+  if (ble_bms_get_timeslot_status() != 0x00 &&  ble_line_beacon_enablep() == 1) {
+    timeslot_start();
   }
 }
 
@@ -601,43 +571,28 @@ static void time_ecomodecheck_count_hanlder(void * p_context)
  */
 static bool app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 {
-    switch (event)
-    {
-        case NRF_PWR_MGMT_EVT_PREPARE_DFU:
-            NRF_LOG_INFO("Power management wants to reset to DFU mode.");
-            // YOUR_JOB: Get ready to reset into DFU mode
-            //
-            // If you aren't finished with any ongoing tasks, return "false" to
-            // signal to the system that reset is impossible at this stage.
-            //
-            // Here is an example using a variable to delay resetting the device.
-            //
-            // if (!m_ready_for_reset)
-            // {
-            //      return false;
-            // }
-            // else
-            //{
-            //
-            //    // Device ready to enter
-            //    uint32_t err_code;
-            //    err_code = sd_softdevice_disable();
-            //    APP_ERROR_CHECK(err_code);
-            //    err_code = app_timer_stop_all();
-            //    APP_ERROR_CHECK(err_code);
-            //}
-            break;
+  switch (event)
+  {
+    case NRF_PWR_MGMT_EVT_PREPARE_DFU:
+      NRF_LOG_INFO("Power management wants to reset to DFU mode.");
+      // YOUR_JOB: Get ready to reset into DFU mode
+      //
+      // If you aren't finished with any ongoing tasks, return "false" to
+      // signal to the system that reset is impossible at this stage.
+      //
+      // Here is an example using a variable to delay resetting the device.
+      break;
 
-        default:
-            // YOUR_JOB: Implement any of the other events available from the power management module:
-            //      -NRF_PWR_MGMT_EVT_PREPARE_SYSOFF
-            //      -NRF_PWR_MGMT_EVT_PREPARE_WAKEUP
-            //      -NRF_PWR_MGMT_EVT_PREPARE_RESET
-            return true;
-    }
+    default:
+      // YOUR_JOB: Implement any of the other events available from the power management module:
+      //      -NRF_PWR_MGMT_EVT_PREPARE_SYSOFF
+      //      -NRF_PWR_MGMT_EVT_PREPARE_WAKEUP
+      //      -NRF_PWR_MGMT_EVT_PREPARE_RESET
+      return true;
+  }
 
-    NRF_LOG_INFO("Power management allowed to reset to DFU mode.");
-    return true;
+  NRF_LOG_INFO("Power management allowed to reset to DFU mode.");
+  return true;
 }
 
 /**@brief Register application shutdown handler with priority 0.
@@ -647,45 +602,45 @@ NRF_PWR_MGMT_HANDLER_REGISTER(app_shutdown_handler, 0);
 
 static void buttonless_dfu_sdh_state_observer(nrf_sdh_state_evt_t state, void * p_context)
 {
-    if (state == NRF_SDH_EVT_STATE_DISABLED)
-    {
-        // Softdevice was disabled before going into reset. Inform bootloader to skip CRC on next boot.
-        nrf_power_gpregret2_set(BOOTLOADER_DFU_SKIP_CRC);
+  if (state == NRF_SDH_EVT_STATE_DISABLED)
+  {
+    // Softdevice was disabled before going into reset. Inform bootloader to skip CRC on next boot.
+    nrf_power_gpregret2_set(BOOTLOADER_DFU_SKIP_CRC);
 
-        //Go to system off.
-        nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
-    }
+    //Go to system off.
+    nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
+  }
 }
 
 /* nrf_sdh state observer. */
 NRF_SDH_STATE_OBSERVER(m_buttonless_dfu_state_obs, 0) =
 {
-    .handler = buttonless_dfu_sdh_state_observer,
+  .handler = buttonless_dfu_sdh_state_observer,
 };
 
 static void advertising_config_get(ble_adv_modes_config_t * p_config)
 {
-    memset(p_config, 0, sizeof(ble_adv_modes_config_t));
+  memset(p_config, 0, sizeof(ble_adv_modes_config_t));
 
-    p_config->ble_adv_fast_enabled  = true;
-    p_config->ble_adv_fast_interval = APP_ADV_INTERVAL;
-    p_config->ble_adv_fast_timeout  = APP_ADV_DURATION;
+  p_config->ble_adv_fast_enabled  = true;
+  p_config->ble_adv_fast_interval = APP_ADV_INTERVAL;
+  p_config->ble_adv_fast_timeout  = APP_ADV_DURATION;
 }
 
 
 static void disconnect(uint16_t conn_handle, void * p_context)
 {
-    UNUSED_PARAMETER(p_context);
+  UNUSED_PARAMETER(p_context);
 
-    ret_code_t err_code = sd_ble_gap_disconnect(conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-    if (err_code != NRF_SUCCESS)
-    {
-        NRF_LOG_WARNING("Failed to disconnect connection. Connection handle: %d Error: %d", conn_handle, err_code);
-    }
-    else
-    {
-        NRF_LOG_DEBUG("Disconnected connection handle %d", conn_handle);
-    }
+  ret_code_t err_code = sd_ble_gap_disconnect(conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+  if (err_code != NRF_SUCCESS)
+  {
+    NRF_LOG_WARNING("Failed to disconnect connection. Connection handle: %d Error: %d", conn_handle, err_code);
+  }
+  else
+  {
+    NRF_LOG_DEBUG("Disconnected connection handle %d", conn_handle);
+  }
 }
 
 
@@ -696,51 +651,50 @@ static void disconnect(uint16_t conn_handle, void * p_context)
  */
 static void ble_dfu_evt_handler(ble_dfu_buttonless_evt_type_t event)
 {
-    switch (event)
+  switch (event)
+  {
+    case BLE_DFU_EVT_BOOTLOADER_ENTER_PREPARE:
     {
-        case BLE_DFU_EVT_BOOTLOADER_ENTER_PREPARE:
-        {
-            NRF_LOG_INFO("Device is preparing to enter bootloader mode.");
+      NRF_LOG_INFO("Device is preparing to enter bootloader mode.");
 
-            // Prevent device from advertising on disconnect.
-            ble_adv_modes_config_t config;
-            advertising_config_get(&config);
-            config.ble_adv_on_disconnect_disabled = true;
-            //ble_advertising_modes_config_set(&m_advertising, &config);
+      // Prevent device from advertising on disconnect.
+      ble_adv_modes_config_t config;
+      advertising_config_get(&config);
+      config.ble_adv_on_disconnect_disabled = true;
+      //ble_advertising_modes_config_set(&m_advertising, &config);
 
-            // Disconnect all other bonded devices that currently are connected.
-            // This is required to receive a service changed indication
-            // on bootup after a successful (or aborted) Device Firmware Update.
-            uint32_t conn_count = ble_conn_state_for_each_connected(disconnect, NULL);
-            NRF_LOG_INFO("Disconnected %d links.", conn_count);
-            break;
-        }
-
-        case BLE_DFU_EVT_BOOTLOADER_ENTER:
-            // YOUR_JOB: Write app-specific unwritten data to FLASH, control finalization of this
-            //           by delaying reset by reporting false in app_shutdown_handler
-            NRF_LOG_INFO("Device will enter bootloader mode.");
-            break;
-
-        case BLE_DFU_EVT_BOOTLOADER_ENTER_FAILED:
-            NRF_LOG_ERROR("Request to enter bootloader mode failed asynchroneously.");
-            // YOUR_JOB: Take corrective measures to resolve the issue
-            //           like calling APP_ERROR_CHECK to reset the device.
-            break;
-
-        case BLE_DFU_EVT_RESPONSE_SEND_ERROR:
-            NRF_LOG_ERROR("Request to send a response to client failed.");
-            // YOUR_JOB: Take corrective measures to resolve the issue
-            //           like calling APP_ERROR_CHECK to reset the device.
-            APP_ERROR_CHECK(false);
-            break;
-
-        default:
-            NRF_LOG_ERROR("Unknown event from ble_dfu_buttonless.");
-            break;
+      // Disconnect all other bonded devices that currently are connected.
+      // This is required to receive a service changed indication
+      // on bootup after a successful (or aborted) Device Firmware Update.
+      uint32_t conn_count = ble_conn_state_for_each_connected(disconnect, NULL);
+      NRF_LOG_INFO("Disconnected %d links.", conn_count);
+      break;
     }
-}
 
+    case BLE_DFU_EVT_BOOTLOADER_ENTER:
+      // YOUR_JOB: Write app-specific unwritten data to FLASH, control finalization of this
+      //           by delaying reset by reporting false in app_shutdown_handler
+      NRF_LOG_INFO("Device will enter bootloader mode.");
+      break;
+
+    case BLE_DFU_EVT_BOOTLOADER_ENTER_FAILED:
+      NRF_LOG_ERROR("Request to enter bootloader mode failed asynchroneously.");
+      // YOUR_JOB: Take corrective measures to resolve the issue
+      //           like calling APP_ERROR_CHECK to reset the device.
+      break;
+
+    case BLE_DFU_EVT_RESPONSE_SEND_ERROR:
+      NRF_LOG_ERROR("Request to send a response to client failed.");
+      // YOUR_JOB: Take corrective measures to resolve the issue
+      //           like calling APP_ERROR_CHECK to reset the device.
+      APP_ERROR_CHECK(false);
+      break;
+
+    default:
+      NRF_LOG_ERROR("Unknown event from ble_dfu_buttonless.");
+      break;
+  }
+}
 
 /**@brief Function for error handling, which is called when an error has occurred.
  *
@@ -761,7 +715,6 @@ void app_error_handler_(uint32_t error_code, uint32_t line_num, const uint8_t * 
   // FIXME NVIC_SystemReset();
 }
 
-
 /**@brief Callback function for asserts in the SoftDevice.
  *
  * @details This function will be called in case of an assert in the SoftDevice.
@@ -778,8 +731,6 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
   NRF_LOG_INFO("Line = %d  file = %s", line_num, p_file_name);
   app_error_handler_(DEAD_BEEF, line_num, p_file_name);
 }
-
-
 
 /**@brief Function for handling Service errors.
  *
@@ -1073,6 +1024,7 @@ static void services_init(void)
   uint8_t firmware_version[2] = {APP_FIRMWARE_VERSION_VALUE};
   _beacon_info[BINFO_VERSION_VALUE_IDX]   = firmware_version[0];
   _beacon_info[BINFO_VERSION_VALUE_IDX+1] = firmware_version[1];
+
   // Timeslot Mode
   uint8_t timeslot_mode = _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX];
   if (timeslot_mode != 0x00) {
@@ -1094,6 +1046,7 @@ static void services_init(void)
       m_advertising_packet_type = 0x40; break;
     }  
   }
+  _beacon_info[BINFO_STATUS_VALUE_IDX] = 4;
   m_advertising_packet_type = 0x10;    // ##DEBUG##
   m_timesot_mode = true;    // ##DEBUG##
 
@@ -1307,8 +1260,9 @@ static void ble_stack_init(void)
     APP_ERROR_CHECK(err_code);
   
     // Enable DCDC
-    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
+    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_DISABLE);
     APP_ERROR_CHECK(err_code);
+  //while(true) nrf_gpio_pin_toggle(9);
 
     // Register a handler for sys events.
     NRF_SDH_SOC_OBSERVER(m_soc_observer, BLE_ADV_SOC_OBSERVER_PRIO, timeslot_soc_evt_handler, NULL);
@@ -1591,8 +1545,6 @@ int main(void)
   m_Blink_LED_count = 0;
   m_Execute_led_flash_type1 = false;
 
-  //timeslot_main();
-
   // Initialize.
   log_init();
 #ifdef FREERTOS_SWITCH
@@ -1645,21 +1597,7 @@ int main(void)
 #endif
 
   application_timers_start();
-
-  // Start execution.
   advertising_mode_reset();
-
-#ifdef TIMESLOT_MODE
-  advertising_init(BLE_ADV_MODE_BMS);
-#else
-  if (ble_bms_get_timeslot_status() != 0x00) {
-    timeslot_advertising_init(false);  // Initialize Nordic beacon
-    timeslot_advertising_init(true);   // Initialize iBeacon
-    timeslot_beacon_adv_init();        // Initialize TimeSlot beacon
-  }
-#endif
-
-  //advertising_init(BLE_ADV_MODE_BMS);
   
 #if defined(LED_ENABLED)
   blink_led(2);
@@ -1714,16 +1652,22 @@ int main(void)
   ble_radio_notification_init(APP_IRQ_PRIORITY_LOW, NRF_RADIO_NOTIFICATION_DISTANCE_5500US, timeslot_on_radio_event);
 
   // Start SoftDevice beacon,
-  m_adv_data.adv_data.p_data  = m_enc_advdata;
-  m_adv_data.adv_data.len     = m_enc_advdata_len;
-  (void)sd_ble_gap_adv_set_configure(&timeslot_m_adv_handle, &m_adv_data, &timeslot_m_adv_params);
-  (void)sd_ble_gap_adv_start(timeslot_m_adv_handle, APP_BLE_CONN_CFG_TAG);
-  
-  
-  ////advertising_start();
+  advertising_init(BLE_ADV_MODE_BMS);
 
-  // Timeslot Started
-  if (ble_bms_get_timeslot_status() != 0x00) timeslot_start();
+  if (ble_bms_get_timeslot_status() != 0x00) {
+    softdevice_advertising_init(false);   // Initialize Nordic beacon
+    softdevice_advertising_init(true);    // Initialize iBeacon
+    timeslot_beacon_adv_init();           // Initialize TimeSlot beacon
+
+    m_adv_data.adv_data.p_data  = m_enc_advdata;
+    m_adv_data.adv_data.len     = m_enc_advdata_len;
+    (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
+    (void)sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
+    timeslot_start();
+  }
+  else {
+    advertising_start();
+  }
 #endif
   // Start execution.
     NRF_LOG_INFO("Tangerin Beacon started.");

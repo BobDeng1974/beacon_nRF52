@@ -95,12 +95,11 @@ void radio_pdu_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_param
   memcpy(adv_pdu+9, p_adv_data->adv_data.p_data, p_adv_data->adv_data.len);
 }
 
-uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params)
+uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data)
 {
   memset(m_adv_pdu, 0x00, APP_PDU_INFO_LENGTH);
 
   // Packer header
-  m_adv_pdu[0] = p_adv_params->properties.type;    // Advertisement type ADV_NONCONN_IND
   m_adv_pdu[0] = 0x60;                             // Advertisement type ADV_NONCONN_IND
   m_adv_pdu[1] = p_adv_data->adv_data.len + sizeof(m_device_addr.addr); 
 
@@ -255,7 +254,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
   static enum mode_t mode;
 
-  nrf_gpio_pin_toggle(9);
+  //nrf_gpio_pin_toggle(9);
 
   signal_callback_return_param.params.request.p_next  = NULL;
   signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
