@@ -1,47 +1,39 @@
 #include "timeslot.h"
 
-#define ADV_PACK_LENGTH_IDX 1
-#define ADV_DATA_LENGTH_IDX 12
-#define ADV_HEADER_LEN      3
+#define ADV_PACK_LENGTH_IDX             1
+#define ADV_DATA_LENGTH_IDX             12
+#define ADV_HEADER_LEN                  3
+#define ADV_TYPE_LEN                    2
+#define APP_DEVICE_TYPE                 0x02                              /**< 0x02 refers to Beacon. */
+#define APP_PDU_INFO_LENGTH             40
+#define BEACON_SLOT_LENGTH              5500
 
-#define ADV_TYPE_LEN 2
-
-#define APP_DEVICE_TYPE               0x02                              /**< 0x02 refers to Beacon. */
-#define APP_PDU_INFO_LENGTH            40
-
-#define ADV_CHANNEL_37                 37
-#define ADV_CHANNEL_38                 38
-#define ADV_CHANNEL_39                 39
+#define ADV_CHANNEL_37                  37
+#define ADV_CHANNEL_38                  38
+#define ADV_CHANNEL_39                  39
 
 #define FREQ_ADV_CHANNEL_37             2
-#define FREQ_ADV_CHANNEL_38            26
-#define FREQ_ADV_CHANNEL_39            80
-
-#define BEACON_SLOT_LENGTH             5500
+#define FREQ_ADV_CHANNEL_38             26
+#define FREQ_ADV_CHANNEL_39             80
 
 static struct
 {
-    ble_uuid128_t           uuid;                               /** 128 proprietary service UUID to include in advertisement packets*/
-    uint32_t                adv_interval;                       /** Advertising interval in milliseconds to be used for 'beacon' advertisements*/
-    uint16_t                major;                              /** Major identifier to use for 'beacon'*/
-    uint16_t                minor;                              /** Minor identifier to use for 'beacon'*/
-    bool                    keep_running;                       /** */
-    bool                    is_running;                         /** is the 'beacon' running*/
-    uint32_t                slot_length;                        /** */
-    nrf_radio_request_t     timeslot_request;                   /** */
-    uint16_t                manuf_id;
-    uint16_t                rssi;                               /** measured RSSI at 1 meter distance in dBm*/
-    ble_gap_addr_t          beacon_addr;                        /** ble address to be used by the beacon*/
-    ble_srv_error_handler_t error_handler;                      /**< Function to be called in case of an error. */
+    ble_uuid128_t           uuid;                           /** 128 proprietary service UUID to include in advertisement packets*/
+    uint32_t                adv_interval;                   /** Advertising interval in milliseconds to be used for 'beacon' advertisements*/
+    bool                    keep_running;                   /** */
+    bool                    is_running;                     /** is the 'beacon' running*/
+    uint32_t                slot_length;                    /** */
+    nrf_radio_request_t     timeslot_request;               /** */
+    ble_srv_error_handler_t error_handler;                  /**< Function to be called in case of an error. */
 } m_beacon;
 
 enum mode_t
 {
-  ADV_INIT,                                                 /** Initialisation*/
-  ADV_RX_CH37,                                              /** Advertising on Rx channel 37*/
-  ADV_RX_CH38,                                              /** Advertising on Rx channel 38*/
-  ADV_RX_CH39,                                              /** Advertising on Rx channel 39*/
-  ADV_DONE                                                  /** Done advertising*/
+    ADV_INIT,                                               /** Initialisation*/
+    ADV_RX_CH37,                                            /** Advertising on Rx channel 37*/
+    ADV_RX_CH38,                                            /** Advertising on Rx channel 38*/
+    ADV_RX_CH39,                                            /** Advertising on Rx channel 39*/
+    ADV_DONE                                                /** Done advertising*/
 };
 
 static  uint8_t m_adv_pdu[APP_PDU_INFO_LENGTH];
@@ -52,7 +44,6 @@ nrf_radio_request_t * m_configure_next_event(void)
 {
     m_beacon.timeslot_request.request_type              = NRF_RADIO_REQ_TYPE_NORMAL;
     m_beacon.timeslot_request.params.normal.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
-//    m_beacon.timeslot_request.params.normal.priority    = NRF_RADIO_PRIORITY_HIGH;
     m_beacon.timeslot_request.params.normal.priority    = NRF_RADIO_PRIORITY_NORMAL;
     m_beacon.timeslot_request.params.normal.distance_us = m_beacon.adv_interval * 10;
     m_beacon.timeslot_request.params.normal.length_us   = m_beacon.slot_length;
@@ -115,52 +106,6 @@ uint8_t * radio_gap_adv_set_configure(ble_gap_adv_data_t const *p_adv_data)
   memcpy(&m_adv_pdu[9], p_adv_data->adv_data.p_data, p_adv_data->adv_data.len);
     
   return &m_adv_pdu[0];
-}
-
-static uint8_t * m_get_adv_packet(void)
-{
-    static uint8_t adv_pdu[40];
-    uint8_t packet_len_start_idx, manuf_data_len_start_idx, beacon_data_len_start_idx;
-    uint8_t offset    = 0;
-
-    // Constructing header
-    adv_pdu[offset]    = 0x02;    // ADV_NONCONN_IND
-    adv_pdu[offset++] |= 1 << 6;                           // TxAdd 1 (random address)
-    adv_pdu[offset++]  = 0;                                // Packet length field (will be filled later)
-    adv_pdu[offset++]  = 0x00;                             // Extra byte used to map into the radio register.
-    packet_len_start_idx = offset;
-
-    // Constructing base advertising packet
-    memcpy(&adv_pdu[offset], m_beacon.beacon_addr.addr, BLE_GAP_ADDR_LEN);
-    offset += BLE_GAP_ADDR_LEN;
-    
-    // Adding advertising data: Flags
-    adv_pdu[offset++] =  ADV_TYPE_LEN;
-    adv_pdu[offset++] =  BLE_GAP_AD_TYPE_FLAGS;
-    adv_pdu[offset++] =  BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
-
-    // Adding advertising data: Manufacturer specific data.
-    adv_pdu[offset++] =  0x00;                             // Manufacturer specific data length field (will be filled later).
-    manuf_data_len_start_idx = offset;
-    adv_pdu[offset++] =  BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
-    offset += uint16_encode(m_beacon.manuf_id, &adv_pdu[offset]);
-    adv_pdu[offset++] =  APP_DEVICE_TYPE;
-
-    // Adding manufacturer specific data (beacon data).
-    adv_pdu[offset++] =  0;                                // Beacon data length field (will be filled later).
-    beacon_data_len_start_idx = offset;
-    memcpy(&adv_pdu[offset], &m_beacon.uuid, sizeof(ble_uuid128_t));
-    offset += sizeof(ble_uuid128_t);
-    offset += uint16_encode(m_beacon.major, &adv_pdu[offset]);
-    offset += uint16_encode(m_beacon.minor, &adv_pdu[offset]);
-    adv_pdu[offset++] = m_beacon.rssi;
-    
-    // Filling in length fields.
-    adv_pdu[ADV_PACK_LENGTH_IDX]         = offset - packet_len_start_idx;
-    adv_pdu[ADV_DATA_LENGTH_IDX]         = offset - manuf_data_len_start_idx;
-    adv_pdu[beacon_data_len_start_idx-1] = offset - beacon_data_len_start_idx;
-    
-    return &m_adv_pdu[0];
 }
 
 static void m_set_adv_ch(uint32_t channel)
@@ -254,7 +199,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
   static enum mode_t mode;
 
-  //nrf_gpio_pin_toggle(9);
+  nrf_gpio_pin_toggle(9);
 
   signal_callback_return_param.params.request.p_next  = NULL;
   signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
@@ -352,12 +297,7 @@ void timeslot_init(ble_beacon_init_t * p_init)
 {
     memcpy(&m_beacon.uuid, &p_init->uuid, sizeof(p_init->uuid));
     m_beacon.adv_interval = p_init->adv_interval;
-    m_beacon.major        = p_init->major;
-    m_beacon.minor        = p_init->minor;
     m_beacon.slot_length  = BEACON_SLOT_LENGTH;
-    m_beacon.manuf_id     = p_init->manuf_id;
-    m_beacon.rssi         = p_init->rssi;
-    m_beacon.beacon_addr  = p_init->beacon_addr;
     m_beacon.error_handler= p_init->error_handler;
 }
 

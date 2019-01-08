@@ -142,6 +142,11 @@ void ibeacon_advertising_init()
   APP_ERROR_CHECK(err_code);
 }
 
+uint8_t * get_ibeacon_advertising_data(void)
+{
+  return &m_enc_advdata;
+}
+
 /**@brief LINE Beacon Packet initialization
  */
 void set_ibeacon_packet(void)

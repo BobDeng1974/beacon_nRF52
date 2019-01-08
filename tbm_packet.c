@@ -343,6 +343,9 @@ void bms_advertising_init(ble_bms_t m_bms)
   err_code = ble_advdata_encode(&scanrsp, m_adv_data.scan_rsp_data.p_data, &m_adv_data.scan_rsp_data.len);
   APP_ERROR_CHECK(err_code);
 
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
+  APP_ERROR_CHECK(err_code);
+
   memcpy(&m_ble_adv_data, &m_adv_data, sizeof(ble_gap_adv_data_t));
 
   //
@@ -363,9 +366,6 @@ void bms_advertising_init(ble_bms_t m_bms)
   m_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_adv_params.duration        = 0;       // Never time out.
 
-  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
-  APP_ERROR_CHECK(err_code);
-
   //
   // Set AdvData and ScanResponseData
   //
@@ -378,3 +378,9 @@ void bms_advertising_init(ble_bms_t m_bms)
   err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
   APP_ERROR_CHECK(err_code);
 }
+
+uint8_t * get_bms_advertising_data(void)
+{
+  return &m_enc_advdata;
+}
+

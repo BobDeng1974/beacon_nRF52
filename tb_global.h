@@ -109,13 +109,13 @@
 
 #define ADC_SAMPLES_IN_BUFFER           5
 
-#define ble_bms_get_timeslot_status()   m_timesot_mode
+#define ble_bms_get_timeslot_status()   m_timeslot_mode
 
 //----------------------------------------------------------------------------
 //  global variables 
 //----------------------------------------------------------------------------
 extern  uint8_t   m_tbm_scan_mode;
-extern  uint8_t   m_timesot_mode;
+extern  uint8_t   m_timeslot_mode;
 extern  uint8_t   m_advertising_packet_type;
 extern  uint8_t   m_eco_adv_stop;
 extern  ble_gap_addr_t m_device_addr;  // 48-bit address, LSB format

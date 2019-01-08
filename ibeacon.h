@@ -19,6 +19,7 @@
 
 void build_ibeacon_data(void);
 void ibeacon_advertising_init();
+uint8_t * get_ibeacon_advertising_data(void);
 
 void set_ibeacon_packet(void);
 uint8_t * get_ibeacon_packet(void);
