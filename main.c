@@ -54,26 +54,6 @@ STATIC_ASSERT(IS_SRVC_CHANGED_CHARACT_PRESENT);                                 
 #define DEAD_BEEF                         0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 //------------------------------------------------------------------------------
-//  timelost
-//------------------------------------------------------------------------------
-#define APP_BEACON_INFO_LENGTH            0x18                                        /**< Total length of information advertised by the Beacon. */
-#define APP_ADV_DATA_LENGTH               0x15                                        /**< Length of manufacturer specific data in the advertisement. */
-#define APP_DEVICE_TYPE                   0x02                                        /**< 0x02 refers to Beacon. */
-#define APP_MEASURED_RSSI                 0xC3                                        /**< The Beacon's measured RSSI at 1 meter distance in dBm. */
-#define APP_COMPANY_IDENTIFIER            0x0059                                      /**< Company identifier for Nordic Semiconductor ASA. as per www.bluetooth.org. */
-#define APP_APPLE_IDENTIFIER              0x004C                                      /**< Company identifier for Apple. as per www.bluetooth.org. */
-#define APP_MAJOR_VALUE                   0x01, 0x02                                  /**< Major value used to identify Beacons. */
-#define APP_MINOR_VALUE                   0x03, 0x04                                  /**< Minor value used to identify Beacons. */
-#define APP_BEACON_UUID                   0x01, 0x12, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78, 0x89, 0x9a, 0xab, 0xbc, 0xcd, 0xde, 0xef, 0xf0              /**< Proprietary UUID for Beacon. */
-#define _BLE_GAP_ADV_SET_DATA_SIZE_MAX     40
-static ble_gap_adv_params_t               m_sd_adv_params;                            /**< Parameters to be passed to the stack when starting advertising. */
-static uint8_t                            m_sd_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET; /**< Advertising handle used to identify an advertising set. */
-static uint8_t                            m_enc_advdata[_BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set. */
-static uint8_t                            m_enc_advdata2[_BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set (iBeacon). */
-static uint16_t                           m_enc_advdata_len = _BLE_GAP_ADV_SET_DATA_SIZE_MAX;
-
-
-//------------------------------------------------------------------------------
 // static global variables
 //------------------------------------------------------------------------------
 NRF_BLE_GATT_DEF(m_gatt);                                                             /**< GATT module instance. */
@@ -92,23 +72,32 @@ uint8_t                                   m_tbm_scan_mode = false;
 uint8_t                                   m_timeslot_mode = false;
 uint8_t                                   m_advertising_packet_type = 0x00;
 uint8_t                                   m_eco_adv_stop = false;
-ble_gap_addr_t                            m_device_addr;                            // 48-bit address, LSB format
+ble_gap_addr_t                            m_device_addr;                              // 48-bit address, LSB format
 
-uint8_t                                   g_is_startup;                             // startup status
-uint8_t                                   g_connected;                              // connected or not connected
-uint16_t                                  g_conn_handle;                            // 
+uint8_t                                   g_is_startup;                               // startup status
+uint8_t                                   g_connected;                                // connected or not connected
+uint16_t                                  g_conn_handle;                              // 
 uint8_t                                   g_ibeacon_mode;
-ble_bms_t                                 g_bms;                                    /**< Structure to identify the Beacon Management Service. */
-uint8_t                                   g_startup_stage;                          // startup status
+ble_bms_t                                 g_bms;                                      /**< Structure to identify the Beacon Management Service. */
+uint8_t                                   g_startup_stage;                            // startup status
 
-uint32_union_t                            m_adv_count;                              /**< advertising counter */
-uint32_union_t                            m_sec_count_100ms;                        /**< 100msec counter */
-uint16_union_t                            m_battery_charge;                         /**< current battery charge */
-uint64_union_t                            m_line_timestamp;                         /**< 64bit timestamp for LINE Beacon */
-uint32_union_t                            m_tgsec_timestamp;                        /**< 32bit timestamp for Tangerine Secure iBeacon */
+uint32_union_t                            m_adv_count;                                /**< advertising counter */
+uint32_union_t                            m_sec_count_100ms;                          /**< 100msec counter */
+uint16_union_t                            m_battery_charge;                           /**< current battery charge */
+uint64_union_t                            m_line_timestamp;                           /**< 64bit timestamp for LINE Beacon */
+uint32_union_t                            m_tgsec_timestamp;                          /**< 32bit timestamp for Tangerine Secure iBeacon */
 
-dectime_union_t                           m_eco_start_time;                         /**< 16bit decmal eco mode start time */
-dectime_union_t                           m_eco_finish_time;                        /**< 16bit decmal eco mode finish time */
+dectime_union_t                           m_eco_start_time;                           /**< 16bit decmal eco mode start time */
+dectime_union_t                           m_eco_finish_time;                          /**< 16bit decmal eco mode finish time */
+
+static ble_gap_adv_params_t               m_sd_adv_params;                            /**< Parameters to be passed to the stack when starting advertising. */
+static uint8_t                            m_sd_adv_handle;                            /**< Advertising handle used to identify an advertising set. */
+static uint16_t                           m_enc_advdata_len;                          //
+static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set. */
+static uint8_t                            m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set (iBeacon). */
+
+uint8_t                                   m_tbm_txfrq;                               // Tangerine Beacon Management Packet Interval Counter
+uint8_t                                   m_bTbm = false;
 
 //------------------------------------------------------------------------------
 // Battery monitoring
@@ -158,26 +147,39 @@ uint8_t m_adc_status = true;
 // 60sec timer count for startup stage.
 //-----------------------------------------------------------------------------
 #ifdef FREERTOS_SWITCH
-  #define COUNTER_60000ms_INTERVAL_ (60000-10) // 60000msec = 30sec
+  #define COUNTER_60000ms_INTERVAL_ (60000) // 60000msec = 60sec
   static void time_60000ms_count_hanlder(TimerHandle_t xTimer);
   static TimerHandle_t m_60000ms_count_timer;
 #else
-  #define COUNTER_60000ms_INTERVAL APP_TIMER_TICKS(60000-10) // 60000msec = 30sec
+  #define COUNTER_60000ms_INTERVAL APP_TIMER_TICKS(60000-10) // 60000msec = 60sec
   APP_TIMER_DEF(m_60000ms_count_timer_id);
   static void time_60000ms_count_hanlder(void * p_context);
 #endif
 
 //-----------------------------------------------------------------------------
-// ECO Mode Check timer count for startup stage.
+// 10min timer count for startup stage.
 //-----------------------------------------------------------------------------
 #ifdef FREERTOS_SWITCH
-  #define COUNTER_ECOMODECHECK_INTERVAL_ (607 * 1000) // 1sec*607 = 10.7min
-  static void time_ecomodecheck_count_hanlder(TimerHandle_t xTimer);
-  static TimerHandle_t m_ecomodecheck_count_timer;
+  #define COUNTER_10min_INTERVAL_ (600 * 1000) // 600000msec = 10min
+  static void time_10min_count_hanlder(TimerHandle_t xTimer);
+  static TimerHandle_t m_10min_count_timer;
 #else
-  #define COUNTER_ECOMODECHECK_INTERVAL APP_TIMER_TICKS(607 * 1000) // 60000msec = 30sec
-  APP_TIMER_DEF(m_ecomodecheck_count_timer_id);
-  static void m_ecomodecheck_count_timer(void * p_context);
+  #define COUNTER_10min_INTERVAL APP_TIMER_TICKS(600 * 1000) // 690000msec = 10min
+  APP_TIMER_DEF(m_10min_count_timer_id);
+  static void m_10min_count_timer(void * p_context);
+#endif
+
+//-----------------------------------------------------------------------------
+// 1sec timer count for startup stage.
+//-----------------------------------------------------------------------------
+#ifdef FREERTOS_SWITCH
+  #define COUNTER_1000ms_INTERVAL_ (1000) // 1000msec = 1sec
+  static void time_1000ms_count_hanlder(TimerHandle_t xTimer);
+  static TimerHandle_t m_1000ms_count_timer;
+#else
+  #define COUNTER_1000ms_INTERVAL APP_TIMER_TICKS(1000) // 1000msec = 1sec
+  APP_TIMER_DEF(m_1000ms_count_timer_id);
+  static void m_1000ms_count_timer(void * p_context);
 #endif
 
 //------------------------------------------------------------------------------
@@ -189,26 +191,13 @@ static ble_gap_adv_data_t m_adv_data =
     .adv_data =
     {
         .p_data = m_enc_advdata,
-        .len    = _BLE_GAP_ADV_SET_DATA_SIZE_MAX
+        .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
     },
     .scan_rsp_data =
     {
         .p_data = NULL,
         .len    = 0
     }
-};
-
-static uint8_t m_beacon_info[APP_BEACON_INFO_LENGTH] =                    /**< Information advertised by the Beacon. */
-{
-    APP_DEVICE_TYPE,     // Manufacturer specific information. Specifies the device type in this
-                         // implementation.
-    APP_ADV_DATA_LENGTH, // Manufacturer specific information. Specifies the length of the
-                         // manufacturer specific data in this implementation.
-    APP_BEACON_UUID,     // 128 bit UUID value.
-    APP_MAJOR_VALUE,     // Major arbitrary value that can be used to distinguish between Beacons.
-    APP_MINOR_VALUE,     // Minor arbitrary value that can be used to distinguish between Beacons.
-    APP_MEASURED_RSSI    // Manufacturer specific information. The Beacon's measured TX power in
-                         // this implementation.
 };
 
 /**@brief Function for initializing the Advertising functionality.
@@ -222,19 +211,16 @@ static void softdevice_advertising_init(uint8_t is_ibeacon)
   ble_advdata_t advdata;
   uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED;
 
+  m_sd_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET;
+  m_enc_advdata_len = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
+
   ble_advdata_manuf_data_t manuf_specific_data;
+  manuf_specific_data.company_identifier = TANGERINE_COMPANY_IDENTIFIER;
+ 
+  //manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
+  manuf_specific_data.data.p_data = (uint8_t *) get_bms_info();
 
-  if (is_ibeacon)
-  {
-    manuf_specific_data.company_identifier = APP_APPLE_IDENTIFIER;
-  }
-  else
-  {
-    manuf_specific_data.company_identifier = APP_COMPANY_IDENTIFIER;
-  }
-
-  manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
-  manuf_specific_data.data.size   = APP_BEACON_INFO_LENGTH;
+  manuf_specific_data.data.size   = APP_BMS_INFO_LENGTH;
 
   // Build and set advertising data.
   memset(&advdata, 0, sizeof(advdata));
@@ -288,10 +274,8 @@ static void timeslot_beacon_advertiser_error_handler(uint32_t nrf_error)
  */
 static void timeslot_beacon_adv_init(void)
 {
-  static uint8_t beacon_uuid[] = {APP_BEACON_UUID};
   static ble_beacon_init_t beacon_init;
     
-  memcpy(beacon_init.uuid.uuid128, beacon_uuid, sizeof(beacon_uuid));
   beacon_init.adv_interval  = TS_ADV_INTERVAL;
   beacon_init.error_handler = timeslot_beacon_advertiser_error_handler;
     
@@ -310,8 +294,7 @@ static void timeslot_on_radio_event(bool radio_active)
   {
     //nrf_gpio_pin_toggle(9);
 
-    //memcpy(m_enc_advdata, get_ibeacon_advertising_data(), _BLE_GAP_ADV_SET_DATA_SIZE_MAX);
-    memcpy(m_enc_advdata, get_bms_advertising_data(), _BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+    memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
    /*
     if (send_ibeacon)
     {
@@ -322,10 +305,11 @@ static void timeslot_on_radio_event(bool radio_active)
       m_adv_data.adv_data.p_data  = m_enc_advdata;
     }
 */
-     m_enc_advdata_len = _BLE_GAP_ADV_SET_DATA_SIZE_MAX;
+     m_enc_advdata_len = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
     m_adv_data.adv_data.p_data  = m_enc_advdata;
     m_adv_data.adv_data.len = m_enc_advdata_len;
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, NULL);
+    m_adv_handle = m_sd_adv_handle;
     send_ibeacon = !send_ibeacon;
   }
 }
@@ -409,7 +393,7 @@ static void restore_15sec_tgsec_timestamp()
 }
 
 /**@brief 
- *
+   100msec Interval Timer*
  */
 #ifdef FREERTOS_SWITCH
 static void time_100ms_count_hanlder(TimerHandle_t xTimer)
@@ -426,7 +410,7 @@ static void time_100ms_count_hanlder(void * p_context)
 }
 
 /**@brief 
- *
+   15see Interval Timer
  */
 #ifdef FREERTOS_SWITCH
 static void time_15000ms_count_hanlder(TimerHandle_t xTimer)
@@ -461,7 +445,7 @@ static void time_15000ms_count_hanlder(void * p_context)
 }
 
 /**@brief 
- *
+   60see Interval Timer
  */
 #ifdef FREERTOS_SWITCH
 static void time_60000ms_count_hanlder(TimerHandle_t xTimer)
@@ -496,23 +480,35 @@ static void time_60000ms_count_hanlder(void * p_context)
 
   // Timeslot Started
   if (ble_bms_get_timeslot_status() != 0x00 &&  ble_line_beacon_enablep() == 1) {
-    timeslot_start();
+
+    sd_ble_gap_adv_stop(m_sd_adv_handle);
+    m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
+    sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
+    sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
+
+    if (ble_line_beacon_enablep() == 1) {
+      timeslot_start();
+    }
+
+    m_tbm_txfrq = 0;
+    ret_code_t err_code = app_timer_start(m_1000ms_count_timer_id, COUNTER_1000ms_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
   }
 }
 
 /**@brief 
- *
+   10min Interval Timer
  */
 #ifdef FREERTOS_SWITCH
-static void time_ecomodecheck_count_hanlder(TimerHandle_t xTimer)
+static void time_10min_count_hanlder(TimerHandle_t xTimer)
 {
   UNUSED_PARAMETER(xTimer);
 #else
-static void time_ecomodecheck_count_hanlder(void * p_context)
+static void time_10min_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  NRF_LOG_INFO("time_ecomodecheck_count_hanlder");
+  NRF_LOG_INFO("time_10min_count_hanlder");
 
   // Battery update
   read_battery_hysteresis(NULL);
@@ -563,6 +559,31 @@ static void time_ecomodecheck_count_hanlder(void * p_context)
   return;
   m_eco_adv_stop = bEco_Mode;
 }
+
+/**@brief 
+   1sec Interval Timer
+ */
+#ifdef FREERTOS_SWITCH
+static void time_1000ms_count_hanlder(TimerHandle_t xTimer)
+{
+  UNUSED_PARAMETER(xTimer);
+#else
+static void time_1000ms_count_hanlder(void * p_context)
+{
+  UNUSED_PARAMETER(p_context);
+#endif
+
+  m_tbm_txfrq++;
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] = 12;
+  if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
+    NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
+    nrf_gpio_pin_toggle(9);
+    m_tbm_txfrq = 0;
+    m_bTbm = true;
+  }
+}
+
 
 
 /**@brief Handler for shutdown preparation.
@@ -793,13 +814,13 @@ static void timers_init(void)
   //                                      read_battery_hysteresis);
   #endif
 
-  // Create ECO mode  check timer for power-on startup stage.
+  // Create counter 10min timer for power-on startup stage.
   #if defined(ECOMODE_CHECKING_ENABLED)
-  m_ecomodecheck_count_timer       = xTimerCreate("ECOMODE_CHECKING_INTERVAL",
-                                        COUNTER_ECOMODECHECK_INTERVAL_,
+  m_10min_count_timer         = xTimerCreate("COUNTER_10min_INTERVAL",
+                                        COUNTER_10min_INTERVAL_,
                                         pdTRUE,
                                         NULL,
-                                        time_ecomodecheck_count_hanlder);
+                                        time_10min_count_hanlder);
   #endif
 
   /* Error checking */
@@ -809,7 +830,7 @@ static void timers_init(void)
   #if defined(BATTERY_CHECKING_ENABLED)
   //|| (NULL == m_battery_monitoring_timer)
   #endif
-    || (NULL == m_ecomodecheck_count_timer) )
+    || (NULL == m_10min_count_timer) )
   {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
   }
@@ -840,12 +861,17 @@ static void timers_init(void)
   //APP_ERROR_CHECK(err_code);
   #endif
 
-  // Create ECO mode  check timer for power-on startup stage.
-  #if defined(ECOMODE_CHECKING_ENABLED)
-  err_code = app_timer_create(&m_ecomodecheck_count_timer_id,
+  // Create 10min  check timer for power-on startup stage.
+  err_code = app_timer_create(&m_10min_count_timer_id,
                               APP_TIMER_MODE_REPEATED,
-                              time_ecomodecheck_count_hanlder);
-  #endif
+                              time_10min_count_hanlder);
+  APP_ERROR_CHECK(err_code);
+
+  // Create 1000msec  check timer for power-on startup stage.
+  err_code = app_timer_create(&m_1000ms_count_timer_id,
+                              APP_TIMER_MODE_REPEATED,
+                              time_1000ms_count_hanlder);
+  APP_ERROR_CHECK(err_code);
 #endif
 
 }
@@ -892,7 +918,7 @@ static void application_timers_start(void)
     m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
     m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
 
-    if (pdPASS != xTimerStart(m_ecomodecheck_count_timer, OSTIMER_WAIT_FOR_QUEUE))
+    if (pdPASS != xTimerStart(m_10min_count_timer, OSTIMER_WAIT_FOR_QUEUE))
     {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
     }
@@ -926,7 +952,7 @@ static void application_timers_start(void)
   m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
   m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
 
-  err_code = app_timer_start(m_ecomodecheck_count_timer_id, COUNTER_ECOMODECHECK_INTERVAL, NULL);
+  err_code = app_timer_start(m_10min_count_timer_id, COUNTER_10min_INTERVAL, NULL);
   APP_ERROR_CHECK(err_code);
   #endif
 #endif
@@ -1184,7 +1210,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
       {
         .rx_phys = BLE_GAP_PHY_AUTO,
         .tx_phys = BLE_GAP_PHY_AUTO,
-      };
+      }; 
       err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
       APP_ERROR_CHECK(err_code);
       break;
@@ -1195,7 +1221,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
       g_connected = 0;
       g_conn_handle = BLE_CONN_HANDLE_INVALID;
       execute_led(LED_OFF);
-      advertising_start();
+      if (ble_bms_get_timeslot_status() == 0x00) {
+        advertising_start();
+      } else {
+        (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
+        (void)sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
+      }
       break;
     }
 
@@ -1543,7 +1574,7 @@ void clock_init(void)
 /**@brief F unction for application main entry.
  */
 int main(void)
-{
+  {
   uint32_t err_code;
   bool erase_bonds;
 

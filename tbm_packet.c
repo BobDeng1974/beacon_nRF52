@@ -6,9 +6,11 @@ static uint8_t bms_info[APP_BMS_INFO_LENGTH] =                  /**< Information
     0x00, 0x00,                                                  // Service ID : 2 bytes
     0x00, 0x00, 0x00, 0x00,                                      // Serial ID : 4 bytes
     0x00, 0x00, 0x00, 0x00,                                      // Beacon ID : 4 bytes
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Geo Hash : 10 bytes
-    0x00,                                                        // Battery/Status 1 byte
-    0x00,                                                        // Tx Power/Frequency 1 byte
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,              // Geo Hash : 8 bytes
+    0x00,                                                        // Tx Power : 1 bytes
+    0x00,                                                        // Battery / ECO : 1 bytes
+    0x00,                                                        // Mode / Status 1 byte
+    0x00,                                                        // Frequency 1 byte
     APP_FIRMWARE_VERSION_VALUE                                   // 2 bytes
 }; // 24bytes
 
@@ -382,5 +384,9 @@ void bms_advertising_init(ble_bms_t m_bms)
 uint8_t * get_bms_advertising_data(void)
 {
   return &m_enc_advdata;
+}
+uint8_t * get_bms_info(void)
+{
+  return &bms_info[0];
 }
 

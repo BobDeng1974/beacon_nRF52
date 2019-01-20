@@ -5,7 +5,6 @@
 
 typedef struct
 {
-    ble_uuid128_t           uuid;
     uint32_t                adv_interval;
     uint16_t                major;
     uint16_t                minor;

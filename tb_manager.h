@@ -34,7 +34,7 @@
 #define  BINFO_SERVICE_ID_VALUE_SIZ            2     //  -
 
 #define  BINFO_GEO_HASH_VALUE_IDX             30     // Geo Hash
-#define  BINFO_GEO_HASH_VALUE_SIZ             10     //  -
+#define  BINFO_GEO_HASH_VALUE_SIZ              8     //  -
 
 #define  BINFO_VERSION_VALUE_IDX              40     // Version
 #define  BINFO_VERSION_VALUE_SIZ               2     //  -
@@ -126,8 +126,8 @@
 #define BINFO_TIMESLOT_TXFRQ_VALUE_IDX       176     // l=12 : s=176 : Timeslot length
 #define BINFO_TIMESLOT_TXFRQ_VALUE_SIZ        1     // -
 
-#define BINFO_TBM_TXFRQ_VALUE_IDX            178     // l=2 : s=178 : Timeslot advertising distance
-#define BINFO_TBM_TXFRQ_VALUE_SIZ              2     // -
+#define BINFO_TBM_TXFRQ_VALUE_IDX            178     // l=1 : s=178 : Timeslot advertising distance
+#define BINFO_TBM_TXFRQ_VALUE_SIZ              1     // -
 
 #define MAX_ADV_MODE_LIST                     12     // Advertising Mode List Max Index
 

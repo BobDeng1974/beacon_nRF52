@@ -2,10 +2,7 @@
 <session>
  <Bookmarks/>
  <Breakpoints groups="Breakpoints" active_group="Breakpoints">
-  <BreakpointListItem trigger="" line="187" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/common/nrf_sdh.c" useHWbreakpoint="false"/>
-  <BreakpointListItem trigger="" line="261" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../../nRF5_SDK_15.2.0_9412b96/components/softdevice/common/nrf_sdh.c" useHWbreakpoint="false"/>
-  <BreakpointListItem trigger="" line="117" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../../nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s" useHWbreakpoint="false"/>
-  <Exceptions set="Reset;MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
+  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
  </Breakpoints>
  <ExecutionProfileWindow/>
  <FrameBufferWindow>
@@ -71,9 +68,10 @@
    <Watchpoint numelements="40" expression="m_pdu_line_beacon" evalMode="2" name="m_pdu_line_beacon" radix="16" linenumber="53" filename="../line.c" list=""/>
    <Watchpoint numelements="40" expression="m_pdu_line_ibeacon" evalMode="2" name="m_pdu_line_ibeacon" radix="-1" linenumber="54" filename="../line.c" list=""/>
    <Watchpoint numelements="0" expression="m_beacon" evalMode="0" name="m_beacon" radix="16" linenumber="77" filename="../timeslot.c" list=""/>
-   <Watchpoint numelements="23" expression="m_beacon_info" evalMode="2" name="m_beacon_info" radix="-1" linenumber="1666" filename="../main.c" list=""/>
-   <Watchpoint numelements="0" expression="m_adv_data" evalMode="0" name="m_adv_data" radix="-1" linenumber="317" filename="../main.c" list=""/>
+   <Watchpoint numelements="23" expression="m_beacon_info" evalMode="2" name="m_beacon_info" radix="-1" linenumber="1668" filename="../main.c" list=""/>
+   <Watchpoint numelements="0" expression="m_adv_data" evalMode="0" name="m_adv_data" radix="-1" linenumber="319" filename="../main.c" list=""/>
    <Watchpoint numelements="31" expression="m_enc_advdata" evalMode="2" name="m_enc_advdata" radix="16" linenumber="384" filename="../tbm_packet.c" list=""/>
+   <Watchpoint numelements="0" expression="BLE_GAP_ADV_SET_DATA_SIZE_MAX" evalMode="0" name="BLE_GAP_ADV_SET_DATA_SIZE_MAX" radix="-1" linenumber="286" filename="../tbm_packet.c" list=""/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -86,12 +84,13 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="257" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="246" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="285" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="224" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="358" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="320" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="36" y="1529" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1519" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="285" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="284" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="347" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="329" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="6" y="1537" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1481" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/util/app_error_weak.c" selected="0" top="61" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="83" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="297" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="255" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="483" useTextEdit="1" useBinaryEdit="0" left="0" path="../ble_bms.c" selected="0" top="435" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="Tangerine-beacon-nRF52-SDK15" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" debugSearchFileMap="" fileDialogInitialDirectory="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/beacon_nRF52" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="Tangerine-beacon-nRF52-SDK15" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/beacon_nRF52" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

@@ -307,10 +307,7 @@ void adv_switch_handler(void * p_context)
 
       // TBM
       if ( current_mode == BLE_ADV_MODE_BMS ) current_mode = 0xFF;
-      uint16_t *_tbm_adv_interval = (uint16_t *)&_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX];
-      uint16_t tbm_adv_interval = (uint16_t)*_tbm_adv_interval;
-      if ( tbm_adv_interval < 100 ) tbm_adv_interval = 100;
-      else if ( tbm_adv_interval > 12000 ) tbm_adv_interval = 12000;
+      uint16_t tbm_adv_interval = (uint16_t)_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] * 1000;
     
       if ( m_tbm_adv_adding_interval > tbm_adv_interval ) {
         m_tbm_adv_adding_interval = 0;

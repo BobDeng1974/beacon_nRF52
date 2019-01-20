@@ -724,8 +724,7 @@ static void ble_bms_set_default_value_to_beacon_info()
   }
 
   if (m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] == 0xFF) {
-    m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = 0xE0;
-    m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX+1] = 0x2E;
+    m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = 0x0C;
   }
 
 

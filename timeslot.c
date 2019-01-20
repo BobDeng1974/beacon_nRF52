@@ -18,7 +18,6 @@
 
 static struct
 {
-    ble_uuid128_t           uuid;                           /** 128 proprietary service UUID to include in advertisement packets*/
     uint32_t                adv_interval;                   /** Advertising interval in milliseconds to be used for 'beacon' advertisements*/
     bool                    keep_running;                   /** */
     bool                    is_running;                     /** is the 'beacon' running*/
@@ -199,7 +198,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
   static enum mode_t mode;
 
-  nrf_gpio_pin_toggle(9);
+  //nrf_gpio_pin_toggle(9);
 
   signal_callback_return_param.params.request.p_next  = NULL;
   signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
@@ -295,7 +294,6 @@ void timeslot_on_sys_evt(uint32_t event)
 
 void timeslot_init(ble_beacon_init_t * p_init)
 {
-    memcpy(&m_beacon.uuid, &p_init->uuid, sizeof(p_init->uuid));
     m_beacon.adv_interval = p_init->adv_interval;
     m_beacon.slot_length  = BEACON_SLOT_LENGTH;
     m_beacon.error_handler= p_init->error_handler;
