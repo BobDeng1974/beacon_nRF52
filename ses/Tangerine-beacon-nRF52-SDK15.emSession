@@ -57,21 +57,10 @@
  </TraceWindow>
  <Watch1>
   <Watches active="1" update="Never">
-   <Watchpoint numelements="10" expression="m_data_id_str" evalMode="2" name="m_data_id_str" radix="16" linenumber="506" filename="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" list=""/>
-   <Watchpoint numelements="2" expression="m_data_action_str" evalMode="2" name="m_data_action_str" radix="16" linenumber="507" filename="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" list=""/>
-   <Watchpoint numelements="0" expression="p_pm_evt->params.peer_data_update_failed.error" evalMode="0" name="p_pm_evt->params.peer_data_update_failed.error" radix="-1" linenumber="508" filename="../../nRF5_SDK_15.2.0_9412b96/components/ble/peer_manager/peer_manager_handler.c" list=""/>
-   <Watchpoint numelements="40" expression="m_adv_pdu" evalMode="2" name="m_adv_pdu" radix="16" linenumber="56" filename="../timeslot.c" list=""/>
-   <Watchpoint numelements="40" expression="adv_pdu" evalMode="2" name="adv_pdu" radix="-1" linenumber="151" filename="../timeslot.c" list=""/>
-   <Watchpoint numelements="0" expression="m_adv_handle" evalMode="0" name="m_adv_handle" radix="-1" linenumber="162" filename="../advertising.c" list=""/>
-   <Watchpoint numelements="0" expression="m_ble_adv_data" evalMode="0" name="m_ble_adv_data" radix="-1" linenumber="162" filename="../advertising.c" list=""/>
-   <Watchpoint numelements="0" expression="m_adv_params" evalMode="0" name="m_adv_params" radix="-1" linenumber="162" filename="../advertising.c" list=""/>
-   <Watchpoint numelements="40" expression="m_pdu_line_beacon" evalMode="2" name="m_pdu_line_beacon" radix="16" linenumber="53" filename="../line.c" list=""/>
-   <Watchpoint numelements="40" expression="m_pdu_line_ibeacon" evalMode="2" name="m_pdu_line_ibeacon" radix="-1" linenumber="54" filename="../line.c" list=""/>
-   <Watchpoint numelements="0" expression="m_beacon" evalMode="0" name="m_beacon" radix="16" linenumber="77" filename="../timeslot.c" list=""/>
-   <Watchpoint numelements="23" expression="m_beacon_info" evalMode="2" name="m_beacon_info" radix="-1" linenumber="1668" filename="../main.c" list=""/>
-   <Watchpoint numelements="0" expression="m_adv_data" evalMode="0" name="m_adv_data" radix="-1" linenumber="319" filename="../main.c" list=""/>
-   <Watchpoint numelements="31" expression="m_enc_advdata" evalMode="2" name="m_enc_advdata" radix="16" linenumber="384" filename="../tbm_packet.c" list=""/>
-   <Watchpoint numelements="0" expression="BLE_GAP_ADV_SET_DATA_SIZE_MAX" evalMode="0" name="BLE_GAP_ADV_SET_DATA_SIZE_MAX" radix="-1" linenumber="286" filename="../tbm_packet.c" list=""/>
+   <Watchpoint numelements="190" expression="m_beacon_info" evalMode="2" name="m_beacon_info" radix="-1" linenumber="385" filename="../tb_manager.c" list=""/>
+   <Watchpoint numelements="0" expression="m_adv_handle" evalMode="0" name="m_adv_handle" radix="-1" linenumber="180" filename="../ibeacon.c" list=""/>
+   <Watchpoint numelements="0" expression="m_sd_adv_handle" evalMode="0" name="m_sd_adv_handle" radix="-1" linenumber="318" filename="../main.c" list=""/>
+   <Watchpoint numelements="0" expression="m_adv_data" evalMode="0" name="m_adv_data" radix="-1" linenumber="180" filename="../ibeacon.c" list=""/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -86,11 +75,12 @@
  <Files>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="285" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="284" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="347" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="329" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="6" y="1537" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1481" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1583" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1544" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/util/app_error_weak.c" selected="0" top="61" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="83" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="29" y="384" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="344" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="297" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="255" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="483" useTextEdit="1" useBinaryEdit="0" left="0" path="../ble_bms.c" selected="0" top="435" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="179" useTextEdit="1" useBinaryEdit="0" left="0" path="../ibeacon.c" selected="0" top="137" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="Tangerine-beacon-nRF52-SDK15" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/beacon_nRF52" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

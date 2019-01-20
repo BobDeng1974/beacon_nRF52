@@ -292,8 +292,6 @@ static void timeslot_on_radio_event(bool radio_active)
   static bool send_ibeacon = true;
   if (radio_active) 
   {
-    //nrf_gpio_pin_toggle(9);
-
     memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
    /*
     if (send_ibeacon)
@@ -305,7 +303,16 @@ static void timeslot_on_radio_event(bool radio_active)
       m_adv_data.adv_data.p_data  = m_enc_advdata;
     }
 */
-     m_enc_advdata_len = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
+    nrf_gpio_pin_toggle(9);
+    if (m_bTbm) {
+      m_bTbm = false;
+      memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+    }
+    else {
+      //memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+    }
+
+    m_enc_advdata_len = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
     m_adv_data.adv_data.p_data  = m_enc_advdata;
     m_adv_data.adv_data.len = m_enc_advdata_len;
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, NULL);
@@ -440,7 +447,7 @@ static void time_15000ms_count_hanlder(void * p_context)
   if (ble_tgsec_ibeacon_enablep() == 1) {
     m_tgsec_timestamp.value++;
     calc_rotmm_save_15sec_tgsec_timestamp();
-    if (ble_bms_get_timeslot_status() != 0x00) set_ibeacon_packet();
+    //if (ble_bms_get_timeslot_status() != 0x00) set_ibeacon_packet();
   }
 }
 
@@ -483,6 +490,7 @@ static void time_60000ms_count_hanlder(void * p_context)
 
     sd_ble_gap_adv_stop(m_sd_adv_handle);
     m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
+    advertising_init(BLE_ADV_MODE_IBEACON);
     sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
     sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
 
@@ -578,7 +586,6 @@ static void time_1000ms_count_hanlder(void * p_context)
   _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] = 12;
   if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
     NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
-    nrf_gpio_pin_toggle(9);
     m_tbm_txfrq = 0;
     m_bTbm = true;
   }
@@ -1078,7 +1085,7 @@ static void services_init(void)
     }  
   }
   _beacon_info[BINFO_STATUS_VALUE_IDX] = 4;
-  m_advertising_packet_type = 0x10;    // ##DEBUG##
+  m_advertising_packet_type = 0x30;    // ##DEBUG##
   m_timeslot_mode = true;    // ##DEBUG##
 
   // DFU Services
@@ -1704,6 +1711,7 @@ int main(void)
     m_adv_data.adv_data.len     = m_enc_advdata_len;
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
     (void)sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
+    m_adv_handle = m_sd_adv_handle;
   }
   else {
     advertising_start();
