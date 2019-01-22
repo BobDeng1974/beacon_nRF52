@@ -322,3 +322,8 @@ void timeslot_stop(void)
     m_beacon.keep_running = false;
 }
 
+uint8_t get_timeslot(void)
+{
+    return m_beacon.keep_running;
+}
+

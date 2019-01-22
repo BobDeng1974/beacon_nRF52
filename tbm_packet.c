@@ -31,8 +31,9 @@ void build_bms_data(void)
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
   // Service ID: 0-1
-  bms_info[0] = 0xdf;
-  bms_info[1] = 0xff;
+  bms_info[0] = 0xD0;
+  if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) bms_info[0] = 0xC0;
+  bms_info[1] = 0xFF;
   // 28-29
   //for (int i = BINFO_SERVICE_ID_VALUE_IDX; i < (BINFO_SERVICE_ID_VALUE_IDX+2); i++) {
   //  bms_info[i-28] = _beacon_info[i];
@@ -59,8 +60,9 @@ void build_bms_data(void)
     //print("%d - ", _beacon_info[i]);
   }
   if (g_startup_stage == 0) {
-    if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
-      bms_info[0] = 0xef;
+    bms_info[0] = 0xF0;
+    if (ble_tgsec_ibeacon_enablep() == 1) {
+      bms_info[0] = 0xE0;
       bms_info[6] = _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX];
       bms_info[7] = _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX+1];
       bms_info[8] = _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX+2];
@@ -104,8 +106,8 @@ void build_bms_data(void)
   bms_info[20] = statusFlags;
 
   // Tx Power / Beacon Frequency
-  statusFlags = _beacon_info[BINFO_TXFRQ_VALUE_IDX];
-  statusFlags = statusFlags  | (_beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] << 4);
+  statusFlags = _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX];
+  statusFlags = statusFlags  | (_beacon_info[BINFO_TXFRQ_VALUE_IDX] << 4);
   bms_info[21] = statusFlags;
 
   // Firmware Version

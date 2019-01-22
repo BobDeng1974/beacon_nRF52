@@ -96,8 +96,9 @@ static uint16_t                           m_enc_advdata_len;                    
 static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set. */
 static uint8_t                            m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set (iBeacon). */
 
-uint8_t                                   m_tbm_txfrq;                               // Tangerine Beacon Management Packet Interval Counter
-uint8_t                                   m_bTbm = false;
+uint8_t                                   m_tbm_txfrq;                                // Tangerine Beacon Management Packet Interval Counter
+uint8_t                                   m_bTbm = false;                             // Tangerine Beacon Management Packet
+uint8_t                                   m_bFlashSaveRequest = false;                // Flash save request
 
 //------------------------------------------------------------------------------
 // Battery monitoring
@@ -267,7 +268,7 @@ static void timeslot_soc_evt_handler(uint32_t evt_id, void * p_context)
 static void timeslot_beacon_advertiser_error_handler(uint32_t nrf_error)
 {
   NRF_LOG_INFO("beacon_advertiser_error_handler 0x%08x.\r\n", nrf_error);
-  APP_ERROR_HANDLER(nrf_error);
+  //APP_ERROR_HANDLER(nrf_error);
 }
 
 /**@brief Function for initializing Beacon advertiser.
@@ -515,6 +516,11 @@ static void time_10min_count_hanlder(void * p_context)
 #endif
   NRF_LOG_INFO("time_10min_count_hanlder");
 
+  if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
+    m_bFlashSaveRequest = true;
+    if (get_timeslot()) timeslot_stop();
+  }
+
   // Battery update
   read_battery_hysteresis(NULL);
 
@@ -588,9 +594,20 @@ static void time_1000ms_count_hanlder(void * p_context)
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] = 12;
   if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
-    NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
+    //NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
     m_tbm_txfrq = 0;
     m_bTbm = true;
+  }
+
+  if( m_bFlashSaveRequest ) {
+    if ( !get_timeslot() ) {
+      uint32_t err_code = tb_manager_settings_store();
+      if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
+      APP_ERROR_CHECK(err_code);
+
+      timeslot_start();
+      m_bFlashSaveRequest = false;
+    }
   }
 }
 
