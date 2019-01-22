@@ -31,10 +31,12 @@ void build_bms_data(void)
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
   // Service ID: 0-1
+  bms_info[0] = 0xdf;
+  bms_info[1] = 0xff;
   // 28-29
-  for (int i = BINFO_SERVICE_ID_VALUE_IDX; i < (BINFO_SERVICE_ID_VALUE_IDX+2); i++) {
-    bms_info[i-28] = _beacon_info[i];
-  }
+  //for (int i = BINFO_SERVICE_ID_VALUE_IDX; i < (BINFO_SERVICE_ID_VALUE_IDX+2); i++) {
+  //  bms_info[i-28] = _beacon_info[i];
+  //}
 
   // Serial ID: 2-5
   // 140-143 
@@ -56,7 +58,15 @@ void build_bms_data(void)
     bms_info[i-10] = _beacon_info[i];
     //print("%d - ", _beacon_info[i]);
   }
-   
+  if (g_startup_stage == 0) {
+    if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
+      bms_info[0] = 0xef;
+      bms_info[6] = _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX];
+      bms_info[7] = _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX+1];
+      bms_info[8] = _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX+2];
+      bms_info[9] = _beacon_info[BINFO_TGSECB_ROTATED_BEACONID_IDX+3];
+    }
+  } 
   // GEO Hash
   for (int i = BINFO_GEO_HASH_VALUE_IDX; i < (BINFO_GEO_HASH_VALUE_IDX+BINFO_GEO_HASH_VALUE_SIZ); i++) {
     bms_info[i-20] = _beacon_info[i];
@@ -75,179 +85,28 @@ void build_bms_data(void)
     bms_info[18] = battery_level_get2();
   }
 
-  // Battery Supply / Beacon Battery / Beacon Status
-  uint8_t statusFlags = _beacon_info[BINFO_BATTERY_VALUE_IDX];
+  // Tx Power
+  bms_info[18] =  _beacon_info[BINFO_TXPWR_VALUE_IDX] & 0x0f;
 
-  // Beacon Status
-  /* 
-     000:Not Provisioned
-     001:Provisioned
-     010:Initialized
-     011:Reinitialized
-     100:Active
-     101:Inactive
-     110:Removed
-     111:Terminated
-  */
-  switch( _beacon_info[BINFO_STATUS_VALUE_IDX] ) {
-  case 0: // TGRBeaconStatusNotProvisioned, // 未登録
-    break;
-  case 1: // TGRBeaconStatusProvisioned, // 登録済み
-    statusFlags |= 1;
-    break;
-  case 2: // TGRBeaconStatusInitialized, // 初期設定済み
-    statusFlags |= (1 << 1);
-    break;
-  case 3: // TGRBeaconStatusReinitialized, // 再初期設定済み
-    statusFlags |= 1;
-    statusFlags |= (1 << 1);
-    break;
-  case 4: // TGRBeaconStatusActive, // アクティブ
-    statusFlags |= (1 << 2);
-    break;
-  case 5: // TGRBeaconStatusInactive, // 休止中
-    statusFlags |= 1;
-    statusFlags |= (1 << 2);
-    break;
-  case 6: // TGRBeaconStatusRemoved, // 撤去済み
-    statusFlags |= (1 << 1);
-    statusFlags |= (1 << 2);
-    break;
-  case 7: // TGRBeaconStatusTerminated, // 終了
-    statusFlags |= 1;
-    statusFlags |= (1 << 1);
-    statusFlags |= (1 << 2);
-    break;
-  default: // TGRBeaconStatusUnknown
-    break;
-  }
+  // Battery / ECO mode
+  uint8_t statusFlags =  battery_level_get2() & 0x7f;
 
-  // ECO mode status
-  //statusFlags |= (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] << 3);
   m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
   m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
   m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
   m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
   if (m_eco_start_time.wTime != m_eco_finish_time.wTime) statusFlags |= 0x08;
-
+  bms_info[19] =  statusFlags;
+  
+  // Beacon Status
+  statusFlags = m_timeslot_mode << 4;
+  statusFlags = statusFlags | _beacon_info[BINFO_STATUS_VALUE_IDX];
   bms_info[20] = statusFlags;
-  if ( m_fcm == 0xFF ) bms_info[20] = m_fcm;
 
   // Tx Power / Beacon Frequency
-  uint8_t txFlags = 0b00000000;
-  
-  // Tx Power
-  /* 
-     0000: -40dBm
-     0001: -30dBm
-     0010: -20dBm
-     0011: -16dBm
-     0100: -12dBm
-     0101: -8dBm
-     0110: -4dBm
-     0111: 0dBm
-     1000: 4dBm
-   */
-  switch( _beacon_info[BINFO_TXPWR_VALUE_IDX] ) {
-  case 0:
-    txFlags = (0 << 8);
-    break;
-  case 1:
-    txFlags |= (1 << 4);
-    break;
-  case 2:
-    txFlags |= (1 << 5);
-    break;
-  case 3:
-    txFlags |= (1 << 4);
-    txFlags |= (1 << 5);
-    break;
-  case 4:
-    txFlags |= (1 << 6);
-    break;
-  case 5:
-    txFlags |= (1 << 4);
-    txFlags |= (1 << 6);
-    break;
-  case 6:
-    txFlags |= (1 << 5);
-    txFlags |= (1 << 6);
-    break;
-  case 7:
-    txFlags |= (1 << 4);
-    txFlags |= (1 << 5);
-    txFlags |= (1 << 6);
-    break;
-  case 8:
-    txFlags |= (1 << 7);
-    break;
-  }
-
-  // Beacon Frequency
-  switch( _beacon_info[BINFO_TXFRQ_VALUE_IDX] ) {
-  case 0:
-    txFlags |= 0b00000000;
-    break;
-  case 1:
-    txFlags |= 0b00000001;
-    break;
-  case 2:
-    txFlags |= 0b00000010;
-    //txFlags |= (1 << 1);
-    break;
-  case 3:
-    txFlags |= 0b00000011;
-    //txFlags |= (1 << 0);
-    //txFlags |= (1 << 1);
-    break;
-  case 4:
-    txFlags |= 0b00000100;
-    //txFlags |= (1 << 2);
-    break;
-  case 5:
-    txFlags |= 0b00000101;
-    //txFlags |= (1 << 0);
-    //txFlags |= (1 << 2);
-    break;
-  case 6:
-    txFlags |= 0b00000110;
-    //txFlags |= (1 << 1);
-    //txFlags |= (1 << 2);
-    break;
-  case 7:
-    txFlags |= 0b00000111;
-    //txFlags |= (1 << 0);
-    //txFlags |= (1 << 1);
-    //txFlags |= (1 << 2);
-    break;
-
-  case 8:
-    txFlags |= 0b00001000;
-    break;
-  case 9:
-    txFlags |= 0b00001001;
-    break;
-  case 10:
-    txFlags |= 0b00001010;
-    break;
-  case 11:
-    txFlags |= 0b00001011;
-    break;
-  case 12:
-    txFlags |= 0b00001100;
-    break;
-  case 13:
-    txFlags |= 0b00001101;
-    break;
-  case 14:
-    txFlags |= 0b00001110;
-    break;
-  case 15:
-    txFlags |= 0b00001111;
-    break;
-  }
-
-  bms_info[21] = txFlags;
+  statusFlags = _beacon_info[BINFO_TXFRQ_VALUE_IDX];
+  statusFlags = statusFlags  | (_beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] << 4);
+  bms_info[21] = statusFlags;
 
   // Firmware Version
   bms_info[22] = _beacon_info[BINFO_VERSION_VALUE_IDX];
@@ -314,9 +173,10 @@ void bms_advertising_init(ble_bms_t m_bms)
   //
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
-  if ( m_fcm == 0xFF || g_is_startup == 1 || (prev_status == 1 && g_is_startup == 0)) {
-      build_bms_data();
-  }
+  build_bms_data();
+  //if ( m_fcm == 0xFF || g_is_startup == 1 || (prev_status == 1 && g_is_startup == 0)) {
+  //    build_bms_data();
+  //}
   prev_status = g_is_startup;
 
   //

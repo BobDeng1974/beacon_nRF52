@@ -290,26 +290,25 @@ static void timeslot_beacon_adv_init(void)
 static void timeslot_on_radio_event(bool radio_active) 
 {
   static bool send_ibeacon = true;
+
+  nrf_gpio_pin_toggle(9);
+
   if (radio_active) 
   {
     memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
-   /*
-    if (send_ibeacon)
-    {
-      m_adv_data.adv_data.p_data  = m_enc_advdata2;
+    if ( g_startup_stage == 1 ) {
+      return;
     }
-    else
-    {
-      m_adv_data.adv_data.p_data  = m_enc_advdata;
-    }
-*/
-    nrf_gpio_pin_toggle(9);
+
     if (m_bTbm) {
       m_bTbm = false;
       memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
     }
     else {
-      //memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+      if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
+        memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+      } 
+      else return;
     }
 
     m_enc_advdata_len = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
@@ -447,7 +446,7 @@ static void time_15000ms_count_hanlder(void * p_context)
   if (ble_tgsec_ibeacon_enablep() == 1) {
     m_tgsec_timestamp.value++;
     calc_rotmm_save_15sec_tgsec_timestamp();
-    //if (ble_bms_get_timeslot_status() != 0x00) set_ibeacon_packet();
+    if (ble_bms_get_timeslot_status() != 0x00) ibeacon_advertising_init();
   }
 }
 
@@ -499,8 +498,6 @@ static void time_60000ms_count_hanlder(void * p_context)
     }
 
     m_tbm_txfrq = 0;
-    ret_code_t err_code = app_timer_start(m_1000ms_count_timer_id, COUNTER_1000ms_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code);
   }
 }
 
@@ -580,6 +577,12 @@ static void time_1000ms_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
+
+  advertising_init(BLE_ADV_MODE_BMS);
+
+  if ( g_startup_stage == 1 ) {
+    return;
+  }
 
   m_tbm_txfrq++;
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
@@ -961,6 +964,9 @@ static void application_timers_start(void)
 
   err_code = app_timer_start(m_10min_count_timer_id, COUNTER_10min_INTERVAL, NULL);
   APP_ERROR_CHECK(err_code);
+
+  err_code = app_timer_start(m_1000ms_count_timer_id, COUNTER_1000ms_INTERVAL, NULL);
+  APP_ERROR_CHECK(err_code);
   #endif
 #endif
 }
@@ -1086,7 +1092,7 @@ static void services_init(void)
   }
   _beacon_info[BINFO_STATUS_VALUE_IDX] = 4;
   m_advertising_packet_type = 0x30;    // ##DEBUG##
-  m_timeslot_mode = true;    // ##DEBUG##
+  m_timeslot_mode = 5;  // ##DEBUG##
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
@@ -1581,7 +1587,7 @@ void clock_init(void)
 /**@brief F unction for application main entry.
  */
 int main(void)
-  {
+{
   uint32_t err_code;
   bool erase_bonds;
 
@@ -1700,6 +1706,7 @@ int main(void)
   ble_radio_notification_init(APP_IRQ_PRIORITY_LOW, NRF_RADIO_NOTIFICATION_DISTANCE_5500US, timeslot_on_radio_event);
 
   // Start SoftDevice beacon,
+  if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) advertising_init(BLE_ADV_MODE_IBEACON);
   advertising_init(BLE_ADV_MODE_BMS);
 
   if (ble_bms_get_timeslot_status() != 0x00) {
