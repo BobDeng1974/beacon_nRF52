@@ -17,6 +17,9 @@ static uint8_t bms_info[APP_BMS_INFO_LENGTH] =                  /**< Information
 static uint8_t m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded advertising set. */
 static uint8_t m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded scan response data set. */
 
+#define TBM_BEACON_PDU_LENGTH        40    
+static  uint8_t m_pdu_tbm[TBM_BEACON_PDU_LENGTH];
+
 static uint8_t prev_status = 1;
 
 uint8_t m_fcm = 0;
@@ -217,6 +220,8 @@ void bms_advertising_init(ble_bms_t m_bms)
   // Set Timeslot Advertising PDU packet
   //
   if (ble_bms_get_timeslot_status() != 0x00) {
+    // Set Timeslot Advertising PDU packet
+    radio_pdu_configure(&m_adv_data, &m_adv_params, &m_pdu_tbm);
     radio_gap_adv_set_configure(&m_adv_data);
     return;
   }
@@ -251,5 +256,10 @@ uint8_t * get_bms_advertising_data(void)
 uint8_t * get_bms_info(void)
 {
   return &bms_info[0];
+}
+
+uint8_t * get_tbm_packet(void)
+{
+  return &m_pdu_tbm;
 }
 

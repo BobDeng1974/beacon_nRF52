@@ -304,6 +304,8 @@ static void timeslot_on_radio_event(bool radio_active)
 
   nrf_gpio_pin_toggle(9);
 
+  if (m_advertising_packet_type == 0x10 ) return;
+
   if (radio_active) 
   {
     memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
@@ -508,10 +510,13 @@ static void time_60000ms_count_hanlder(void * p_context)
   if (ble_bms_get_timeslot_status() != 0x00 &&  ble_line_beacon_enablep() == 1) {
 
     sd_ble_gap_adv_stop(m_sd_adv_handle);
-    m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
-    advertising_init(BLE_ADV_MODE_IBEACON);
-    sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
-    sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
+
+    if (m_advertising_packet_type != 0x10 ) {
+      m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
+      advertising_init(BLE_ADV_MODE_IBEACON);
+      sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
+      sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
+    }
 
     if (ble_line_beacon_enablep() == 1) {
       timeslot_start();
@@ -604,18 +609,20 @@ static void time_1000ms_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-
-  advertising_init(BLE_ADV_MODE_BMS);
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
   uint16_t blevel = get_battery_level();
   uint8_t bpercent = battery_level_to_percent(blevel);
+  m_battery_charge.value = blevel;
+  _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = bpercent;
+
+  advertising_init(BLE_ADV_MODE_BMS);
 
   if ( g_startup_stage == 1 ) {
     return;
   }
 
   if (!m_bTbmRequest) m_tbm_txfrq++;
-  uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
     //NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
     m_tbm_txfrq = 0;
@@ -1729,7 +1736,7 @@ int main(void)
   advertising_init(BLE_ADV_MODE_BMS);
 
   if (ble_bms_get_timeslot_status() != 0x00) {
-    softdevice_advertising_init(false);   // Initialize Nordic beacon
+    softdevice_advertising_init(false);   // Initialize Tangerine beacon
     softdevice_advertising_init(true);    // Initialize iBeacon
     timeslot_beacon_adv_init();           // Initialize TimeSlot beacon
 

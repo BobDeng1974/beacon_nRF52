@@ -87,7 +87,7 @@
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x50 /* v41040 refactoring version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x60 /* v41056 LINE support version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x70 /* v41072 Tangerine Secure Beacon v1.0 support */
-#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x84 /* v42116 nRF52 Tangerine Secure Beacon v1.1 support */
+#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x85 /* v42117 nRF52 Tangerine Secure Beacon v1.1 support */
 
 //----------------------------------------------------------------------------
 // device name and company identifier
@@ -114,21 +114,23 @@
 //----------------------------------------------------------------------------
 //  global variables 
 //----------------------------------------------------------------------------
-extern  uint8_t   m_tbm_scan_mode;
-extern  uint8_t   m_timeslot_mode;
-extern  uint8_t   m_advertising_packet_type;
-extern  uint8_t   m_eco_adv_stop;
-extern  ble_gap_addr_t m_device_addr;  // 48-bit address, LSB format
-extern  ble_advertising_t m_advertising;        /**< Advertising module instance. BLE_ADVERTISING_DEF(m_advertising); */
-extern  nrf_saadc_value_t  m_buffer_pool[ADC_SAMPLES_IN_BUFFER];                                        
-extern  uint8_t   m_adc_status;
+extern  uint8_t           m_tbm_scan_mode;
+extern  uint8_t           m_timeslot_mode;
+extern  uint8_t           m_advertising_packet_type;
+extern  uint8_t           m_eco_adv_stop;
+extern  ble_gap_addr_t    m_device_addr;          // 48-bit address, LSB format
+extern  ble_advertising_t m_advertising;          // Advertising module instance. BLE_ADVERTISING_DEF(m_advertising); */
+extern  nrf_saadc_value_t m_buffer_pool[ADC_SAMPLES_IN_BUFFER];                                        
+extern  uint8_t           m_adc_status;
+extern  uint8_t           m_bTbmRequest;          // Tangerine Beacon Management Packet
+extern  uint8_t           m_bTbmRequestCounter;   // Tangerine Beacon Management Packet
 
-extern  uint8_t   g_is_startup;    // startup status
-extern  uint8_t   g_connected;     // connected or not connected
-extern  uint16_t  g_conn_handle;   // 
-extern  uint8_t   g_ibeacon_mode;
-extern  ble_bms_t g_bms;           /**< Structure to identify the Beacon Management Service. */
-extern  uint8_t   g_startup_stage; // startup status
+extern  uint8_t           g_is_startup;           // startup status
+extern  uint8_t           g_connected;            // connected or not connected
+extern  uint16_t          g_conn_handle;          // 
+extern  uint8_t           g_ibeacon_mode;
+extern  ble_bms_t         g_bms;                  // Structure to identify the Beacon Management Service. */
+extern  uint8_t           g_startup_stage;        // startup status
 
 //-----------------------------------------------------------------------------
 // transable uint* type : uint* <-> uint8_t type array

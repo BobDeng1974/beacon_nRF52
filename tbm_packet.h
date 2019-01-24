@@ -17,6 +17,7 @@ void build_bms_data(void);
 void bms_advertising_init(ble_bms_t m_bms);
 uint8_t * get_bms_advertising_data(void);
 uint8_t * get_bms_info(void);
+uint8_t * get_tbm_packet(void);
 void tx_power_set(void);
 
 #endif /*  _TBM_PACKET_H_ */
