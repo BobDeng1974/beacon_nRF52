@@ -78,11 +78,12 @@
 
 #define BMS_CURRENT_DATETIME                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // sec/min/hour/days/week/mon/year
 
-#define BMS_TIMESLOT_MODE_STATUS            0x00, 0x00                         // ECO mode status
-#define BMS_TIMESLOT_TXFRQ_VALUE            0x00, 0x00  // Timeslot mode Intervals
+#define BMS_TIMESLOT_MODE_STATUS            0x81, 0x00                         // ECO mode status
+#define BMS_TIMESLOT_TXFRQ_VALUE            0x0F, 0x00                         // Timeslot mode Intervals
 
-#define BMS_TBM_TXFRQ_VALUE                 0x00, 0x00                        // BMS advertising Intervals
+#define BMS_TBM_TXFRQ_VALUE                 0x0C, 0x00                         // BMS advertising Intervals
 
+#define BMS_BATTERY_MAX_CAPACITY            0xD4, 0x01                         // Battery Maximum capacity
 
 // flag operation
 #define BMS_FLG_GET(flg, bits)               (flg & bits)
@@ -155,7 +156,10 @@ static uint8_t m_beacon_info[BMS_BEACON_INFO_LENGTH] = {
     BMS_TIMESLOT_MODE_STATUS,            // l=12 : s=174 : Timeslot mode Intervals
     BMS_TIMESLOT_TXFRQ_VALUE,            // l=12 : s=176 : Timeslot mode Intervals
 
-    BMS_TBM_TXFRQ_VALUE                  // l=2  : s=178 : BMS advertising Intervals
+    BMS_TBM_TXFRQ_VALUE,                 // l=2  : s=178 : BMS advertising Intervals
+  
+    BMS_BATTERY_MAX_CAPACITY             // l=2  : s=180 : Battery Maximum capacity
+
 };
 
 #define BMS_DB_SIZE \
@@ -716,17 +720,21 @@ static void ble_bms_set_default_value_to_beacon_info()
   }
 
   if (m_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] == 0xFF) {
-    m_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]   = 0x00;
+    m_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]   = 0x81;
   }
 
   if (m_beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] == 0xFF) {
-    m_beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX]   = 0x00;
+    m_beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX]   = 0x0F;
   }
 
   if (m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] == 0xFF) {
     m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = 0x0C;
   }
 
+  if (m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX] == 0xFF) {
+    m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = 0xD4;
+    m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1]   = 0x01;
+  }
 
 }
 

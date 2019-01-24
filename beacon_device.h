@@ -73,6 +73,8 @@ int8_t get_tx_power_level(uint8_t tx_power);
 /**
  * battery level
  */
+extern  uint16_t m_Energizer_Max_Capacity;
+
 void battery_init(void);
 uint16_t get_battery_level();
 
@@ -86,8 +88,6 @@ uint16_t battery_level_get2(void);
  * Convert battery level(mv) to percentage
  */
 uint8_t battery_level_to_percent(const uint16_t mvolts);
-uint8_t battery_level_to_percent_rn2(const uint16_t mvolts);
-uint8_t battery_level_to_percent_devidedby10(const uint16_t mvolts);
 
 /**
  * RTC PCF8563

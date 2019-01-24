@@ -755,6 +755,8 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
     // 00D0 : SET Enable/Disable TIMESLOT mode & status
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD2) {
       _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]= p_data[i+2] & 0x8F;
+
+      //set_timeslot_mode();
     }
 
     // 00D3: Set Radio Timeslot length list
@@ -767,6 +769,16 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
       if (length != BINFO_TBM_TXFRQ_VALUE_IDX+OP_SEC_LEN) return;
 
       _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = p_data[i+2];
+    }
+
+    // 00D5: Set Battery Max Capacity Value
+    else if (p_data[i] == 0x00 && p_data[i+1] == 0xD5) {
+      if (length != BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+OP_SEC_LEN) return;
+
+      _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = p_data[i+2];
+      _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = p_data[i+3];
+      uint16_t *pEnergizer_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
+      m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
     }
 
 
@@ -868,4 +880,29 @@ uint8_t get_status_flags()
   }
  
   return statusFlags;
+}
+
+void set_timeslot_mode(void)
+{
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+
+  m_timeslot_mode = _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX];
+  if (m_timeslot_mode != 0x00) {
+    switch(m_timeslot_mode & 0x0f) {
+    case 0 :  // TGR
+      m_advertising_packet_type = 0x40; break;
+    case 1 :  // iBeacon + TGR
+      m_advertising_packet_type = 0x01; break;
+    case 2 :  // Secure iBeacon + TGR
+      m_advertising_packet_type = 0x20; break;
+    case 3 :  // LINE + TGR
+      m_advertising_packet_type = 0x10; break;
+    case 4 :  // LINE + iBeacon + TGR
+      m_advertising_packet_type = 0x11; break;
+    case 5 :  // LINE + Secure iBeacon + TGR
+      m_advertising_packet_type = 0x30; break;
+    default :
+      m_advertising_packet_type = 0x40; break;
+    }  
+  }
 }

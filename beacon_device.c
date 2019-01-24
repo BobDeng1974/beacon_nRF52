@@ -8,6 +8,9 @@ static uint8_t m_Blink_LED_count;
 static uint8_t m_Blink_Error_LED_count;
 static uint8_t m_Execute_led_flash_type1;
 
+/* Battery */
+uint16_t m_Energizer_Max_Capacity = ENERGIZER_MAXIMUM_CAPACITY;
+
 /* RTC PCF8563 */
 #define RTC_SLAVE_ADDR        0x51
 #define RTC_SECONDS_ADDR      0x02
@@ -203,7 +206,7 @@ uint16_t get_battery_level()
   blevel -= bl_min;
 
   // 平均値を計算
-  blevel = (blevel / 8) * 30;
+  blevel = (blevel / 8);
 
   return blevel;
 }
@@ -269,64 +272,12 @@ uint16_t battery_level_get()
 
 uint8_t battery_level_to_percent(const uint16_t mvolts)
 {
-    uint8_t battery_level;
+    float fMaxCapacity = (float)m_Energizer_Max_Capacity;
 
-    if (mvolts >= 2650) { // 2650
-        battery_level = 100;
-    } else if (mvolts >= 2300) { // 2300
-        battery_level = 75;
-    } else if (mvolts >= 1950) { // 1950
-        battery_level = 50;
-    } else { // 1600
-        battery_level = 25;
-    }
-
+    fMaxCapacity = ((float)mvolts / fMaxCapacity) * 100.0;
+    uint8_t battery_level = (uint8_t)fMaxCapacity;
+    if ( battery_level > 100 ) battery_level = 100;
     return battery_level;
-}
-
-/*
-  0x0B: 100%: 2650 <=
-  0x0A:  90%
-  0x09:  80%
-  0x08:  70%
-  0x07:  60%
-  0x06:  50%
-  0x05:  40%
-  0x04:  30%
-  0x03:  20%
-  0x02:  10%
-  0x01:   0%
-  0x00: Unkown/continuous power
-*/
-uint8_t battery_level_to_percent_devidedby10(const uint16_t mvolts)
-{
-  uint8_t battery_level;
-
-  if (mvolts >= 2912) {           // 100%
-    battery_level = 0x0B;
-  } else if (mvolts >= 2737) {    // 90%
-    battery_level = 0x0A;
-  } else if (mvolts >= 2562) {    // 80%
-    battery_level = 0x09;
-  } else if (mvolts >= 2387) {    // 70%
-    battery_level = 0x08;
-  } else if (mvolts >= 2212) {    // 60%
-    battery_level = 0x07;
-  } else if (mvolts >= 2037) {    // 50%
-    battery_level = 0x06;
-  } else if (mvolts >= 1862) {    // 40%
-    battery_level = 0x05;
-  } else if (mvolts >= 1687) {    // 30%
-    battery_level = 0x04;
-  } else if (mvolts >= 1512) {    // 20%
-    battery_level = 0x03;
-  } else if (mvolts >= 1337) {    // 10%
-    battery_level = 0x02;
-  } else {                        // 0%
-    battery_level = 0x01;
-  }
-
-  return battery_level;
 }
 
 int8_t get_adjusted_rssi(uint8_t tx_power) 

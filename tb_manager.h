@@ -129,6 +129,9 @@
 #define BINFO_TBM_TXFRQ_VALUE_IDX            178     // l=1 : s=178 : Timeslot advertising distance
 #define BINFO_TBM_TXFRQ_VALUE_SIZ              1     // -
 
+#define BINFO_BMS_BATTERY_MAX_CAPACITY_IDX   180     // l=2 : s=180 : Battery Maximum capacity
+#define BINFO_BMS_BATTERY_MAX_CAPACITY_SIZ     2     // -
+
 #define MAX_ADV_MODE_LIST                     12     // Advertising Mode List Max Index
 
 /**

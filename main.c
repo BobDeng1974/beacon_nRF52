@@ -459,12 +459,13 @@ static void time_15000ms_count_hanlder(void * p_context)
     if (ble_bms_get_timeslot_status() != 0x00) ibeacon_advertising_init();
   }
 
+#ifdef NO_FLASH_SAVE_TIMESTAMP
   if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
     m_bFlashSaveRequest = true;
     m_bFlashSaveRequestCounter = 0;
     if (get_timeslot()) timeslot_stop();
   }
-
+#endif
 }
 
 /**@brief 
@@ -532,14 +533,13 @@ static void time_10min_count_hanlder(void * p_context)
 #endif
   NRF_LOG_INFO("time_10min_count_hanlder");
 
-/*  if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
-    if (get_timeslot()) {
-      m_bFlashSaveRequest = true;
-      m_bFlashSaveRequestCounter = 0;
-      timeslot_stop();
-    }
+  // FDS Request
+  if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
+    m_bFlashSaveRequest = true;
+    m_bFlashSaveRequestCounter = 0;
+    if (get_timeslot()) timeslot_stop();
   }
-*/
+
   // Battery update
   read_battery_hysteresis(NULL);
 
@@ -605,13 +605,15 @@ static void time_1000ms_count_hanlder(void * p_context)
 
   advertising_init(BLE_ADV_MODE_BMS);
 
+  uint16_t blevel = get_battery_level();
+  uint8_t bpercent = battery_level_to_percent(blevel);
+
   if ( g_startup_stage == 1 ) {
     return;
   }
 
   m_tbm_txfrq++;
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] = 12;
   if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
     //NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
     m_tbm_txfrq = 0;
@@ -622,7 +624,7 @@ static void time_1000ms_count_hanlder(void * p_context)
     if ( !get_timeslot() ) {
 
       m_bFlashSaveRequestCounter++;
-      if (m_bFlashSaveRequestCounter == 5)
+      if (m_bFlashSaveRequestCounter == 3)
       {
         uint32_t err_code = tb_manager_settings_store();
         if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
@@ -630,7 +632,7 @@ static void time_1000ms_count_hanlder(void * p_context)
 
         NRF_LOG_INFO("tb_manager_settings_store");
       }
-      else if (m_bFlashSaveRequestCounter == 10) {
+      else if (m_bFlashSaveRequestCounter == 6) {
         timeslot_start();
         m_bFlashSaveRequest = false;
 
@@ -1117,30 +1119,14 @@ static void services_init(void)
   _beacon_info[BINFO_VERSION_VALUE_IDX+1] = firmware_version[1];
 
   // Timeslot Mode
-  m_timeslot_mode = _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX];
-  if (m_timeslot_mode != 0x00) {
-    switch(m_timeslot_mode & 0x0f) {
-    case 0 :  // TGR
-      m_advertising_packet_type = 0x40; break;
-    case 1 :  // iBeacon + TGR
-      m_advertising_packet_type = 0x01; break;
-    case 2 :  // Secure iBeacon + TGR
-      m_advertising_packet_type = 0x20; break;
-    case 3 :  // LINE + TGR
-      m_advertising_packet_type = 0x10; break;
-    case 4 :  // LINE + iBeacon + TGR
-      m_advertising_packet_type = 0x11; break;
-    case 5 :  // LINE + Secure iBeacon + TGR
-      m_advertising_packet_type = 0x30; break;
-    default :
-      m_advertising_packet_type = 0x40; break;
-    }  
-  }
+/*
+  _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] = 0x85;
   _beacon_info[BINFO_STATUS_VALUE_IDX] = 4;
+  _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] = 2;
   _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 0x00;
   _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] = 0x0F;
-  m_advertising_packet_type = 0x30;    // ##DEBUG##
-  m_timeslot_mode = 5;  // ##DEBUG##
+*/
+  set_timeslot_mode();
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
@@ -1447,35 +1433,12 @@ static void read_battery_hysteresis(void * p_context)
 #endif
   uint16_t blevel = get_battery_level();
   uint8_t bpercent = battery_level_to_percent(blevel);
-  uint8_t bpercent10 = battery_level_to_percent_devidedby10(blevel);
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
-  // バッテリ残量 (00 ~ FF)
-  _beacon_info[BINFO_BATTERY_VALUE_IDX] &= 0b00001111;
-
-  if (bpercent <= 25) {
-    // 25%
-    _beacon_info[BINFO_BATTERY_VALUE_IDX] |= (1 << 4);
-  } else if (bpercent <= 50) {
-    // 50%
-    _beacon_info[BINFO_BATTERY_VALUE_IDX] |= (1 << 5);
-  } else if (bpercent <= 75) {
-    // 75%
-    _beacon_info[BINFO_BATTERY_VALUE_IDX] |= (1 << 4);
-    _beacon_info[BINFO_BATTERY_VALUE_IDX] |= (1 << 5);
-  } else if (bpercent <= 100) {
-    // 100%
-    _beacon_info[BINFO_BATTERY_VALUE_IDX] |= (1 << 6);
-  } else {
-    // 100%
-    _beacon_info[BINFO_BATTERY_VALUE_IDX] |= (1 << 6);
-  }
-
   m_battery_charge.value = blevel;
+  _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = bpercent;
 
-  _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = bpercent10;
-
-  NRF_LOG_INFO("read_battery_hysteresis ADC=%d bpercend=%d bpaercent10=%d",blevel, bpercent, bpercent10 );
+  NRF_LOG_INFO("read_battery_hysteresis ADC=%d bpercend=%d bpaercent10=%d",blevel, bpercent, bpercent );
 
   // rebuild all packet data
   //build_all_data();
@@ -1694,6 +1657,12 @@ int main(void)
   // system start....
   //-------------------------------------------------
 #if defined(BATTERY_CHECKING_ENABLED)
+  battery_init();
+
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  uint16_t *pEnergizer_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
+  m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
+
   // 一度バッテリの状態を読み込む
   read_battery_hysteresis(NULL);
 #endif
@@ -1703,7 +1672,6 @@ int main(void)
   
 #if defined(LED_ENABLED)
   blink_led(2);
-  uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
     execute_pending_led(LED_ON);
   }

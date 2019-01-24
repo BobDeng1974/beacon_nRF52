@@ -83,16 +83,16 @@ void build_bms_data(void)
     else {
      memset(&bms_info[10], 0xFF, sizeof(m_pre_time));
     }
-
-    bms_info[17] = battery_level_get2();
-    bms_info[18] = battery_level_get2();
+    uint16_t blevel = get_battery_level();
+    bms_info[17] = (uint8_t)((blevel & 0xFF00) >> 8);
+    bms_info[18] = (uint8_t)(blevel & 0x00FF);
   }
 
   // Tx Power
   bms_info[18] =  _beacon_info[BINFO_TXPWR_VALUE_IDX] & 0x0f;
 
   // Battery / ECO mode
-  uint8_t statusFlags =  battery_level_get2() & 0x7f;
+  uint8_t statusFlags = _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] & 0x7f;
 
   m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
   m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];

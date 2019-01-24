@@ -98,6 +98,8 @@ void ble_bms_on_ble_evt(ble_bms_t * p_bms, ble_evt_t * p_ble_evt);
 // */
 //uint32_t ble_bms_send_string(ble_bms_t * p_bms, uint8_t * string, uint16_t length);
 
-uint8_t get_status_flags();
+uint8_t get_status_flags(void);
+
+void set_timeslot_mode(void);
 
 #endif
