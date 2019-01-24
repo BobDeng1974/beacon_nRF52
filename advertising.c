@@ -546,6 +546,88 @@ uint16_t get_beacon_frequency(uint8_t tx_freq, uint8_t unit)
   }
 }
 
+// Beacon Frequency
+uint32_t get_beacon_frequency2(uint8_t tx_freq, uint8_t unit) 
+{
+  if (unit) {
+
+    switch( tx_freq ) {
+    case 0:
+      return APP_ADV_INTERVAL_0000_UNITS;
+    case 1:
+      return APP_ADV_INTERVAL_0001_UNITS;
+    case 2:
+      return APP_ADV_INTERVAL_0010_UNITS;
+    case 3:
+      return APP_ADV_INTERVAL_0011_UNITS;
+    case 4:
+      return APP_ADV_INTERVAL_0100_UNITS;
+    case 5:
+      return APP_ADV_INTERVAL_0101_UNITS;
+    case 6:
+      return APP_ADV_INTERVAL_0110_UNITS;
+    case 7:
+      return APP_ADV_INTERVAL_0111_UNITS;
+    case 8:
+      return APP_ADV_INTERVAL_1000_UNITS;
+    case 9:
+      return APP_ADV_INTERVAL_1001_UNITS;
+    case 10:
+      return APP_ADV_INTERVAL_1010_UNITS;
+    case 11:
+      return APP_ADV_INTERVAL_1011_UNITS;
+    case 12:
+      return APP_ADV_INTERVAL_1100_UNITS;
+    case 13:
+      return APP_ADV_INTERVAL_1101_UNITS;
+    case 14:
+      return APP_ADV_INTERVAL_1110_UNITS;
+    case 15:
+      return APP_ADV_INTERVAL_1111_UNITS;
+    }
+    return APP_ADV_INTERVAL_0000_UNITS;
+  }
+  else  {
+    
+    switch( tx_freq ) {
+    case 0:
+      return APP_ADV_INTERVAL_0000_USEC;
+    case 1:
+      return APP_ADV_INTERVAL_0001_USEC;
+    case 2:
+      return APP_ADV_INTERVAL_0010_USEC;
+    case 3:
+      return APP_ADV_INTERVAL_0011_USEC;
+    case 4:
+      return APP_ADV_INTERVAL_0100_USEC;
+    case 5:
+      return APP_ADV_INTERVAL_0101_USEC;
+    case 6:
+      return APP_ADV_INTERVAL_0110_USEC;
+    case 7:
+      return APP_ADV_INTERVAL_0111_USEC;
+    case 8:
+      return APP_ADV_INTERVAL_1000_USEC;
+    case 9:
+      return APP_ADV_INTERVAL_1001_USEC;
+    case 10:
+      return APP_ADV_INTERVAL_1010_USEC;
+    case 11:
+      return APP_ADV_INTERVAL_1011_USEC;
+    case 12:
+      return APP_ADV_INTERVAL_1100_USEC;
+    case 13:
+      return APP_ADV_INTERVAL_1101_USEC;
+    case 14:
+      return APP_ADV_INTERVAL_1110_USEC;
+    case 15:
+      return APP_ADV_INTERVAL_1111_USEC;
+    }
+    return APP_ADV_INTERVAL_1111_USEC;
+
+  }
+}
+
 void build_all_data()
 {
   build_eddystone_uid_data();

@@ -97,8 +97,9 @@ static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZ
 static uint8_t                            m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set (iBeacon). */
 
 uint8_t                                   m_tbm_txfrq;                                // Tangerine Beacon Management Packet Interval Counter
-uint8_t                                   m_bTbm = false;                             // Tangerine Beacon Management Packet
+uint8_t                                   m_bTbmRequest = false;                      // Tangerine Beacon Management Packet
 uint8_t                                   m_bFlashSaveRequest = false;                // Flash save request
+uint8_t                                   m_bFlashSaveRequestCounter = 0;             // Flash Save start wait counter
 
 //------------------------------------------------------------------------------
 // Battery monitoring
@@ -243,10 +244,14 @@ static void softdevice_advertising_init(uint8_t is_ibeacon)
     // Initialize advertising parameters (used when starting advertising).
     memset(&m_sd_adv_params, 0, sizeof(m_sd_adv_params));
 
+    uint8_t *_beacon_info = ble_bms_get_beacon_info();
+    uint8_t txFreq = _beacon_info[BINFO_TXFRQ_VALUE_IDX];
+
     m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED;
     m_sd_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
     m_sd_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
     m_sd_adv_params.interval        = BASE_ADV_INTERVAL;
+    m_sd_adv_params.interval        = get_beacon_frequency2(txFreq, true);
     m_sd_adv_params.duration        = 0;       // Never time out.
   }
 }
@@ -276,8 +281,12 @@ static void timeslot_beacon_advertiser_error_handler(uint32_t nrf_error)
 static void timeslot_beacon_adv_init(void)
 {
   static ble_beacon_init_t beacon_init;
+
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  uint8_t txFreq = _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX];
     
   beacon_init.adv_interval  = TS_ADV_INTERVAL;
+  beacon_init.adv_interval  = get_beacon_frequency2(txFreq, false);
   beacon_init.error_handler = timeslot_beacon_advertiser_error_handler;
     
   uint32_t err_code = sd_ble_gap_addr_get(&beacon_init.beacon_addr);
@@ -301,8 +310,8 @@ static void timeslot_on_radio_event(bool radio_active)
       return;
     }
 
-    if (m_bTbm) {
-      m_bTbm = false;
+    if (m_bTbmRequest) {
+      m_bTbmRequest = false;
       memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
     }
     else {
@@ -449,6 +458,13 @@ static void time_15000ms_count_hanlder(void * p_context)
     calc_rotmm_save_15sec_tgsec_timestamp();
     if (ble_bms_get_timeslot_status() != 0x00) ibeacon_advertising_init();
   }
+
+  if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
+    m_bFlashSaveRequest = true;
+    m_bFlashSaveRequestCounter = 0;
+    if (get_timeslot()) timeslot_stop();
+  }
+
 }
 
 /**@brief 
@@ -516,11 +532,14 @@ static void time_10min_count_hanlder(void * p_context)
 #endif
   NRF_LOG_INFO("time_10min_count_hanlder");
 
-  if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
-    m_bFlashSaveRequest = true;
-    if (get_timeslot()) timeslot_stop();
+/*  if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
+    if (get_timeslot()) {
+      m_bFlashSaveRequest = true;
+      m_bFlashSaveRequestCounter = 0;
+      timeslot_stop();
+    }
   }
-
+*/
   // Battery update
   read_battery_hysteresis(NULL);
 
@@ -596,17 +615,27 @@ static void time_1000ms_count_hanlder(void * p_context)
   if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
     //NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
     m_tbm_txfrq = 0;
-    m_bTbm = true;
+    m_bTbmRequest = true;
   }
 
   if( m_bFlashSaveRequest ) {
     if ( !get_timeslot() ) {
-      uint32_t err_code = tb_manager_settings_store();
-      if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
-      APP_ERROR_CHECK(err_code);
 
-      timeslot_start();
-      m_bFlashSaveRequest = false;
+      m_bFlashSaveRequestCounter++;
+      if (m_bFlashSaveRequestCounter == 5)
+      {
+        uint32_t err_code = tb_manager_settings_store();
+        if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
+        APP_ERROR_CHECK(err_code);
+
+        NRF_LOG_INFO("tb_manager_settings_store");
+      }
+      else if (m_bFlashSaveRequestCounter == 10) {
+        timeslot_start();
+        m_bFlashSaveRequest = false;
+
+        NRF_LOG_INFO("timeslot_start");
+      }
     }
   }
 }
@@ -1108,6 +1137,8 @@ static void services_init(void)
     }  
   }
   _beacon_info[BINFO_STATUS_VALUE_IDX] = 4;
+  _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 0x00;
+  _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] = 0x0F;
   m_advertising_packet_type = 0x30;    // ##DEBUG##
   m_timeslot_mode = 5;  // ##DEBUG##
 

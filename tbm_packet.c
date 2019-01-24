@@ -41,7 +41,8 @@ void build_bms_data(void)
 
   // Serial ID: 2-5
   // 140-143 
-  if (g_startup_stage == 1) {
+  if (g_startup_stage == 1 || ble_tgsec_ibeacon_enablep() == 1) {
+ 
     // order: mem: little endian, packet: big endian
     for (int i = BINFO_TGSECB_TIMESTAMP_IDX; i < (BINFO_TGSECB_TIMESTAMP_IDX+4); i++) {
       bms_info[i-138] = _beacon_info[283-i]; // [i-138] <= [143-i+143]
