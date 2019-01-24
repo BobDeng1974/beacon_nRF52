@@ -350,6 +350,15 @@ uint32_t ble_bms_init(ble_bms_t *p_bms)
         return err_code;
     }
 
+    // Add Battery Calibration Mode Characteristic.
+    err_code = add_characteristic(p_bms, p_bms_init,
+                                  BLE_UUID_BMS_BCM_CHARACTERISTIC, 5,
+                                  &p_bms->bcm_handles);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+
     return NRF_SUCCESS;
 }
 
@@ -358,6 +367,8 @@ uint32_t ble_bms_init(ble_bms_t *p_bms)
 static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length, uint16_t handle)
 {
   uint32_t         err_code;
+
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
   // Access Control
   if (handle == p_bms->settings_handles.value_handle
@@ -371,7 +382,6 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
   if (handle == p_bms->settings_handles.value_handle) {
 
-    uint8_t *_beacon_info = ble_bms_get_beacon_info();
     int i=0;
     
     if (length < 3) return;
@@ -803,11 +813,19 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
     
   // Factory Check mode
   else if (handle == p_bms->fcm_handles.value_handle) {
-    uint8_t *_beacon_info = ble_bms_get_beacon_info();
     _beacon_info[BINFO_MODE_LIST_IDX] = BLE_ADV_MODE_BMS;
     _beacon_info[BINFO_STATUS_VALUE_IDX] = 4; // アクティブ
     g_startup_stage = 0;
     m_fcm = 0xFF;
+  }
+
+  // Battery Calibration mode
+  else if (handle == p_bms->bcm_handles.value_handle) {
+    uint16_t blevel = get_battery_level();
+    _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = (uint8_t)((blevel & 0xFF00) >> 8);
+    _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = (uint8_t)(blevel & 0x00FF);
+    uint16_t *pEnergizer_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
+    m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
   }
 }
 

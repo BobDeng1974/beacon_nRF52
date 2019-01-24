@@ -98,6 +98,7 @@ static uint8_t                            m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SI
 
 uint8_t                                   m_tbm_txfrq;                                // Tangerine Beacon Management Packet Interval Counter
 uint8_t                                   m_bTbmRequest = false;                      // Tangerine Beacon Management Packet
+uint8_t                                   m_bTbmRequestCounter = 0;                   // Tangerine Beacon Management Packet
 uint8_t                                   m_bFlashSaveRequest = false;                // Flash save request
 uint8_t                                   m_bFlashSaveRequestCounter = 0;             // Flash Save start wait counter
 
@@ -311,8 +312,9 @@ static void timeslot_on_radio_event(bool radio_active)
     }
 
     if (m_bTbmRequest) {
-      m_bTbmRequest = false;
+      m_bTbmRequestCounter++;
       memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+      if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
     }
     else {
       if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
@@ -612,11 +614,12 @@ static void time_1000ms_count_hanlder(void * p_context)
     return;
   }
 
-  m_tbm_txfrq++;
+  if (!m_bTbmRequest) m_tbm_txfrq++;
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
     //NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
     m_tbm_txfrq = 0;
+    m_bTbmRequest = 0;
     m_bTbmRequest = true;
   }
 
@@ -1120,11 +1123,11 @@ static void services_init(void)
 
   // Timeslot Mode
 /*
-  _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] = 0x85;
   _beacon_info[BINFO_STATUS_VALUE_IDX] = 4;
   _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] = 2;
   _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 0x00;
   _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] = 0x0F;
+  _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] = 0x83;
 */
   set_timeslot_mode();
 
