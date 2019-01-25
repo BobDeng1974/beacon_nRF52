@@ -264,7 +264,7 @@ void timeslot_on_sys_evt(uint32_t event)
         case NRF_EVT_RADIO_SESSION_IDLE:
             if (m_beacon.is_running)
             {
-                NRF_LOG_INFO("sd_radio_session_close");
+                //NRF_LOG_INFO("sd_radio_session_close");
                 err_code = sd_radio_session_close();
                 if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
                 {

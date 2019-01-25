@@ -428,7 +428,7 @@ static void time_100ms_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  NRF_LOG_INFO("time_100ms_count_hanlder");
+  //NRF_LOG_INFO("time_100ms_count_hanlder");
 
   m_sec_count_100ms.value++;
 }
@@ -445,7 +445,7 @@ static void time_15000ms_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  NRF_LOG_INFO("time_15000ms_count_hanlder");
+  //NRF_LOG_INFO("time_15000ms_count_hanlder");
 
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if ( g_startup_stage == 1 ||
@@ -489,7 +489,7 @@ static void time_60000ms_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  NRF_LOG_INFO("time_60000ms_count_hanlder");
+  //NRF_LOG_INFO("time_60000ms_count_hanlder");
 
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if (_beacon_info[BINFO_STATUS_VALUE_IDX] != 0x00) {
@@ -549,7 +549,7 @@ static void time_10min_count_hanlder(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  NRF_LOG_INFO("time_10min_count_hanlder");
+  //NRF_LOG_INFO("time_10min_count_hanlder");
 
   // FDS Request
   if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
@@ -644,13 +644,13 @@ static void time_1000ms_count_hanlder(void * p_context)
         if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
         APP_ERROR_CHECK(err_code);
 
-        NRF_LOG_INFO("tb_manager_settings_store");
+        //NRF_LOG_INFO("tb_manager_settings_store");
       }
       else if (m_bFlashSaveRequestCounter == 6) {
         timeslot_start();
         m_bFlashSaveRequest = false;
 
-        NRF_LOG_INFO("timeslot_start");
+        //NRF_LOG_INFO("timeslot_start");
       }
     }
   }
@@ -1568,7 +1568,6 @@ static void tsk_Advertising_start(void * arg)
 
   while(true)
   {
-    NRF_LOG_INFO("vTaskSuspend_tsk_Advertising_start");
     vTaskSuspend( m_advertising_start );
     advertising_start();
   }

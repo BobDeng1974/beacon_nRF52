@@ -310,7 +310,7 @@ void adv_switch_handler(void * p_context)
       if ( m_tbm_adv_adding_interval > tbm_adv_interval ) {
         m_tbm_adv_adding_interval = 0;
         current_mode = BLE_ADV_MODE_BMS;
-        NRF_LOG_INFO("tbm_adv_interval=%d", m_tbm_adv_adding_interval);
+        //NRF_LOG_INFO("tbm_adv_interval=%d", m_tbm_adv_adding_interval);
       }
 
       switch (current_mode) {
