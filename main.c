@@ -1699,7 +1699,7 @@ int main(void)
 
   if (ble_line_beacon_enablep() == 1) {
     restore_15sec_timestamp();
-    m_line_timestamp += TIME_CORRECTION_COUNTER;
+    m_line_timestamp.value += TIME_CORRECTION_COUNTER;
   }
   if (ble_tgsec_ibeacon_enablep() == 1) {
     m_tgsec_timestamp.value = 0;

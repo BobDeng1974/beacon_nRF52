@@ -301,23 +301,24 @@ int8_t get_tx_power_level(uint8_t tx_power)
     // return -40;
     return 0;
   case 1:
-    return -40;
+    return RADIO_TXPOWER_TXPOWER_Neg40dBm;  /*!< -40 dBm */
   case 2:
-    return -20;
+    return RADIO_TXPOWER_TXPOWER_Neg20dBm;  /*!< -20 dBm */
   case 3:
-    return -16;
+    return RADIO_TXPOWER_TXPOWER_Neg16dBm;  /*!< -16 dBm */
   case 4:
-    return -12;
+    return RADIO_TXPOWER_TXPOWER_Neg12dBm;  /*!< -12 dBm */
   case 5:
-    return -8;
+    return RADIO_TXPOWER_TXPOWER_Neg8dBm;   /*!< -8 dBm */
   case 6:
-    return -4;
+    return RADIO_TXPOWER_TXPOWER_Neg4dBm;   /*!< -4 dBm */
   case 7:
-    return 0;
+    return RADIO_TXPOWER_TXPOWER_0dBm;      /*!< 0 dBm */
   case 8:
-    return 4;
+    return RADIO_TXPOWER_TXPOWER_Pos4dBm;   /*!< +4 dBm */
+  case 9:
+    return RADIO_TXPOWER_TXPOWER_Pos3dBm;   /*!< +3 dBm */
   }
-  
   return TX_POWER_LEVEL;
 }
 
