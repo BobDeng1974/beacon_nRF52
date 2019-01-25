@@ -155,10 +155,10 @@ void led_flash_type1()
 
 void gpiote_init(void)
 {
-  nrf_gpio_cfg_output(DEBUG_PIN);
-  nrf_gpio_pin_set(DEBUG_PIN);
-  nrf_gpio_cfg_output(DEBUG_PIN2);
-  nrf_gpio_pin_set(DEBUG_PIN2);
+  //nrf_gpio_cfg_output(DEBUG_PIN);
+  //nrf_gpio_pin_set(DEBUG_PIN);
+  //nrf_gpio_cfg_output(DEBUG_PIN2);
+  //nrf_gpio_pin_set(DEBUG_PIN2);
 
   nrf_gpio_cfg_output(LED_G);
   nrf_gpio_cfg_output(LED_R);
@@ -413,7 +413,7 @@ uint8_t pcf8563_init(uint8_t scl_pin, uint8_t sda_pin)
   };
 
   err_code = nrf_drv_twi_init(&m_twi, &twi_lm75b_config, twi_handler, NULL);
-  APP_ERROR_CHECK(err_code);
+  if (err_code != NRF_SUCCESS)return false;
 
   nrf_drv_twi_enable(&m_twi);
 

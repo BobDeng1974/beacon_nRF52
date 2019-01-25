@@ -24,6 +24,7 @@ static struct
     uint32_t                slot_length;                    /** */
     nrf_radio_request_t     timeslot_request;               /** */
     ble_srv_error_handler_t error_handler;                  /**< Function to be called in case of an error. */
+    int8_t                  txpower;                        /** */ 
 } m_beacon;
 
 enum mode_t
@@ -132,10 +133,11 @@ static void m_configure_radio()
     uint8_t * p_adv_pdu = get_line_beacon_packet();
     if (line_packet_sw) p_adv_pdu = get_line_ibeacon_packet();
 
-    if (m_bTbmRequest) {
-      m_bTbmRequestCounter++;
-      p_adv_pdu = get_tbm_packet();
-      if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
+    if (m_advertising_packet_type == 0x10 && m_bTbmRequest) {
+        //m_bTbmRequestCounter++;
+        p_adv_pdu = get_tbm_packet();
+        m_bTbmRequest = false;
+        //if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
     }
 
     line_packet_sw = !line_packet_sw;
@@ -161,7 +163,7 @@ static void m_configure_radio()
     NRF_RADIO->BASE0        = 0x89bed600; //access_addr[0:3]
     NRF_RADIO->CRCINIT      = 0x00555555;
     NRF_RADIO->PACKETPTR    = (uint32_t) p_adv_pdu;
-    
+    NRF_RADIO->TXPOWER      = m_beacon.txpower;
     NVIC_EnableIRQ(RADIO_IRQn);
 }
 
@@ -302,9 +304,10 @@ void timeslot_on_sys_evt(uint32_t event)
 
 void timeslot_init(ble_beacon_init_t * p_init)
 {
-    m_beacon.adv_interval = p_init->adv_interval;
-    m_beacon.slot_length  = BEACON_SLOT_LENGTH;
-    m_beacon.error_handler= p_init->error_handler;
+    m_beacon.adv_interval   = p_init->adv_interval;
+    m_beacon.slot_length    = BEACON_SLOT_LENGTH;
+    m_beacon.error_handler  = p_init->error_handler;
+    m_beacon.txpower        = p_init->txpower;
 }
 
 void timeslot_start(void)

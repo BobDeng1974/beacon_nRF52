@@ -12,6 +12,7 @@ typedef struct
     uint8_t                 rssi;                               /** measured RSSI at 1 meter distance in dBm*/
     ble_gap_addr_t          beacon_addr;                        /** ble address to be used by the beacon*/    
     ble_srv_error_handler_t error_handler;                      /**< Function to be called in case of an error. */
+    int8_t                  txpower;
 } ble_beacon_init_t;
 
 

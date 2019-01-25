@@ -550,6 +550,7 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
     // 00FF : commit
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xFF) {
       if(p_data[i+2] == 0x01) {
+        NRF_LOG_INFO("tb_manager_settings_store");
         err_code = tb_manager_settings_store();
         APP_ERROR_CHECK(err_code);
         //led_param = 1;
@@ -765,6 +766,7 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
     // 00D0 : SET Enable/Disable TIMESLOT mode & status
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD2) {
       _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]= p_data[i+2] & 0x8F;
+      NRF_LOG_INFO("BINFO_TIMESLOT_MODE_STATUS_IDX = %02X", _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]);
 
       //set_timeslot_mode();
     }

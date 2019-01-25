@@ -51,6 +51,8 @@ STATIC_ASSERT(IS_SRVC_CHANGED_CHARACT_PRESENT);                                 
 #define SEC_PARAM_MIN_KEY_SIZE            7                                           /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE            16                                          /**< Maximum encryption key size. */
 
+#define TIME_CORRECTION_COUNTER           (10*60)/15                                  /**< Tgsec / line counter correction 10min / 15sec */
+
 #define DEAD_BEEF                         0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 //------------------------------------------------------------------------------
@@ -289,7 +291,8 @@ static void timeslot_beacon_adv_init(void)
   beacon_init.adv_interval  = TS_ADV_INTERVAL;
   beacon_init.adv_interval  = get_beacon_frequency2(txFreq, false);
   beacon_init.error_handler = timeslot_beacon_advertiser_error_handler;
-    
+  beacon_init.txpower       = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
+  
   uint32_t err_code = sd_ble_gap_addr_get(&beacon_init.beacon_addr);
   APP_ERROR_CHECK(err_code);
   beacon_init.beacon_addr.addr[0] += 0x01;
@@ -302,7 +305,7 @@ static void timeslot_on_radio_event(bool radio_active)
 {
   static bool send_ibeacon = true;
 
-  nrf_gpio_pin_toggle(9);
+  //nrf_gpio_pin_toggle(9);
 
   if (m_advertising_packet_type == 0x10 ) return;
 
@@ -314,9 +317,10 @@ static void timeslot_on_radio_event(bool radio_active)
     }
 
     if (m_bTbmRequest) {
-      m_bTbmRequestCounter++;
+      //m_bTbmRequestCounter++;
       memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
-      if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
+      //if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
+      m_bTbmRequest = false;
     }
     else {
       if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
@@ -461,6 +465,7 @@ static void time_15000ms_count_hanlder(void * p_context)
     m_tgsec_timestamp.value++;
     calc_rotmm_save_15sec_tgsec_timestamp();
     if (ble_bms_get_timeslot_status() != 0x00) ibeacon_advertising_init();
+    bms_advertising_init(g_bms);
   }
 
 #ifdef NO_FLASH_SAVE_TIMESTAMP
@@ -514,7 +519,13 @@ static void time_60000ms_count_hanlder(void * p_context)
     if (m_advertising_packet_type != 0x10 ) {
       m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
       advertising_init(BLE_ADV_MODE_IBEACON);
+
       sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
+
+      int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
+      ret_code_t err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_sd_adv_handle, txPowerLevel);
+      APP_ERROR_CHECK(err_code);
+
       sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
     }
 
@@ -610,13 +621,6 @@ static void time_1000ms_count_hanlder(void * p_context)
   UNUSED_PARAMETER(p_context);
 #endif
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-
-  uint16_t blevel = get_battery_level();
-  uint8_t bpercent = battery_level_to_percent(blevel);
-  m_battery_charge.value = blevel;
-  _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = bpercent;
-
-  advertising_init(BLE_ADV_MODE_BMS);
 
   if ( g_startup_stage == 1 ) {
     return;
@@ -1695,10 +1699,12 @@ int main(void)
 
   if (ble_line_beacon_enablep() == 1) {
     restore_15sec_timestamp();
+    m_line_timestamp += TIME_CORRECTION_COUNTER;
   }
   if (ble_tgsec_ibeacon_enablep() == 1) {
     m_tgsec_timestamp.value = 0;
     restore_15sec_tgsec_timestamp();
+    m_tgsec_timestamp.value += TIME_CORRECTION_COUNTER;
   }
 
   // once build all advertising packet data
@@ -1742,7 +1748,14 @@ int main(void)
 
     m_adv_data.adv_data.p_data  = m_enc_advdata;
     m_adv_data.adv_data.len     = m_enc_advdata_len;
+
+
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
+
+    int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
+    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_sd_adv_handle, txPowerLevel);
+    APP_ERROR_CHECK(err_code);
+
     (void)sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
     m_adv_handle = m_sd_adv_handle;
   }

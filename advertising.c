@@ -263,8 +263,6 @@ void adv_switch_handler(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  //nrf_gpio_pin_toggle(DEBUG_PIN);
-
   // HOSTと接続中の場合、Adv Switchは行わない
   if (g_connected == 1) {
     return;
