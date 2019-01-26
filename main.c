@@ -622,6 +622,8 @@ static void time_1000ms_count_hanlder(void * p_context)
 #endif
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
+  _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = battery_level_to_percent(get_battery_level());
+
   if ( g_startup_stage == 1 ) {
     return;
   }

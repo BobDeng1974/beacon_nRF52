@@ -66,7 +66,7 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1142" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1124" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1613" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1577" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="146" useTextEdit="1" useBinaryEdit="0" left="0" path="../ibeacon.c" selected="0" top="146" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="468" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="425" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="916" useTextEdit="1" useBinaryEdit="0" left="0" path="../ble_bms.c" selected="0" top="864" codecName="Default"/>
