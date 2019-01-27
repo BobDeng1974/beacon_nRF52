@@ -625,6 +625,7 @@ static void time_1000ms_count_hanlder(void * p_context)
   _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = battery_level_to_percent(get_battery_level());
 
   if ( g_startup_stage == 1 ) {
+    bms_advertising_init(g_bms);
     return;
   }
 
@@ -1230,7 +1231,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     {
       g_connected = 1;
       g_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+    #if defined(LED_ENABLED)
       execute_led(LED_ON);
+    #endif
       break;
     }
 
@@ -1238,7 +1241,18 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     {
       g_connected = 0;
       g_conn_handle = BLE_CONN_HANDLE_INVALID;
+
+    #if defined(LED_ENABLED)
       execute_led(LED_OFF);
+      uint8_t *_beacon_info = ble_bms_get_beacon_info();
+      if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
+        execute_pending_led(LED_ON);
+      }
+      else {
+        execute_pending_led(LED_OFF);
+      }
+    #endif
+
       if (ble_bms_get_timeslot_status() == 0x00) {
         advertising_start();
       } else {
@@ -1283,7 +1297,16 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     {
       g_connected = 0;
       g_conn_handle = BLE_CONN_HANDLE_INVALID;
+    #if defined(LED_ENABLED)
       execute_led(LED_OFF);
+      uint8_t *_beacon_info = ble_bms_get_beacon_info();
+      if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
+        execute_pending_led(LED_ON);
+      }
+      else {
+        execute_pending_led(LED_OFF);
+      }
+    #endif
       if (ble_bms_get_timeslot_status() == 0x00) {
         advertising_start();
       } else {
