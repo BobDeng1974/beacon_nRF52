@@ -103,6 +103,7 @@ uint8_t                                   m_bTbmRequest = false;                
 uint8_t                                   m_bTbmRequestCounter = 0;                   // Tangerine Beacon Management Packet
 uint8_t                                   m_bFlashSaveRequest = false;                // Flash save request
 uint8_t                                   m_bFlashSaveRequestCounter = 0;             // Flash Save start wait counter
+uint8_t                                   m_bPending;                                 // Setting Non Reset flag
 
 //------------------------------------------------------------------------------
 // Battery monitoring
@@ -576,7 +577,7 @@ static void time_10min_count_hanlder(void * p_context)
   m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
 
   bool bEco_Mode = false;
-  //if (_beacon_info[BINFO_ECO_MODE_STATUS_IDX] != 0x00)
+
   if (m_eco_start_time.wTime != m_eco_finish_time.wTime)
   {
     if ( m_eco_start_time.dec.Hours <= m_eco_finish_time.dec.Hours )
@@ -602,8 +603,8 @@ static void time_10min_count_hanlder(void * p_context)
       }
     }
   }
-  NRF_LOG_INFO("ECO mode = %d %02X:%02X", m_eco_adv_stop, m_pre_time.hours, m_pre_time.minutes);
-  NRF_LOG_INFO("(%02X:%02X-%02X:%02X)", m_eco_start_time.dec.Hours, m_eco_start_time.dec.Minutes, m_eco_finish_time.dec.Hours, m_eco_finish_time.dec.Minutes);  
+  //NRF_LOG_INFO("ECO mode = %d %02X:%02X", m_eco_adv_stop, m_pre_time.hours, m_pre_time.minutes);
+  //NRF_LOG_INFO("(%02X:%02X-%02X:%02X)", m_eco_start_time.dec.Hours, m_eco_start_time.dec.Minutes, m_eco_finish_time.dec.Hours, m_eco_finish_time.dec.Minutes);  
   return;
   m_eco_adv_stop = bEco_Mode;
 }
@@ -623,6 +624,15 @@ static void time_1000ms_count_hanlder(void * p_context)
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
   _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = battery_level_to_percent(get_battery_level());
+
+  if ( m_bPending ) {
+    if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) execute_pending_led(LED_ON);
+    else {
+      execute_pending_led(LED_ON);
+      nrf_delay_ms(100);
+      execute_pending_led(LED_OFF);
+    }
+  }
 
   if ( g_startup_stage == 1 ) {
     bms_advertising_init(g_bms);
@@ -1244,13 +1254,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
     #if defined(LED_ENABLED)
       execute_led(LED_OFF);
-      uint8_t *_beacon_info = ble_bms_get_beacon_info();
-      if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
-        execute_pending_led(LED_ON);
-      }
-      else {
-        execute_pending_led(LED_OFF);
-      }
     #endif
 
       if (ble_bms_get_timeslot_status() == 0x00) {
@@ -1299,13 +1302,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
       g_conn_handle = BLE_CONN_HANDLE_INVALID;
     #if defined(LED_ENABLED)
       execute_led(LED_OFF);
-      uint8_t *_beacon_info = ble_bms_get_beacon_info();
-      if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
-        execute_pending_led(LED_ON);
-      }
-      else {
-        execute_pending_led(LED_OFF);
-      }
     #endif
       if (ble_bms_get_timeslot_status() == 0x00) {
         advertising_start();
@@ -1712,9 +1708,11 @@ int main(void)
   blink_led(2);
   if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) {
     execute_pending_led(LED_ON);
+    m_bPending = true;
   }
   else {
     execute_pending_led(LED_OFF);
+    m_bPending = false;
   }
 #endif
 

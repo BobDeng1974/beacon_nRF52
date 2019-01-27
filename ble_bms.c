@@ -765,7 +765,9 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
     // 00D0 : SET Enable/Disable TIMESLOT mode & status
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD2) {
+      uint8_t before_mode = _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX];
       _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]= p_data[i+2] & 0x8F;
+      if (before_mode != _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]) m_bPending = true;
       //NRF_LOG_INFO("BINFO_TIMESLOT_MODE_STATUS_IDX = %02X", _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]);
 
       //set_timeslot_mode();

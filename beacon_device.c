@@ -66,10 +66,12 @@ void execute_led(const char *param)
   if (param[0] == '1') {
     nrf_gpio_pin_clear(LED_G);
     nrf_gpio_pin_clear(LED_R);
+    nrf_gpio_pin_clear(LED_B);
   }
   else {
     nrf_gpio_pin_set(LED_G);
     nrf_gpio_pin_set(LED_R);
+    nrf_gpio_pin_set(LED_B);
   }
 }
 
@@ -91,10 +93,12 @@ void execute_pending_led(const char *param)
 {
   if (param[0] == '1') {
     nrf_gpio_pin_set(LED_G);
+    nrf_gpio_pin_set(LED_R);
     nrf_gpio_pin_clear(LED_B);
   }
   else {
     nrf_gpio_pin_set(LED_G);
+    nrf_gpio_pin_set(LED_R);
     nrf_gpio_pin_set(LED_B);
   }
 }

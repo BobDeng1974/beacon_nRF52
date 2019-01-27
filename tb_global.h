@@ -124,6 +124,7 @@ extern  nrf_saadc_value_t m_buffer_pool[ADC_SAMPLES_IN_BUFFER];
 extern  uint8_t           m_adc_status;
 extern  uint8_t           m_bTbmRequest;          // Tangerine Beacon Management Packet
 extern  uint8_t           m_bTbmRequestCounter;   // Tangerine Beacon Management Packet
+extern  uint8_t           m_bPending;
 
 extern  uint8_t           g_is_startup;           // startup status
 extern  uint8_t           g_connected;            // connected or not connected
