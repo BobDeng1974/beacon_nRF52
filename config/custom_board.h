@@ -44,17 +44,31 @@
 extern "C" {
 #endif
 
-#include "nrf_gpio.h"
+#include "tb_global.h"
 
 
-#define LOWBAT_DET      2
-#define LED_R           29
-#define LED_G           28
-#define LED_B           27
-#define BAT_V           NRF_SAADC_INPUT_AIN0
+#ifdef nRF52832_DK
 
-#define DEBUG_PIN       9
-#define DEBUG_PIN2      10
+// LEDs definitions for PCA10040
+#define LEDS_NUMBER    4
+
+#define LED_START      17
+#define LED_1          17
+#define LED_2          18
+#define LED_3          19
+#define LED_4          20
+#define LED_STOP       20
+
+#define LEDS_ACTIVE_STATE 0
+
+#define LEDS_INV_MASK  LEDS_MASK
+
+#define LEDS_LIST { LED_1, LED_2, LED_3, LED_4 }
+
+#define BSP_LED_0      LED_1
+#define BSP_LED_1      LED_2
+#define BSP_LED_2      LED_3
+#define BSP_LED_3      LED_4
 
 #define BUTTONS_NUMBER 4
 
@@ -157,6 +171,30 @@ extern "C" {
 #define ARDUINO_A3_PIN              29    // Analog channel 3
 #define ARDUINO_A4_PIN              30    // Analog channel 4
 #define ARDUINO_A5_PIN              31    // Analog channel 5
+
+#define LOWBAT_DET      2
+#define LED_R           18
+#define LED_G           17
+#define LED_B           19
+#define BAT_V           NRF_SAADC_INPUT_AIN0
+
+#define DEBUG_PIN       ARDUINO_7_PIN
+#define DEBUG_PIN2      ARDUINO_8_PIN
+
+#else
+
+#define LOWBAT_DET      2
+#define LED_R           29
+#define LED_G           28
+#define LED_B           27
+#define BAT_V           NRF_SAADC_INPUT_AIN0
+
+#define DEBUG_PIN       9
+#define DEBUG_PIN2      10
+
+
+#endif
+
 
 
 #ifdef __cplusplus

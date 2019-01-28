@@ -55,13 +55,15 @@
 #include "beacon_device.h"
 #include "advertising.h"
 
-#include "custom_board.h"
 #include "tracetask.h"
 
 //#define ADV_SWITCH_TIMER_APP_TIMER
 //#define FREERTOS_SWITCH
 #define TIMESLOT_DEBUG
 #define RGB_LED
+#define nRF52832_DK
+
+#include "custom_board.h"
 
 #ifdef   FREERTOS_SWITCH
   #include "nrf_sdh_freertos.h"

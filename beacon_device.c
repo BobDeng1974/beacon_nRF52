@@ -26,22 +26,22 @@ static bool m_xfer_done;
 /**@brief Function for initializing the GPIOTE handler module.
  */
 
-#ifndef RGB_LED
+#ifdef nRF52832_DK
 void execute_led(const char *param)
 {
-  if (param[0] == '0') {
+  if (param[0] == '1') {
     nrf_gpio_pin_clear(LED_G);
-    nrf_gpio_pin_clear(LED_R);
+    nrf_gpio_pin_set(LED_R);
   }
   else {
     nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_clear(LED_R);
+    nrf_gpio_pin_set(LED_R);
   }
 }
 
 void execute_error_led(const char *param)
 {
-  if (param[0] == '0') {
+  if (param[0] == '1') {
     nrf_gpio_pin_clear(LED_R);
   }
   else {
@@ -51,16 +51,49 @@ void execute_error_led(const char *param)
 
 void execute_pending_led(const char *param)
 {
-  if (param[0] == '0') {
-    nrf_gpio_pin_clear(LED_G);
-    nrf_gpio_pin_clear(LED_R);
+  if (param[0] == '1') {
+    nrf_gpio_pin_clear(LED_B);
   }
   else {
-    nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_clear(LED_R);
+    nrf_gpio_pin_set(LED_3);
   }
 }
 #else
+  #ifndef RGB_LED
+void execute_led(const char *param)
+{
+  if (param[0] == '0') {
+    nrf_gpio_pin_clear(LED_G);
+    nrf_gpio_pin_clear(LED_R);
+  }
+  else {
+    nrf_gpio_pin_set(LED_G);
+    nrf_gpio_pin_clear(LED_R);
+  }
+}
+
+void execute_error_led(const char *param)
+{
+  if (param[0] == '0') {
+    nrf_gpio_pin_clear(LED_R);
+  }
+  else {
+    nrf_gpio_pin_set(LED_R);
+  }
+}
+
+void execute_pending_led(const char *param)
+{
+  if (param[0] == '0') {
+    nrf_gpio_pin_clear(LED_G);
+    nrf_gpio_pin_clear(LED_R);
+  }
+  else {
+    nrf_gpio_pin_set(LED_G);
+    nrf_gpio_pin_set(LED_R);
+  }
+}
+  #else
 void execute_led(const char *param)
 {
   if (param[0] == '1') {
@@ -102,6 +135,7 @@ void execute_pending_led(const char *param)
     nrf_gpio_pin_set(LED_B);
   }
 }
+  #endif
 #endif
 
 void blink_led(uint8_t count)
