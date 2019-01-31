@@ -720,7 +720,7 @@ static void ble_bms_set_default_value_to_beacon_info()
   }
 
   if (m_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] == 0xFF) {
-    m_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]   = 0x81;
+    m_beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX]   = 0x80;
   }
 
   if (m_beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] == 0xFF) {
@@ -728,7 +728,7 @@ static void ble_bms_set_default_value_to_beacon_info()
   }
 
   if (m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] == 0xFF) {
-    m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = 0x0C;
+    m_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = 0x02;
   }
 
   if (m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX] == 0xFF) {

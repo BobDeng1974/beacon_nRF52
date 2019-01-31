@@ -72,20 +72,20 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1635" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1602" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1635" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="1602" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="146" useTextEdit="1" useBinaryEdit="0" left="0" path="../ibeacon.c" selected="0" top="146" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="501" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="482" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="21" useTextEdit="1" useBinaryEdit="0" left="0" path="../ble_bms.c" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="34" y="49" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="22" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="53" y="730" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="679" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="909" useTextEdit="1" useBinaryEdit="0" left="0" path="../ble_bms.c" selected="0" top="872" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="49" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="22" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="178" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="102" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="33" useTextEdit="1" useBinaryEdit="0" left="0" path="../beacon_device.c" selected="0" top="27" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="137" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="88" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/util/app_error_weak.c" selected="0" top="16" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="129" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_global.h" selected="0" top="43" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="62" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_global.h" selected="1" top="41" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="41" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="193" useTextEdit="1" useBinaryEdit="0" left="0" path="../config/custom_board.h" selected="0" top="26" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="277" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/ble_services/ble_dfu/ble_dfu.c" selected="0" top="255" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="87" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.h" selected="0" top="68" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="93" useTextEdit="1" useBinaryEdit="0" left="0" path="../beacon_device.c" selected="0" top="36" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="Tangerine-beacon-nRF52-SDK15" fileDialogDefaultFilter="*.h" autoConnectTarget="J-Link" buildConfiguration="Release" debugSearchFileMap="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_clock.c&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_gpiote.c&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_saadc.c&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf_common.s&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_clock.c&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_gpiote.c&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_saadc.c&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf_common.s&#xa;" fileDialogInitialDirectory="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/beacon_nRF52" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

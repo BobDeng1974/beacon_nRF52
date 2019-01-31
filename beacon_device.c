@@ -90,7 +90,7 @@ void execute_pending_led(const char *param)
   }
   else {
     nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_set(LED_R);
+    nrf_gpio_pin_clear(LED_R);
   }
 }
   #else

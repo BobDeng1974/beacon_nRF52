@@ -61,7 +61,7 @@
 //#define FREERTOS_SWITCH
 #define TIMESLOT_DEBUG
 #define RGB_LED
-#define PCA10040
+//#define PCA10040
 
 #include "custom_board.h"
 
