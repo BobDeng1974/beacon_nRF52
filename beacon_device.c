@@ -26,7 +26,7 @@ static bool m_xfer_done;
 /**@brief Function for initializing the GPIOTE handler module.
  */
 
-#ifdef nRF52832_DK
+#ifdef PCA10040
 void execute_led(const char *param)
 {
   if (param[0] == '1') {

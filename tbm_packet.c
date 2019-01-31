@@ -44,18 +44,19 @@ void build_bms_data(void)
 
   // Serial ID: 2-5
   // 140-143 
-  if (g_startup_stage == 1 || ble_tgsec_ibeacon_enablep() == 1) {
- 
+  if (g_startup_stage == 1 && ble_tgsec_ibeacon_enablep() == 1) { 
     // order: mem: little endian, packet: big endian
-    for (int i = BINFO_TGSECB_TIMESTAMP_IDX; i < (BINFO_TGSECB_TIMESTAMP_IDX+4); i++) {
-      bms_info[i-138] = _beacon_info[283-i]; // [i-138] <= [143-i+143]
-    }
+    bms_info[2] = _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX+3];
+    bms_info[3] = _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX+2];
+    bms_info[4] = _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX+1];
+    bms_info[5] = _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX+0];
   }
   else {
-    // 24-27 
-    for (int i = BINFO_SERIAL_ID_VALUE_IDX; i < (BINFO_SERIAL_ID_VALUE_IDX+4); i++) {
-      bms_info[i-22] = _beacon_info[i];
-    }
+  // Iot Sensor Data 1
+    bms_info[2] = 0x00;
+    bms_info[3] = 0x00;
+    bms_info[4] = 0x00;
+    bms_info[5] = 0x00;
   }
 
   // Beacon ID (Major/Minor)

@@ -267,7 +267,6 @@ void ble_bms_on_ble_evt(ble_bms_t *p_bms, ble_evt_t *p_ble_evt)
     }
 }
 
-//uint32_t ble_bms_init(ble_bms_t *p_bms, const ble_bms_init_t *p_bms_init)
 uint32_t ble_bms_init(ble_bms_t *p_bms)
 {
   
@@ -637,7 +636,7 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xE4) {
       _beacon_info[BINFO_TXPWR_FOR_MNG_IDX] = p_data[i+2];
       int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_FOR_MNG_IDX] );
-      err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_adv_handle, txPowerLevel);
+      err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, get_sd_adv_handle(), txPowerLevel);
       APP_ERROR_CHECK(err_code);
     }
 

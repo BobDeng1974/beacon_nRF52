@@ -496,7 +496,7 @@ uint8_t ble_tibeacon_pwinfop()
 void ble_bms_reset_beacon_info()
 {
   for (int i = 0; i < BMS_BEACON_INFO_LENGTH; ++i) {
-    m_beacon_info[0] = 0xFF;
+    m_beacon_info[i] = 0xFF;
   }
 
   ble_bms_set_default_value_to_beacon_info();

@@ -92,18 +92,18 @@ uint32_union_t                            m_tgsec_timestamp;                    
 dectime_union_t                           m_eco_start_time;                           /**< 16bit decmal eco mode start time */
 dectime_union_t                           m_eco_finish_time;                          /**< 16bit decmal eco mode finish time */
 
-static ble_gap_adv_params_t               m_sd_adv_params;                            /**< Parameters to be passed to the stack when starting advertising. */
-static uint8_t                            m_sd_adv_handle;                            /**< Advertising handle used to identify an advertising set. */
-static uint16_t                           m_enc_advdata_len;                          //
-static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX]; /**< Buffer for storing an encoded advertising set. */
-static uint8_t                            m_enc_advdata2[BLE_GAP_ADV_SET_DATA_SIZE_MAX];  /**< Buffer for storing an encoded advertising set (iBeacon). */
-
 uint8_t                                   m_tbm_txfrq;                                // Tangerine Beacon Management Packet Interval Counter
 uint8_t                                   m_bTbmRequest = false;                      // Tangerine Beacon Management Packet
 uint8_t                                   m_bTbmRequestCounter = 0;                   // Tangerine Beacon Management Packet
 uint8_t                                   m_bFlashSaveRequest = false;                // Flash save request
 uint8_t                                   m_bFlashSaveRequestCounter = 0;             // Flash Save start wait counter
 uint8_t                                   m_bPending;                                 // Setting Non Reset flag
+
+static ble_gap_adv_params_t               m_sd_adv_params;                            /**< Parameters to be passed to the stack when starting advertising. */
+static uint8_t                            m_sd_adv_handle;                            /**< Advertising handle used to identify an advertising set. */
+static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];/**< Buffer for storing an encoded advertising set. */
+static uint8_t                            m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];/**< Buffer for storing an encoded scan response data set. */
+
 
 //------------------------------------------------------------------------------
 // Battery monitoring
@@ -201,8 +201,8 @@ static ble_gap_adv_data_t m_adv_data =
     },
     .scan_rsp_data =
     {
-        .p_data = NULL,
-        .len    = 0
+        .p_data = m_enc_scrdata,
+        .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
     }
 };
 
@@ -211,53 +211,60 @@ static ble_gap_adv_data_t m_adv_data =
  * @details Encodes the required advertising data and passes it to the stack.
  *          Also builds a structure to be passed to the stack when starting advertising.
  */
-static void softdevice_advertising_init(uint8_t is_ibeacon)
+static void softdevice_advertising_init(void)
 {
   uint32_t      err_code;
   ble_advdata_t advdata;
+  ble_advdata_t scanrsp;
   uint8_t       flags = BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED;
 
+  //
+  // UUIDs for services
+  //
+  ble_uuid_t adv_uuids[] = {
+    {BLE_UUID_BMS_SERVICE_, g_bms.uuid_type}
+  };
+
   m_sd_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET;
-  m_enc_advdata_len = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
 
   ble_advdata_manuf_data_t manuf_specific_data;
   manuf_specific_data.company_identifier = TANGERINE_COMPANY_IDENTIFIER;
- 
-  //manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
   manuf_specific_data.data.p_data = (uint8_t *) get_bms_info();
-
   manuf_specific_data.data.size   = APP_BMS_INFO_LENGTH;
 
   // Build and set advertising data.
   memset(&advdata, 0, sizeof(advdata));
+  advdata.name_type               = BLE_ADVDATA_NO_NAME;
+  advdata.include_appearance      = false;
+  advdata.flags                   = flags;
+  advdata.p_manuf_specific_data   = &manuf_specific_data;
 
-  advdata.name_type             = BLE_ADVDATA_NO_NAME;
-  advdata.flags                 = flags;
-  advdata.p_manuf_specific_data = &manuf_specific_data;
+  //
+  // Build and set advertising scan response
+  //
+  memset(&scanrsp, 0, sizeof(scanrsp));
+  scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+  scanrsp.uuids_complete.p_uuids  = adv_uuids;
 
-  if (is_ibeacon)
-  {
-    err_code = ble_advdata_encode(&advdata, m_enc_advdata2, &m_enc_advdata_len);
-    APP_ERROR_CHECK(err_code);
-  }
-  else
-  {
-    err_code = ble_advdata_encode(&advdata, m_enc_advdata, &m_enc_advdata_len);
-    APP_ERROR_CHECK(err_code);
+  err_code = ble_advdata_encode(&scanrsp, m_adv_data.scan_rsp_data.p_data, &m_adv_data.scan_rsp_data.len);
+  APP_ERROR_CHECK(err_code);
 
-    // Initialize advertising parameters (used when starting advertising).
-    memset(&m_sd_adv_params, 0, sizeof(m_sd_adv_params));
+  err_code = ble_advdata_encode(&advdata, m_adv_data.adv_data.p_data, &m_adv_data.adv_data.len);
+  APP_ERROR_CHECK(err_code);
 
-    uint8_t *_beacon_info = ble_bms_get_beacon_info();
-    uint8_t txFreq = _beacon_info[BINFO_TXFRQ_VALUE_IDX];
+  // Initialize advertising parameters (used when starting advertising).
+  memset(&m_sd_adv_params, 0, sizeof(m_sd_adv_params));
 
-    m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED;
-    m_sd_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
-    m_sd_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
-    m_sd_adv_params.interval        = BASE_ADV_INTERVAL;
-    m_sd_adv_params.interval        = get_beacon_frequency2(txFreq, true);
-    m_sd_adv_params.duration        = 0;       // Never time out.
-  }
+  uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  uint8_t txFreq = _beacon_info[BINFO_TXFRQ_VALUE_IDX];
+
+  m_sd_adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
+  m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED;
+  m_sd_adv_params.p_peer_addr     = NULL;    // Undirected advertisement.
+  m_sd_adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
+  m_sd_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
+  m_sd_adv_params.interval        = get_beacon_frequency2(txFreq, true);
+  m_sd_adv_params.duration        = 0;       // Never time out.
 }
 
 /**@brief Function for handling SoC events.
@@ -330,13 +337,15 @@ static void timeslot_on_radio_event(bool radio_active)
       else return;
     }
 
-    m_enc_advdata_len = BLE_GAP_ADV_SET_DATA_SIZE_MAX;
-    m_adv_data.adv_data.p_data  = m_enc_advdata;
-    m_adv_data.adv_data.len = m_enc_advdata_len;
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, NULL);
     m_adv_handle = m_sd_adv_handle;
     send_ibeacon = !send_ibeacon;
   }
+}
+
+uint8_t get_sd_adv_handle(void)
+{
+  return m_sd_adv_handle;
 }
 
 //-----------------------------------------------------------------------------
@@ -1132,7 +1141,6 @@ static void services_init(void)
   // Initialize Queued Write Module. 
   qwr_init.error_handler = nrf_qwr_error_handler;
 
-  //err_code = ble_bms_init(&m_bms, &bms_init);
   err_code = ble_bms_init(&g_bms);
   APP_ERROR_CHECK(err_code);
 
@@ -1146,13 +1154,6 @@ static void services_init(void)
   _beacon_info[BINFO_VERSION_VALUE_IDX+1] = firmware_version[1];
 
   // Timeslot Mode
-/*
-  _beacon_info[BINFO_STATUS_VALUE_IDX] = 4;
-  _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] = 2;
-  _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 0x00;
-  _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX] = 0x0F;
-  _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX] = 0x83;
-*/
   set_timeslot_mode();
 
   // DFU Services
@@ -1722,11 +1723,13 @@ int main(void)
   if (ble_line_beacon_enablep() == 1) {
     restore_15sec_timestamp();
     m_line_timestamp.value += TIME_CORRECTION_COUNTER;
+    save_15sec_timestamp();
   }
   if (ble_tgsec_ibeacon_enablep() == 1) {
     m_tgsec_timestamp.value = 0;
     restore_15sec_tgsec_timestamp();
     m_tgsec_timestamp.value += TIME_CORRECTION_COUNTER;
+    calc_rotmm_save_15sec_tgsec_timestamp();
   }
 
   // once build all advertising packet data
@@ -1764,12 +1767,11 @@ int main(void)
   advertising_init(BLE_ADV_MODE_BMS);
 
   if (ble_bms_get_timeslot_status() != 0x00) {
-    softdevice_advertising_init(false);   // Initialize Tangerine beacon
-    softdevice_advertising_init(true);    // Initialize iBeacon
+    softdevice_advertising_init();        // Initialize Tangerine / iBeacon
     timeslot_beacon_adv_init();           // Initialize TimeSlot beacon
 
-    m_adv_data.adv_data.p_data  = m_enc_advdata;
-    m_adv_data.adv_data.len     = m_enc_advdata_len;
+    //m_adv_data.adv_data.p_data  = m_enc_advdata;
+    //m_adv_data.adv_data.len     = m_enc_advdata_len;
 
 
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);

@@ -47,7 +47,7 @@ extern "C" {
 #include "tb_global.h"
 
 
-#ifdef nRF52832_DK
+#ifdef PCA10040
 
 // LEDs definitions for PCA10040
 #define LEDS_NUMBER    4
