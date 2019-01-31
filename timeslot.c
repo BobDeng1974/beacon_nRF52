@@ -133,13 +133,6 @@ static void m_configure_radio()
     uint8_t * p_adv_pdu = get_line_beacon_packet();
     if (line_packet_sw) p_adv_pdu = get_line_ibeacon_packet();
 
-    if (m_advertising_packet_type == 0x10 && m_bTbmRequest) {
-        //m_bTbmRequestCounter++;
-        p_adv_pdu = get_tbm_packet();
-        m_bTbmRequest = false;
-        //if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
-    }
-
     line_packet_sw = !line_packet_sw;
 
     NRF_RADIO->POWER        = 1;

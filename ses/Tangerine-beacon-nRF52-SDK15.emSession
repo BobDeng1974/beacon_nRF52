@@ -59,7 +59,8 @@
    <Watchpoint numelements="0" expression="handle" evalMode="0" name="handle" radix="-1" linenumber="373" filename="../ble_bms.c" list=""/>
    <Watchpoint numelements="0" expression="p_data" evalMode="1" name="p_data" radix="-1" linenumber="375" filename="../ble_bms.c" list=""/>
    <Watchpoint numelements="0" expression="ac_key" evalMode="0" name="ac_key" radix="-1" linenumber="375" filename="../ble_bms.c" list=""/>
-   <Watchpoint numelements="0" expression="ac_match" evalMode="0" name="ac_match" radix="-1" linenumber="376" filename="../ble_bms.c" list=""/>
+   <Watchpoint numelements="0" expression="ac_match" evalMode="0" name="ac_match" radix="16" linenumber="376" filename="../ble_bms.c" list=""/>
+   <Watchpoint numelements="0" expression="m_sd_adv_params" evalMode="0" name="m_sd_adv_params" radix="-1" linenumber="271" filename="../main.c" list=""/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -72,15 +73,15 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1635" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="1602" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1636" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1603" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="146" useTextEdit="1" useBinaryEdit="0" left="0" path="../ibeacon.c" selected="0" top="146" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="53" y="730" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="679" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="730" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_manager.c" selected="0" top="679" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="909" useTextEdit="1" useBinaryEdit="0" left="0" path="../ble_bms.c" selected="0" top="872" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="49" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="22" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="178" useTextEdit="1" useBinaryEdit="0" left="0" path="../advertising.c" selected="0" top="102" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="137" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="88" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/libraries/util/app_error_weak.c" selected="0" top="16" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="62" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_global.h" selected="1" top="41" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="63" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_global.h" selected="0" top="41" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="41" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="193" useTextEdit="1" useBinaryEdit="0" left="0" path="../config/custom_board.h" selected="0" top="26" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="277" useTextEdit="1" useBinaryEdit="0" left="0" path="../../nRF5_SDK_15.2.0_9412b96/components/ble/ble_services/ble_dfu/ble_dfu.c" selected="0" top="255" codecName="Default"/>

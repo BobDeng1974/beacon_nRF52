@@ -265,6 +265,11 @@ static void softdevice_advertising_init(void)
   m_sd_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_sd_adv_params.interval        = get_beacon_frequency2(txFreq, true);
   m_sd_adv_params.duration        = 0;       // Never time out.
+
+  if (m_advertising_packet_type == 0x10) {
+    uint32_t tbm_frq = _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] * 1000;
+    m_sd_adv_params.interval = MSEC_TO_UNITS(tbm_frq, UNIT_0_625_MS);
+  }
 }
 
 /**@brief Function for handling SoC events.
@@ -314,8 +319,6 @@ static void timeslot_on_radio_event(bool radio_active)
   static bool send_ibeacon = true;
 
   //nrf_gpio_pin_toggle(9);
-
-  if (m_advertising_packet_type == 0x10 ) return;
 
   if (radio_active) 
   {
@@ -526,18 +529,16 @@ static void time_60000ms_count_hanlder(void * p_context)
 
     sd_ble_gap_adv_stop(m_sd_adv_handle);
 
-    if (m_advertising_packet_type != 0x10 ) {
-      m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
-      advertising_init(BLE_ADV_MODE_IBEACON);
+    m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
+    advertising_init(BLE_ADV_MODE_IBEACON);
 
-      sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
+    sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
 
-      int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
-      ret_code_t err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_sd_adv_handle, txPowerLevel);
-      APP_ERROR_CHECK(err_code);
+    int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
+    ret_code_t err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_sd_adv_handle, txPowerLevel);
+    APP_ERROR_CHECK(err_code);
 
-      sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
-    }
+    sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
 
     if (ble_line_beacon_enablep() == 1) {
       timeslot_start();
@@ -649,7 +650,7 @@ static void time_1000ms_count_hanlder(void * p_context)
   }
 
   if (!m_bTbmRequest) m_tbm_txfrq++;
-  if ( m_tbm_txfrq >=_beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
+  if ( m_tbm_txfrq >= _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]) {
     //NRF_LOG_INFO("TBM TX Frquency interval = %d", m_tbm_txfrq);
     m_tbm_txfrq = 0;
     m_bTbmRequest = 0;
