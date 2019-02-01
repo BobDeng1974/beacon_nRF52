@@ -707,6 +707,8 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
       _beacon_info[BINFO_15SEC_TIMESTAMP_IDX+5]= p_data[i+7];
       _beacon_info[BINFO_15SEC_TIMESTAMP_IDX+6]= p_data[i+8];
       _beacon_info[BINFO_15SEC_TIMESTAMP_IDX+7]= p_data[i+9];
+
+      restore_15sec_timestamp();
     }
 
     // 00EC : Tangerine Secure iBeacon Secure Key
@@ -729,6 +731,8 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
       _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX+1] = p_data[i+3];
       _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX+2] = p_data[i+4];
       _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX+3] = p_data[i+5];
+
+      restore_15sec_tgsec_timestamp();
     }
 
     // 00EF : SET Current datetime

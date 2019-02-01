@@ -381,7 +381,7 @@ static void save_15sec_timestamp()
 /**@brief
    restore 15sec timestamp counter 
 */
-static void restore_15sec_timestamp() 
+void restore_15sec_timestamp() 
 {
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   m_line_timestamp.array[0] = _beacon_info[BINFO_15SEC_TIMESTAMP_IDX];
@@ -420,7 +420,7 @@ static void calc_rotmm_save_15sec_tgsec_timestamp()
 /**@brief
    restore 15sec timestamp counter 
 */
-static void restore_15sec_tgsec_timestamp() 
+void restore_15sec_tgsec_timestamp() 
 {
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   m_tgsec_timestamp.array[0] = _beacon_info[BINFO_TGSECB_TIMESTAMP_IDX];
