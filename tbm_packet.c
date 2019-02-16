@@ -97,6 +97,7 @@ void build_bms_data(void)
 
   // Battery / ECO mode
   uint8_t statusFlags = _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] & 0x7f;
+  if ( m_hardware_type != HW_TYPE_TANGERINE_BEACON ) statusFlags = 0x7F;
 
   m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
   m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
@@ -118,6 +119,9 @@ void build_bms_data(void)
   // Firmware Version
   bms_info[22] = _beacon_info[BINFO_VERSION_VALUE_IDX];
   bms_info[23] = _beacon_info[BINFO_VERSION_VALUE_IDX+1];
+
+  // Hardware Type
+  bms_info[0] = ( bms_info[0] & 0xF0) | m_hardware_type;
 }
 
 /**@brief Function for handling advertising events.

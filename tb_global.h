@@ -89,13 +89,18 @@
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x50 /* v41040 refactoring version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x60 /* v41056 LINE support version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x70 /* v41072 Tangerine Secure Beacon v1.0 support */
-#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x89 /* v42121 nRF52 Tangerine Secure Beacon v1.1 support */
+#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x8A /* v42122 nRF52 Tangerine Secure Beacon v1.1 support */
 
 //----------------------------------------------------------------------------
 // device name and company identifier
 //----------------------------------------------------------------------------
 #define DEVICE_NAME                     "TgReF"   /**< Name of device. Will be included in the advertising data. */
-#define TANGERINE_COMPANY_IDENTIFIER    0x014E     /*< Company identifier for Tangerine Inc. as per www.bluetooth.org. */
+#define TANGERINE_COMPANY_IDENTIFIER    0x014E    /*< Company identifier for Tangerine Inc. as per www.bluetooth.org. */
+
+#define HW_TYPE_TANGERINE_BEACON        0x00      // Tangerine Beacon
+#define HW_TYPE_MINEW_MAX_BEACON        0x01      // MINEW MAX Beacon
+#define HW_TYPE_MINEW_USB_BEACON        0x02      // MINEW USB Beacon
+#define HW_TYPE_NORDIC_NRF52DK          0x0E      // Nordic nRF52-DK Beacon
 
 //----------------------------------------------------------------------------
 // 
@@ -116,6 +121,7 @@
 //----------------------------------------------------------------------------
 //  global variables 
 //----------------------------------------------------------------------------
+extern  uint8_t           m_hardware_type;
 extern  uint8_t           m_tbm_scan_mode;
 extern  uint8_t           m_timeslot_mode;
 extern  uint8_t           m_advertising_packet_type;

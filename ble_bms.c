@@ -358,6 +358,15 @@ uint32_t ble_bms_init(ble_bms_t *p_bms)
         return err_code;
     }
 
+    // Reset Hardware Characteristic.
+    err_code = add_characteristic(p_bms, p_bms_init,
+                                  BLE_UUID_BMS_RST_CHARACTERISTIC, 5,
+                                  &p_bms->rst_handles);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+
     return NRF_SUCCESS;
 }
 
@@ -783,8 +792,6 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
     // 00D4: Set Radio Timeslot advertising distance list
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD4) {
-      if (length != BINFO_TBM_TXFRQ_VALUE_IDX+OP_SEC_LEN) return;
-
       _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX]   = p_data[i+2];
     }
 
@@ -798,6 +805,10 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
       m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
     }
 
+    // 00D6: Set Hardware Type
+    else if (p_data[i] == 0x00 && p_data[i+1] == 0xD6) {
+      _beacon_info[BINFO_HARDWARE_TYPE_IDX]   = p_data[i+2];
+    }
 
     // rebuild packet data
     build_all_data();
@@ -833,6 +844,11 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
     _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = (uint8_t)(blevel & 0x00FF);
     uint16_t *pEnergizer_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
     m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
+  }
+
+  // Reset Hardware
+  else if (handle == p_bms->rst_handles.value_handle) {
+     NVIC_SystemReset();
   }
 }
 

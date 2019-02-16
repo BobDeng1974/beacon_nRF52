@@ -70,6 +70,7 @@ TaskHandle_t                              m_advertising_start;
 TaskHandle_t                              m_LED_control;
 #endif
 
+uint8_t                                   m_hardware_type = 0x00;
 uint8_t                                   m_tbm_scan_mode = false;
 uint8_t                                   m_timeslot_mode = false;
 uint8_t                                   m_advertising_packet_type = 0x00;
@@ -98,12 +99,32 @@ uint8_t                                   m_bTbmRequestCounter = 0;             
 uint8_t                                   m_bFlashSaveRequest = false;                // Flash save request
 uint8_t                                   m_bFlashSaveRequestCounter = 0;             // Flash Save start wait counter
 uint8_t                                   m_bPending;                                 // Setting Non Reset flag
+uint8_t                                   m_sw_check_counter = 0;
+uint8_t                                   m_bSwCheck = false;
 
 static ble_gap_adv_params_t               m_sd_adv_params;                            /**< Parameters to be passed to the stack when starting advertising. */
 static uint8_t                            m_sd_adv_handle;                            /**< Advertising handle used to identify an advertising set. */
 static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];/**< Buffer for storing an encoded advertising set. */
 static uint8_t                            m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];/**< Buffer for storing an encoded scan response data set. */
 
+/**@brief Function for putting the chip into sleep mode.
+ *
+ * @note This function will not return.
+ */
+static void sleep_mode_enter(void)
+{
+    ret_code_t err_code;
+
+    // Prepare wakeup buttons.
+    //err_code = bsp_btn_ble_sleep_mode_prepare();
+    //APP_ERROR_CHECK(err_code);
+
+    // Go to system-off mode (this function will not return; wakeup will cause a reset).
+    nrf_gpio_cfg_sense_set(13, NRF_GPIO_PIN_SENSE_LOW);
+
+    err_code = sd_power_system_off();
+    APP_ERROR_CHECK(err_code);
+}
 
 //------------------------------------------------------------------------------
 // Battery monitoring
@@ -622,6 +643,9 @@ static void time_10min_count_hanlder(void * p_context)
 /**@brief 
    1sec Interval Timer
  */
+static bool old_sw_value = 0xFF;
+static bool cnt_sw_value = 0;
+
 #ifdef FREERTOS_SWITCH
 static void time_1000ms_count_hanlder(TimerHandle_t xTimer)
 {
@@ -634,6 +658,36 @@ static void time_1000ms_count_hanlder(void * p_context)
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
   _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = battery_level_to_percent(get_battery_level());
+
+  if (m_hardware_type == HW_TYPE_MINEW_MAX_BEACON) {
+    cnt_sw_value++;
+    m_sw_check_counter++;
+    bool sw_value = nrf_gpio_pin_read(SW_HW_MIMAXK);
+    //NRF_LOG_INFO("Switch = %d:%d - %d", sw_value, old_sw_value,m_sw_check_counter);
+    if ( sw_value == 1 ) {
+      m_bSwCheck = false;
+      m_sw_check_counter = 0;
+    }
+
+    if ( !m_bSwCheck && sw_value != old_sw_value ) {
+      m_bSwCheck = true;
+      m_sw_check_counter = 0;
+    }
+
+    if ( m_bSwCheck && sw_value == old_sw_value && m_sw_check_counter > 1 ) {
+      if ( sw_value == 0) {
+        blink_error_led(2);
+        // FIXME NVIC_SystemReset();
+        nrf_delay_ms(3000);
+        blink_error_led(1);
+        sleep_mode_enter();
+      }
+      m_sw_check_counter = 0;
+      m_bSwCheck = false;
+    } else if ( m_bSwCheck && sw_value != old_sw_value ) m_sw_check_counter = 0;
+    
+    old_sw_value = sw_value;
+  }
 
   if ( m_bPending ) {
     if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) execute_pending_led(LED_ON);
@@ -1157,6 +1211,13 @@ static void services_init(void)
   // Timeslot Mode
   set_timeslot_mode();
 
+  // Hardware Type
+  if (_beacon_info[BINFO_HARDWARE_TYPE_IDX] == 0xFF) {
+    _beacon_info[BINFO_HARDWARE_TYPE_IDX]   = HW_TYPE_TANGERINE_BEACON;
+  }
+  m_hardware_type = _beacon_info[BINFO_HARDWARE_TYPE_IDX];
+  gpiote_init_hw_type(m_hardware_type);
+
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
   dfus_init.evt_handler = ble_dfu_evt_handler;
@@ -1653,7 +1714,7 @@ int main(void)
   // Activate deep sleep mode.
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 #endif
-  pcf8563_init(SCL_PIN_, SDA_PIN_);
+  //pcf8563_init(SCL_PIN_, SDA_PIN_);
   adc_configure();
 
 #ifdef BOOTLOADER_NOT_FOUND

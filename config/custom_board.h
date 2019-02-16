@@ -183,15 +183,26 @@ extern "C" {
 
 #else
 
-#define LOWBAT_DET      2
-#define LED_R           29
-#define LED_G           28
-#define LED_B           27
-#define BAT_V           NRF_SAADC_INPUT_AIN0
-
 #define DEBUG_PIN       9
 #define DEBUG_PIN2      10
 
+#define LOWBAT_DET      2
+#define BAT_V           NRF_SAADC_INPUT_AIN0
+
+#define LED_R           NRF_GPIO_PIN_MAP(0,29)
+#define LED_G           NRF_GPIO_PIN_MAP(0,28)
+#define LED_B           NRF_GPIO_PIN_MAP(0,27)
+
+#define LED_R_HW_52DK   18
+#define LED_G_HW_52DK   17
+#define LED_B_HW_52DK   19
+
+#define SW_HW_MIMAXK    NRF_GPIO_PIN_MAP(0,13)
+#define LED_R_HW_MIMAXK NRF_GPIO_PIN_MAP(0,18)
+#define LED_G_HW_MIMAXK NRF_GPIO_PIN_MAP(0,19)
+#define LED_B_HW_MIMAXK NRF_GPIO_PIN_MAP(0,17)
+
+//#define BSP_BUTTON_0   SW_HW_MIMAXK
 
 #endif
 

@@ -96,43 +96,97 @@ void execute_pending_led(const char *param)
   #else
 void execute_led(const char *param)
 {
-  if (param[0] == '1') {
-    nrf_gpio_pin_clear(LED_G);
-    nrf_gpio_pin_clear(LED_R);
-    nrf_gpio_pin_clear(LED_B);
-  }
-  else {
-    nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_set(LED_R);
-    nrf_gpio_pin_set(LED_B);
+  switch(m_hardware_type) {
+  case HW_TYPE_MINEW_USB_BEACON :   // MINEW USB Beacon
+    return;
+  case HW_TYPE_TANGERINE_BEACON :   // Tangerine Beacon
+    if (param[0] == '1') {
+      nrf_gpio_pin_clear(LED_G);
+      nrf_gpio_pin_clear(LED_R);
+      nrf_gpio_pin_clear(LED_B);
+    }
+    else {
+      nrf_gpio_pin_set(LED_G);
+      nrf_gpio_pin_set(LED_R);
+      nrf_gpio_pin_set(LED_B);
+    }
+    break;
+  case HW_TYPE_MINEW_MAX_BEACON :   // MINEW MAX Beacon
+    if (param[0] == '1') {
+      nrf_gpio_pin_set(LED_G_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_R_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_B_HW_MIMAXK);
+    }
+    else {
+      nrf_gpio_pin_clear(LED_G_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_R_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_B_HW_MIMAXK);
+    }
+    break;
   }
 }
 
 void execute_error_led(const char *param)
 {
-  if (param[0] == '1') {
-    nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_clear(LED_R);
-    nrf_gpio_pin_set(LED_B);
-  }
-  else {
-    nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_set(LED_R);
-    nrf_gpio_pin_set(LED_B);
+  switch(m_hardware_type) {
+  case HW_TYPE_MINEW_USB_BEACON :   // MINEW USB Beacon
+    return;
+  case HW_TYPE_TANGERINE_BEACON :   // Tangerine Beacon
+    if (param[0] == '1') {
+      nrf_gpio_pin_set(LED_G);
+      nrf_gpio_pin_clear(LED_R);
+      nrf_gpio_pin_set(LED_B);
+    }
+    else {
+      nrf_gpio_pin_set(LED_G);
+      nrf_gpio_pin_set(LED_R);
+      nrf_gpio_pin_set(LED_B);
+    }
+    break;
+  case HW_TYPE_MINEW_MAX_BEACON :   // MINEW MAX Beacon
+    if (param[0] == '1') {
+      nrf_gpio_pin_clear(LED_G_HW_MIMAXK);
+      nrf_gpio_pin_set(LED_R_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_B_HW_MIMAXK);
+    }
+    else {
+      nrf_gpio_pin_clear(LED_G_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_R_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_B_HW_MIMAXK);
+    }
+    break;
   }
 }
 
 void execute_pending_led(const char *param)
 {
-  if (param[0] == '1') {
-    nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_set(LED_R);
-    nrf_gpio_pin_clear(LED_B);
-  }
-  else {
-    nrf_gpio_pin_set(LED_G);
-    nrf_gpio_pin_set(LED_R);
-    nrf_gpio_pin_set(LED_B);
+  switch(m_hardware_type) {
+  case HW_TYPE_MINEW_USB_BEACON :   // MINEW USB Beacon
+    return;
+  case HW_TYPE_TANGERINE_BEACON :   // Tangerine Beacon
+    if (param[0] == '1') {
+      nrf_gpio_pin_set(LED_G);
+      nrf_gpio_pin_set(LED_R);
+      nrf_gpio_pin_clear(LED_B);
+    }
+    else {
+      nrf_gpio_pin_set(LED_G);
+      nrf_gpio_pin_set(LED_R);
+      nrf_gpio_pin_set(LED_B);
+    }
+    break;
+  case HW_TYPE_MINEW_MAX_BEACON :   // MINEW MAX Beacon
+    if (param[0] == '1') {
+      nrf_gpio_pin_clear(LED_G_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_R_HW_MIMAXK);
+      nrf_gpio_pin_set(LED_B_HW_MIMAXK);
+    }
+    else {
+      nrf_gpio_pin_clear(LED_G_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_R_HW_MIMAXK);
+      nrf_gpio_pin_clear(LED_B_HW_MIMAXK);
+    }
+    break;
   }
 }
   #endif
@@ -157,10 +211,22 @@ void blink_error_led(uint8_t count)
   for(uint8_t i = 0; i < count; i++) 
   {
     execute_error_led(LED_ON);
-    nrf_delay_ms(200);
+    nrf_delay_ms(100);
 
     execute_error_led(LED_OFF);
-    nrf_delay_ms(200);
+    nrf_delay_ms(100);
+  }
+}
+
+void blink_pending_led(uint8_t count)
+{
+  for(uint8_t i = 0; i < count; i++) 
+  {
+    execute_pending_led(LED_ON);
+    nrf_delay_ms(100);
+
+    execute_pending_led(LED_OFF);
+    nrf_delay_ms(100);
   }
 }
 
@@ -204,6 +270,30 @@ void gpiote_init(void)
   nrf_gpio_pin_clear(LED_G);
   nrf_gpio_pin_set(LED_R);
   nrf_gpio_pin_set(LED_B);
+}
+
+void gpiote_init_hw_type(uint8_t hw_type)
+{
+  switch(hw_type) {
+  case HW_TYPE_MINEW_USB_BEACON :   // MINEW USB Beacon
+    nrf_gpio_cfg_input(LED_R, NRF_GPIO_PIN_NOPULL);
+    nrf_gpio_cfg_input(LED_G, NRF_GPIO_PIN_NOPULL);
+    nrf_gpio_cfg_input(LED_B, NRF_GPIO_PIN_NOPULL);
+    break;
+  case HW_TYPE_TANGERINE_BEACON :   // Tangerine Beacon
+    break;
+  case HW_TYPE_MINEW_MAX_BEACON :   // MINEW MAX Beacon
+    nrf_gpio_cfg_output(LED_R_HW_MIMAXK);
+    nrf_gpio_cfg_output(LED_G_HW_MIMAXK);
+    nrf_gpio_cfg_output(LED_B_HW_MIMAXK);
+    nrf_gpio_cfg_input(SW_HW_MIMAXK, NRF_GPIO_PIN_PULLUP);
+    break;
+  case HW_TYPE_NORDIC_NRF52DK :     // Nordic nRF52-DK Beacon
+    nrf_gpio_cfg_output(LED_R_HW_52DK);
+    nrf_gpio_cfg_output(LED_G_HW_52DK);
+    nrf_gpio_cfg_output(LED_B_HW_52DK);
+    break;
+  }
 }
 
 void battery_init(void)
@@ -425,6 +515,8 @@ uint8_t pcf8563_write(void)
 
 uint8_t pcf8563_read(void)
 {
+  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) return false;   
+
   uint8_t data[RTC_TIMEDATE_LENGTH];
   uint8_t result = PCF8563_read_regs(RTC_SECONDS_ADDR, RTC_TIMEDATE_LENGTH, data);
   if ( !result ) return false;

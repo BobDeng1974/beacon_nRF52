@@ -56,12 +56,14 @@ static uint8_t m_Execute_led_flash_type1;
 /**
  * GPIO and LED 
  */
-void gpiote_init(void);                   // GPIO initialize
-void execute_led(const char *param);      // turn on/off LED
-void led_flash_type1();                   // flash led type1
+void gpiote_init(void);                     // GPIO initialize
+void gpiote_init_hw_type(uint8_t hw_type);  // GPIO hardware typw initialize
+void execute_led(const char *param);        // turn on/off LED
+void led_flash_type1();                     // flash led type1
 void execute_error_led(const char *param);  // turn on/off RED LED
-void blink_led(uint8_t count);            // Blink LED
-void blink_error_led(uint8_t count);      // Blink Error LED
+void blink_led(uint8_t count);              // Blink LED
+void blink_error_led(uint8_t count);        // Blink Error LED
+void blink_pending_led(uint8_t count);      // Blink Pending LED
 void execute_pending_led(const char *param);
 
 /**

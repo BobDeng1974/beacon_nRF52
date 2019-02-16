@@ -85,6 +85,8 @@
 
 #define BMS_BATTERY_MAX_CAPACITY            0xD4, 0x01                         // Battery Maximum capacity
 
+#define BMS_HARDWARE_TYPE                   0x00, 0x00                         // Hardware Type
+
 // flag operation
 #define BMS_FLG_GET(flg, bits)               (flg & bits)
 #define BMS_FLG_SET(flg, bits)               (flg | bits)
@@ -158,7 +160,9 @@ static uint8_t m_beacon_info[BMS_BEACON_INFO_LENGTH] = {
 
     BMS_TBM_TXFRQ_VALUE,                 // l=2  : s=178 : BMS advertising Intervals
   
-    BMS_BATTERY_MAX_CAPACITY             // l=2  : s=180 : Battery Maximum capacity
+    BMS_BATTERY_MAX_CAPACITY,            // l=2  : s=180 : Battery Maximum capacity
+
+    BMS_HARDWARE_TYPE                    // l=2  : s=182 : HARDWARE TYPE
 
 };
 
@@ -734,6 +738,10 @@ static void ble_bms_set_default_value_to_beacon_info()
   if (m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX] == 0xFF) {
     m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = 0xD4;
     m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1]   = 0x01;
+  }
+
+  if (m_beacon_info[BINFO_HARDWARE_TYPE_IDX] == 0xFF) {
+    m_beacon_info[BINFO_HARDWARE_TYPE_IDX]   = HW_TYPE_TANGERINE_BEACON;
   }
 
 }

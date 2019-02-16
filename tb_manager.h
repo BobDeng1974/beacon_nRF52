@@ -132,6 +132,9 @@
 #define BINFO_BMS_BATTERY_MAX_CAPACITY_IDX   180     // l=2 : s=180 : Battery Maximum capacity
 #define BINFO_BMS_BATTERY_MAX_CAPACITY_SIZ     2     // -
 
+#define BINFO_HARDWARE_TYPE_IDX              182     // l=1 : s=182 : Hardware Type
+#define BINFO_HARDWARE_TYPE_SIZ                2     // -
+
 #define MAX_ADV_MODE_LIST                     12     // Advertising Mode List Max Index
 
 /**
