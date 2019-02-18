@@ -109,11 +109,14 @@ void build_bms_data(void)
   // Beacon Status
   statusFlags = m_timeslot_mode << 4;
   statusFlags = statusFlags | _beacon_info[BINFO_STATUS_VALUE_IDX];
+  if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) statusFlags = statusFlags | 0x08;
   bms_info[20] = statusFlags;
 
   // Tx Power / Beacon Frequency
   statusFlags = _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX];
   statusFlags = statusFlags  | (_beacon_info[BINFO_TXFRQ_VALUE_IDX] << 4);
+
+
   bms_info[21] = statusFlags;
 
   // Firmware Version

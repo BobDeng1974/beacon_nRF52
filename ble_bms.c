@@ -367,6 +367,15 @@ uint32_t ble_bms_init(ble_bms_t *p_bms)
         return err_code;
     }
 
+    // Reset Hardware Characteristic.
+    err_code = add_characteristic(p_bms, p_bms_init,
+                                  BLE_UUID_BMS_PWR_CHARACTERISTIC, 5,
+                                  &p_bms->pwr_handles);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+
     return NRF_SUCCESS;
 }
 
@@ -849,6 +858,16 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
   // Reset Hardware
   else if (handle == p_bms->rst_handles.value_handle) {
      NVIC_SystemReset();
+  }
+
+  // Power OFF
+  else if (handle == p_bms->pwr_handles.value_handle) {
+    blink_error_led(2);
+    nrf_delay_ms(3000);
+    blink_error_led(1);
+    nrf_gpio_cfg_sense_set(13, NRF_GPIO_PIN_SENSE_LOW);
+    err_code = sd_power_system_off();
+    APP_ERROR_CHECK(err_code);
   }
 }
 
