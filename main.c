@@ -657,7 +657,7 @@ static void time_1000ms_count_hanlder(void * p_context)
 #endif
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
-  _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = battery_level_to_percent(get_battery_level());
+   read_battery_hysteresis(NULL);
 
   if (m_hardware_type == HW_TYPE_MINEW_MAX_BEACON) {
     cnt_sw_value++;
@@ -676,10 +676,9 @@ static void time_1000ms_count_hanlder(void * p_context)
 
     if ( m_bSwCheck && sw_value == old_sw_value && m_sw_check_counter > 1 ) {
       if ( sw_value == 0) {
-        blink_error_led(2);
-        // FIXME NVIC_SystemReset();
-        nrf_delay_ms(3000);
-        blink_error_led(1);
+        blink_pending_led(3, 200);
+        nrf_delay_ms(2000);
+        nrf_gpio_cfg_sense_set(13, NRF_GPIO_PIN_SENSE_LOW);
         sleep_mode_enter();
       }
       m_sw_check_counter = 0;
@@ -1529,17 +1528,29 @@ static void read_battery_hysteresis(void * p_context)
 {
   UNUSED_PARAMETER(p_context);
 #endif
-  uint16_t blevel = get_battery_level();
-  uint8_t bpercent = battery_level_to_percent(blevel);
+
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
+  uint16_t blevel = 0;
+  uint8_t bBatPsent = 0;
 
-  m_battery_charge.value = blevel;
-  _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = bpercent;
+  if ( m_hardware_type == HW_TYPE_TANGERINE_BEACON ) {
+    blevel = get_battery_level();
+    m_battery_charge.value = blevel;
+    _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = battery_level_to_percent(blevel);
+  }
+  else if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) {
+    for(int ix=0; ix < 10; ix++) {
+      blevel = get_battery_level();
+      bBatPsent = battery_level_to_percent(blevel);
+      if (bBatPsent > 10) {
+        m_battery_charge.value = blevel;
+        _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = bBatPsent;
+        break;
+      }
+    }
+  }
 
-  NRF_LOG_INFO("read_battery_hysteresis ADC=%d bpercend=%d bpaercent10=%d",blevel, bpercent, bpercent );
-
-  // rebuild all packet data
-  //build_all_data();
+  //NRF_LOG_INFO("read_battery_hysteresis ADC=%d bpercend=%d",blevel, bBatPsent);
 }
 
 /**@brief Function for handling Peer Manager events.
@@ -1689,8 +1700,6 @@ void clock_init(void)
     ret_code_t err_code = nrf_drv_clock_init();
     APP_ERROR_CHECK(err_code);
 }
-
-
 
 /**@brief F unction for application main entry.
  */

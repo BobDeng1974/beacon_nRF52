@@ -862,10 +862,9 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
   // Power OFF
   else if (handle == p_bms->pwr_handles.value_handle) {
-    blink_error_led(2);
-    nrf_delay_ms(3000);
-    blink_error_led(1);
-    nrf_gpio_cfg_sense_set(13, NRF_GPIO_PIN_SENSE_LOW);
+    blink_pending_led(3, 200);
+    nrf_delay_ms(2000);
+    if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) nrf_gpio_cfg_sense_set(13, NRF_GPIO_PIN_SENSE_LOW);
     err_code = sd_power_system_off();
     APP_ERROR_CHECK(err_code);
   }

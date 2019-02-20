@@ -97,7 +97,8 @@ void build_bms_data(void)
 
   // Battery / ECO mode
   uint8_t statusFlags = _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] & 0x7f;
-  if ( m_hardware_type != HW_TYPE_TANGERINE_BEACON ) statusFlags = 0x7F;
+  if ( m_hardware_type == HW_TYPE_MINEW_USB_BEACON ) statusFlags = 0x64;
+  if ( m_hardware_type == HW_TYPE_NORDIC_NRF52DK ) statusFlags = 0x64;
 
   m_eco_start_time.dec.Hours     = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX];
   m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];

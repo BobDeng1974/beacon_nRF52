@@ -56,15 +56,15 @@ static uint8_t m_Execute_led_flash_type1;
 /**
  * GPIO and LED 
  */
-void gpiote_init(void);                     // GPIO initialize
-void gpiote_init_hw_type(uint8_t hw_type);  // GPIO hardware typw initialize
-void execute_led(const char *param);        // turn on/off LED
-void led_flash_type1();                     // flash led type1
-void execute_error_led(const char *param);  // turn on/off RED LED
-void blink_led(uint8_t count);              // Blink LED
-void blink_error_led(uint8_t count);        // Blink Error LED
-void blink_pending_led(uint8_t count);      // Blink Pending LED
-void execute_pending_led(const char *param);
+void gpiote_init(void);                       // GPIO initialize
+void gpiote_init_hw_type(uint8_t hw_type);    // GPIO hardware typw initialize
+void execute_led(const char *param);          // turn on/off LED
+void led_flash_type1();                       // flash led type1
+void execute_error_led(const char *param);    // turn on/off RED LED
+void blink_led(uint8_t count);                // Blink LED
+void blink_error_led(uint8_t count);          // Blink Error LED
+void blink_pending_led(uint8_t c, uint8_t t); // Blink Pending LED
+void execute_pending_led(const char *param);  // Blink Pending LED
 
 /**
  * rssi / tx power
@@ -78,12 +78,12 @@ int8_t get_tx_power_level(uint8_t tx_power);
 extern  uint16_t m_Energizer_Max_Capacity;
 
 void battery_init(void);
-uint16_t get_battery_level();
+uint16_t get_battery_level(void);
 
 /**
  * Retrieve current battery level
  */
-uint16_t battery_level_get();
+uint16_t battery_level_get(void);
 uint16_t battery_level_get2(void);
 
 /**

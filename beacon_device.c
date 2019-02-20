@@ -9,6 +9,10 @@ static uint8_t m_Blink_Error_LED_count;
 static uint8_t m_Execute_led_flash_type1;
 
 /* Battery */
+// Input range of internal Vdd measurement = (0.6 V)/(1/6) = 3.6 V
+// 3.0 volts -> 14486 ADC counts with 14-bit sampling: 4828.8 counts per volt
+#define ADC12_COUNTS_PER_VOLT 4551
+
 uint16_t m_Energizer_Max_Capacity = ENERGIZER_MAXIMUM_CAPACITY;
 
 /* RTC PCF8563 */
@@ -218,15 +222,15 @@ void blink_error_led(uint8_t count)
   }
 }
 
-void blink_pending_led(uint8_t count)
+void blink_pending_led(uint8_t c, uint8_t t)
 {
-  for(uint8_t i = 0; i < count; i++) 
+  for(uint8_t i = 0; i < c; i++) 
   {
     execute_pending_led(LED_ON);
-    nrf_delay_ms(100);
+    nrf_delay_ms(t);
 
     execute_pending_led(LED_OFF);
-    nrf_delay_ms(100);
+    nrf_delay_ms(t);
   }
 }
 
@@ -296,47 +300,119 @@ void gpiote_init_hw_type(uint8_t hw_type)
   }
 }
 
+/**
+ * @brief Function for 14-bit adc init in polled mode
+ */
 void battery_init(void)
 {
-  ret_code_t err_code;
- 
-  nrf_saadc_channel_config_t adc_channel_conf = NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(BAT_V);
+  if ( m_hardware_type == HW_TYPE_TANGERINE_BEACON ) 
+  {
+    nrf_saadc_channel_config_t adc_channel_conf = NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(BAT_V);
+    ret_code_t err_code = nrf_drv_saadc_channel_init(0, &adc_channel_conf);
+    APP_ERROR_CHECK(err_code);
+  }
+  else {
+    nrf_saadc_channel_config_t myConfig =
+    {
+        .resistor_p = NRF_SAADC_RESISTOR_DISABLED,
+        .resistor_n = NRF_SAADC_RESISTOR_DISABLED,
+        .gain       = NRF_SAADC_GAIN1_6,
+        .reference  = NRF_SAADC_REFERENCE_INTERNAL,
+        .acq_time   = NRF_SAADC_ACQTIME_40US,
+        .mode       = NRF_SAADC_MODE_SINGLE_ENDED,
+        .burst      = NRF_SAADC_BURST_ENABLED,
+        .pin_p      = NRF_SAADC_INPUT_VDD,
+        .pin_n      = NRF_SAADC_INPUT_DISABLED
+    };
 
-  err_code = nrf_drv_saadc_channel_init(0, &adc_channel_conf);
-  APP_ERROR_CHECK(err_code);
+    nrf_saadc_resolution_set((nrf_saadc_resolution_t) 3);   // 3 is 14-bit
+    nrf_saadc_oversample_set((nrf_saadc_oversample_t) 2);   // 2 is 4x, about 150uSecs total
+    nrf_saadc_int_disable(NRF_SAADC_INT_ALL);
+    nrf_saadc_event_clear(NRF_SAADC_EVENT_END);
+    nrf_saadc_event_clear(NRF_SAADC_EVENT_STARTED);
+    nrf_saadc_enable();
+
+    NRF_SAADC->CH[1].CONFIG =
+              ((myConfig.resistor_p << SAADC_CH_CONFIG_RESP_Pos)   & SAADC_CH_CONFIG_RESP_Msk)
+            | ((myConfig.resistor_n << SAADC_CH_CONFIG_RESN_Pos)   & SAADC_CH_CONFIG_RESN_Msk)
+            | ((myConfig.gain       << SAADC_CH_CONFIG_GAIN_Pos)   & SAADC_CH_CONFIG_GAIN_Msk)
+            | ((myConfig.reference  << SAADC_CH_CONFIG_REFSEL_Pos) & SAADC_CH_CONFIG_REFSEL_Msk)
+            | ((myConfig.acq_time   << SAADC_CH_CONFIG_TACQ_Pos)   & SAADC_CH_CONFIG_TACQ_Msk)
+            | ((myConfig.mode       << SAADC_CH_CONFIG_MODE_Pos)   & SAADC_CH_CONFIG_MODE_Msk)
+            | ((myConfig.burst      << SAADC_CH_CONFIG_BURST_Pos)  & SAADC_CH_CONFIG_BURST_Msk);
+
+    NRF_SAADC->CH[1].PSELN = myConfig.pin_n;
+    NRF_SAADC->CH[1].PSELP = myConfig.pin_p;
+  }
 }
 
+/**
+ * @brief Function for 14-bit adc battery voltage by direct blocking reading
+ */
 uint16_t get_battery_level()
 {
-  uint16_t blevel = 0;
-  uint16_t bl_max = 0;
-  uint16_t bl_min = 10000;
+  if ( m_hardware_type == HW_TYPE_TANGERINE_BEACON ) 
+  {
+    uint16_t blevel = 0;
+    uint16_t bl_max = 0;
+    uint16_t bl_min = 10000;
 
-  for (int i = 0; i < 10; i++) {
-    uint16_t bl_tmp = battery_level_get2(); 
+    for (int i = 0; i < 10; i++) {
+      uint16_t bl_tmp = battery_level_get2(); 
 
-    if (bl_tmp > bl_max) {
-      // 最大値更新
-      bl_max = bl_tmp;
-    }
-    if (bl_tmp < bl_min) {
-      // 最小値更新
-      bl_min = bl_tmp;
-    }
+      if (bl_tmp > bl_max) {
+        // 最大値更新
+        bl_max = bl_tmp;
+      }
+      if (bl_tmp < bl_min) {
+        // 最小値更新
+        bl_min = bl_tmp;
+      }
 
-    blevel += bl_tmp;
+      blevel += bl_tmp;
     
-    nrf_delay_us(1);
+      nrf_delay_us(1);
+    }
+
+    // 最大値と最小値を排除
+    blevel -= bl_max;
+    blevel -= bl_min;
+
+    // 平均値を計算
+    blevel = (blevel / 8);
+
+    return blevel;
   }
+  else {
+    uint16_t result = 0xFFFF;           // Some recognisable dummy value
+    uint32_t timeout = 10000;           // Trial and error
+    volatile int16_t buffer[8];
+  
+    // Enable command
+    nrf_saadc_enable();
+    NRF_SAADC->RESULT.PTR = (uint32_t)buffer;
+    NRF_SAADC->RESULT.MAXCNT = 1;
+    nrf_saadc_event_clear(NRF_SAADC_EVENT_END);
+    nrf_saadc_task_trigger(NRF_SAADC_TASK_START);
+    nrf_saadc_task_trigger(NRF_SAADC_TASK_SAMPLE);
 
-  // 最大値と最小値を排除
-  blevel -= bl_max;
-  blevel -= bl_min;
-
-  // 平均値を計算
-  blevel = (blevel / 8);
-
-  return blevel;
+    while (0 == nrf_saadc_event_check(NRF_SAADC_EVENT_END) && timeout > 0)
+    {
+      //nrf_delay_us(10);
+      timeout--;
+    }
+    nrf_saadc_task_trigger(NRF_SAADC_TASK_STOP);
+    nrf_saadc_event_clear(NRF_SAADC_EVENT_STARTED);
+    nrf_saadc_event_clear(NRF_SAADC_EVENT_END);
+  
+    // Disable command to reduce power consumption
+    nrf_saadc_disable();
+    if (timeout != 0) {
+      result = ((buffer[0] * 1000L)+(ADC12_COUNTS_PER_VOLT/2)) / ADC12_COUNTS_PER_VOLT;
+    }
+    //NRF_LOG_INFO("ADC12 = %dmV(%d) Timeout(%d)", result, buffer[0], timeout);
+    return result;
+ }
 }
 
 #define MAXADBF 512
@@ -356,7 +432,6 @@ uint16_t battery_level_get2(void)
     err_code = nrf_drv_saadc_sample_convert(0, &adc_result);
     APP_ERROR_CHECK(err_code);
     adc_total += (uint32_t)adc_result;
-    //nrf_delay_ms(50);
   }
 
   adc_sample = (uint32_t)(adc_total / MAX_BATTERY_ADC_SAMPLE);    
@@ -374,38 +449,16 @@ uint16_t battery_level_get2(void)
   return vbat_current_in_mv;
 }
 
-uint16_t battery_level_get()
-{
-  ret_code_t err_code;
-
-  //saadc_init();
-
-  //Event handler is called immediately after conversion is finished.
-  //err_code = nrf_drv_saadc_sample(); // Check error
-  //APP_ERROR_CHECK(err_code);
-
-  m_adc_status = true;
-  while (m_adc_status == true) {};
-  //nrf_drv_saadc_uninit();
-
-  uint16_t adc_result = 0;
-  for(int i=0; i < ADC_SAMPLES_IN_BUFFER; i++) adc_result += m_buffer_pool[i];
-  
-  uint16_t vbg_in_mv = 1200;
-  uint16_t adc_max = 255; // 10bit=1023, 8bit=255
-  uint16_t vbat_current_in_mv = ((adc_result/ADC_SAMPLES_IN_BUFFER) * 3 * vbg_in_mv) / adc_max;
-
-  return vbat_current_in_mv;
-}
-
 uint8_t battery_level_to_percent(const uint16_t mvolts)
 {
-    float fMaxCapacity = (float)m_Energizer_Max_Capacity;
+  float fMaxCapacity = (float)m_Energizer_Max_Capacity;
+  if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) fMaxCapacity = 3200.0;
 
-    fMaxCapacity = ((float)mvolts / fMaxCapacity) * 100.0;
-    uint8_t battery_level = (uint8_t)fMaxCapacity;
-    if ( battery_level > 100 ) battery_level = 100;
-    return battery_level;
+  fMaxCapacity = ((float)mvolts / fMaxCapacity) * 100.0;
+  uint8_t battery_level = (uint8_t)fMaxCapacity;
+  //NRF_LOG_INFO("Battery = %d", battery_level);
+  if ( battery_level > 100 ) battery_level = 100;
+  return battery_level;
 }
 
 int8_t get_adjusted_rssi(uint8_t tx_power) 
