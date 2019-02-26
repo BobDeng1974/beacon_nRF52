@@ -75,7 +75,7 @@ int8_t get_tx_power_level(uint8_t tx_power);
 /**
  * battery level
  */
-extern  uint16_t m_Energizer_Max_Capacity;
+extern  uint16_t m_Battery_Voltage_Max_Capacity;
 
 void battery_init(void);
 uint16_t get_battery_level(void);

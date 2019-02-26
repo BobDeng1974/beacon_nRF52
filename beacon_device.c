@@ -1,6 +1,7 @@
 #define _BEACON_DEVICE_MAIN_CODE_
 
 #include "beacon_device.h"
+#include "nrf_drv_saadc.h"
 
 
 /* LED */
@@ -13,7 +14,7 @@ static uint8_t m_Execute_led_flash_type1;
 // 3.0 volts -> 14486 ADC counts with 14-bit sampling: 4828.8 counts per volt
 #define ADC12_COUNTS_PER_VOLT 4551
 
-uint16_t m_Energizer_Max_Capacity = ENERGIZER_MAXIMUM_CAPACITY;
+uint16_t m_Battery_Voltage_Max_Capacity;
 
 /* RTC PCF8563 */
 #define RTC_SLAVE_ADDR        0x51
@@ -451,8 +452,7 @@ uint16_t battery_level_get2(void)
 
 uint8_t battery_level_to_percent(const uint16_t mvolts)
 {
-  float fMaxCapacity = (float)m_Energizer_Max_Capacity;
-  if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) fMaxCapacity = 3200.0;
+  float fMaxCapacity = (float)m_Battery_Voltage_Max_Capacity;
 
   fMaxCapacity = ((float)mvolts / fMaxCapacity) * 100.0;
   uint8_t battery_level = (uint8_t)fMaxCapacity;

@@ -806,17 +806,28 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
     // 00D5: Set Battery Max Capacity Value
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD5) {
-      if (length != BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+OP_SEC_LEN) return;
+      if (length != BINFO_BMS_BATTERY_MAX_CAPACITY_SIZ+OP_SEC_LEN) return;
 
-      _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = p_data[i+2];
-      _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = p_data[i+3];
-      uint16_t *pEnergizer_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
-      m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
+      _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = p_data[i+3];
+      _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = p_data[i+2];
+      uint16_t *pBattery_Voltage_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
+      m_Battery_Voltage_Max_Capacity = (uint16_t)*pBattery_Voltage_Max_Capacity;
     }
 
     // 00D6: Set Hardware Type
     else if (p_data[i] == 0x00 && p_data[i+1] == 0xD6) {
       _beacon_info[BINFO_HARDWARE_TYPE_IDX]   = p_data[i+2];
+
+      if ( _beacon_info[BINFO_HARDWARE_TYPE_IDX] == HW_TYPE_TANGERINE_BEACON ) {
+        uint8_t max_battery_valtage[2] = {ENERGIZER_MAXIMUM_CAPACITY};
+        _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = max_battery_valtage[1];
+        _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = max_battery_valtage[0];
+      }
+      else {
+        uint8_t max_battery_valtage[2] = {MAXBEACON_MAXIMUM_CAPACITY};
+        _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = max_battery_valtage[1];
+        _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = max_battery_valtage[0];
+      }
     }
 
     // rebuild packet data
@@ -848,11 +859,21 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
   // Battery Calibration mode
   else if (handle == p_bms->bcm_handles.value_handle) {
-    uint16_t blevel = get_battery_level();
-    _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = (uint8_t)((blevel & 0xFF00) >> 8);
-    _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = (uint8_t)(blevel & 0x00FF);
-    uint16_t *pEnergizer_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
-    m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
+    uint16_t blevel = 0;
+    uint8_t bBatPsent = 0;
+
+    for(int ix=0; ix < 10; ix++) {
+      blevel = get_battery_level();
+      bBatPsent = battery_level_to_percent(blevel);
+      if (bBatPsent > 10) break;
+    }
+    float flevel = (float)blevel - ((float)blevel * 0.01f);
+    blevel = flevel; 
+
+    _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1]   = (uint8_t)((blevel & 0xFF00) >> 8);
+    _beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX] = (uint8_t)(blevel & 0x00FF);
+    uint16_t *pBattery_Voltage_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
+    m_Battery_Voltage_Max_Capacity = (uint16_t)*pBattery_Voltage_Max_Capacity;
   }
 
   // Reset Hardware

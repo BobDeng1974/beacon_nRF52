@@ -1211,9 +1211,6 @@ static void services_init(void)
   set_timeslot_mode();
 
   // Hardware Type
-  if (_beacon_info[BINFO_HARDWARE_TYPE_IDX] == 0xFF) {
-    _beacon_info[BINFO_HARDWARE_TYPE_IDX]   = HW_TYPE_TANGERINE_BEACON;
-  }
   m_hardware_type = _beacon_info[BINFO_HARDWARE_TYPE_IDX];
   gpiote_init_hw_type(m_hardware_type);
 
@@ -1536,7 +1533,8 @@ static void read_battery_hysteresis(void * p_context)
   if ( m_hardware_type == HW_TYPE_TANGERINE_BEACON ) {
     blevel = get_battery_level();
     m_battery_charge.value = blevel;
-    _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = battery_level_to_percent(blevel);
+    bBatPsent = battery_level_to_percent(blevel);
+    _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] = bBatPsent;
   }
   else if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) {
     for(int ix=0; ix < 10; ix++) {
@@ -1724,7 +1722,6 @@ int main(void)
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 #endif
   //pcf8563_init(SCL_PIN_, SDA_PIN_);
-  adc_configure();
 
 #ifdef BOOTLOADER_NOT_FOUND
   // Initialize the async SVCI interface to bootloader before any interrupts are enabled.
@@ -1763,11 +1760,12 @@ int main(void)
   // system start....
   //-------------------------------------------------
 #if defined(BATTERY_CHECKING_ENABLED)
+  if ( m_hardware_type == HW_TYPE_TANGERINE_BEACON ) adc_configure();
   battery_init();
 
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-  uint16_t *pEnergizer_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
-  m_Energizer_Max_Capacity = (uint16_t)*pEnergizer_Max_Capacity;
+  uint16_t *pBattery_Voltage_Max_Capacity = (uint16_t *)&_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]; 
+  m_Battery_Voltage_Max_Capacity = (uint16_t)*pBattery_Voltage_Max_Capacity;
 
   // 一度バッテリの状態を読み込む
   read_battery_hysteresis(NULL);
@@ -1859,7 +1857,9 @@ int main(void)
   }
 #endif
   // Start execution.
-    NRF_LOG_INFO("Tangerin Beacon started.");
+  int32_t temp;
+  while (sd_temp_get(&temp)!=NRF_SUCCESS);
+  NRF_LOG_INFO("Tangerin Beacon started. now tempture=%d",  (int)temp*25/100);
 
 #ifdef FREERTOS_SWITCH
   // Start FreeRTOS scheduler.

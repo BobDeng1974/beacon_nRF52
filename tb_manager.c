@@ -736,12 +736,23 @@ static void ble_bms_set_default_value_to_beacon_info()
   }
 
   if (m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX] == 0xFF) {
-    m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = 0xD4;
-    m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1]   = 0x01;
+#ifndef DEFAULT_HW_TYPE
+    uint8_t max_battery_valtage[2] = {ENERGIZER_MAXIMUM_CAPACITY};
+    m_Battery_Voltage_Max_Capacity = ENERGIZER_MAXIMUM_CAPACITY;
+#else
+    uint8_t max_battery_valtage[2] = {MAXBEACON_MAXIMUM_CAPACITY};
+    m_Battery_Voltage_Max_Capacity = MAXBEACON_MAXIMUM_CAPACITY;
+#endif
+    m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX]   = max_battery_valtage[1];
+    m_beacon_info[BINFO_BMS_BATTERY_MAX_CAPACITY_IDX+1] = max_battery_valtage[0];
   }
 
   if (m_beacon_info[BINFO_HARDWARE_TYPE_IDX] == 0xFF) {
+#ifndef DEFAULT_HW_TYPE
     m_beacon_info[BINFO_HARDWARE_TYPE_IDX]   = HW_TYPE_TANGERINE_BEACON;
+#else
+    m_beacon_info[BINFO_HARDWARE_TYPE_IDX]   = HW_TYPE_MINEW_MAX_BEACON;
+#endif
   }
 
 }

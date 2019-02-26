@@ -62,6 +62,7 @@
 #define TIMESLOT_DEBUG
 #define RGB_LED
 //#define PCA10040
+#define DEFAULT_HW_TYPE
 
 #include "custom_board.h"
 
@@ -89,7 +90,7 @@
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x50 /* v41040 refactoring version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x60 /* v41056 LINE support version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x70 /* v41072 Tangerine Secure Beacon v1.0 support */
-#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x8C /* v42124 nRF52 Tangerine Secure Beacon v1.1 support */
+#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x8D /* v42125 nRF52 Tangerine Secure Beacon v1.1 support */
 
 //----------------------------------------------------------------------------
 // device name and company identifier
@@ -114,7 +115,9 @@
 #define NON_CONNECTABLE_ADV_INTERVAL    MSEC_TO_UNITS(100, UNIT_0_625_MS)  /**< The advertising interval for non-connectable advertisement (100 ms). This value can vary between 100ms to 10.24s). */
 
 #define ADC_SAMPLES_IN_BUFFER           5
-#define ENERGIZER_MAXIMUM_CAPACITY      46800                             // Energizer Maximum capacity
+
+#define ENERGIZER_MAXIMUM_CAPACITY      0x01, 0xd4                         //  468 Energizer Maximum capacity
+#define MAXBEACON_MAXIMUM_CAPACITY      0x0B, 0xB8                         // 3000 Minew MAX Beacon Battery Maximum capacity
 
 #define ble_bms_get_timeslot_status()   m_timeslot_mode
 
