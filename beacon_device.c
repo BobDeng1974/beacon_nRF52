@@ -603,6 +603,8 @@ uint8_t pcf8563_write(void)
 {
   uint8_t data[RTC_TIMEDATE_LENGTH+1];
 
+  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) return true;  // Tangerine Beacon
+
   data[0] = RTC_SECONDS_ADDR;
   data[1] = m_pre_time.seconds;
   data[2] = m_pre_time.minutes;
@@ -616,7 +618,7 @@ uint8_t pcf8563_write(void)
 
 uint8_t pcf8563_read(void)
 {
-  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) return false;   
+  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) return true;   
 
   uint8_t data[RTC_TIMEDATE_LENGTH];
   uint8_t result = PCF8563_read_regs(RTC_SECONDS_ADDR, RTC_TIMEDATE_LENGTH, data);
@@ -636,6 +638,14 @@ uint8_t pcf8563_init(uint8_t scl_pin, uint8_t sda_pin)
 {
   ret_code_t err_code;
 
+  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) {
+    // System Timer
+    uint8_t *_beacon_info = ble_bms_get_beacon_info();
+    memcpy(&m_pre_time, &_beacon_info[BINFO_SET_CURRENT_DATETIME_IDX], BINFO_CURRENT_DATETIME_SIZ);
+    m_system_timer = (bcd2bin(m_pre_time.hours) * 3600) + (bcd2bin(m_pre_time.minutes) * 60)  + bcd2bin(m_pre_time.seconds);
+    return true;   
+  }
+  
   const nrf_drv_twi_config_t twi_lm75b_config = {
     .scl = scl_pin,
     .sda = sda_pin,

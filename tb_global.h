@@ -64,6 +64,7 @@
 //#define PCA10040
 #define DEFAULT_HW_TYPE
 //#define DEBUG_PIN1_ENABLE
+//#define DEBUG_RTC_ENABLE
 
 #include "custom_board.h"
 
@@ -91,7 +92,7 @@
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x50 /* v41040 refactoring version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x60 /* v41056 LINE support version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x70 /* v41072 Tangerine Secure Beacon v1.0 support */
-#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x8E /* v42126 nRF52 Tangerine Secure Beacon v1.1 support */
+#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x91 /* v42129 nRF52 Tangerine Secure Beacon v1.1 support */
 
 //----------------------------------------------------------------------------
 // device name and company identifier
@@ -137,6 +138,7 @@ extern  uint8_t           m_adc_status;
 extern  uint8_t           m_bTbmRequest;          // Tangerine Beacon Management Packet
 extern  uint8_t           m_bTbmRequestCounter;   // Tangerine Beacon Management Packet
 extern  uint8_t           m_bPending;
+extern  uint32_t          m_system_timer;
 
 extern  uint8_t           g_is_startup;           // startup status
 extern  uint8_t           g_connected;            // connected or not connected

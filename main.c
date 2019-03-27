@@ -107,6 +107,8 @@ static uint8_t                            m_sd_adv_handle;                      
 static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];/**< Buffer for storing an encoded advertising set. */
 static uint8_t                            m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];/**< Buffer for storing an encoded scan response data set. */
 
+uint32_t                                  m_system_timer = 0;
+
 /**@brief Function for putting the chip into sleep mode.
  *
  * @note This function will not return.
@@ -623,10 +625,10 @@ static void time_10min_count_hanlder(void * p_context)
   read_battery_hysteresis(NULL);
 
   // Date/Time read
-  if ( !pcf8563_read() ) return;
-
-  // RTC Chec
-  if ( m_pre_time.years == 0x00 || m_pre_time.months == 0x00 || m_pre_time.days == 0x00 ) return;
+  if (m_hardware_type == HW_TYPE_TANGERINE_BEACON) {
+    if ( !pcf8563_read() ) return;
+    if ( m_pre_time.years == 0x00 || m_pre_time.months == 0x00 || m_pre_time.days == 0x00 ) return;
+  }
 
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   memcpy(&_beacon_info[BINFO_CURRENT_DATETIME_IDX], &m_pre_time, BINFO_CURRENT_DATETIME_SIZ);
@@ -663,10 +665,12 @@ static void time_10min_count_hanlder(void * p_context)
       }
     }
   }
-  //NRF_LOG_INFO("ECO mode = %d %02X:%02X", m_eco_adv_stop, m_pre_time.hours, m_pre_time.minutes);
-  //NRF_LOG_INFO("(%02X:%02X-%02X:%02X)", m_eco_start_time.dec.Hours, m_eco_start_time.dec.Minutes, m_eco_finish_time.dec.Hours, m_eco_finish_time.dec.Minutes);  
-  return;
   m_eco_adv_stop = bEco_Mode;
+#ifdef  DEBUG_RTC_ENABLE
+  NRF_LOG_INFO("ECO mode = %d %02X:%02X", m_eco_adv_stop, m_pre_time.hours, m_pre_time.minutes);
+  NRF_LOG_INFO("(%02X:%02X-%02X:%02X)", m_eco_start_time.dec.Hours, m_eco_start_time.dec.Minutes, m_eco_finish_time.dec.Hours, m_eco_finish_time.dec.Minutes);  
+#endif
+  return;
 }
 
 /**@brief 
@@ -686,7 +690,20 @@ static void time_1000ms_count_hanlder(void * p_context)
 #endif
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
 
-   read_battery_hysteresis(NULL);
+  m_system_timer++;
+  if (m_system_timer > 0x015180) m_system_timer = 0;
+
+  uint32_t clock = m_system_timer;
+  m_pre_time.hours = bin2bcd(clock / 3600);
+  clock %= 3600;
+  m_pre_time.minutes = bin2bcd(clock / 60);
+  clock %= 60;
+  m_pre_time.seconds = bin2bcd(clock);
+#ifdef  DEBUG_RTC_ENABLE
+  NRF_LOG_INFO("TIME %02X:%02X:%02X", m_pre_time.hours, m_pre_time.minutes, m_pre_time.seconds);
+#endif
+
+  read_battery_hysteresis(NULL);
 
   if (m_hardware_type == HW_TYPE_MINEW_MAX_BEACON) {
     cnt_sw_value++;
@@ -1242,6 +1259,7 @@ static void services_init(void)
   // Hardware Type
   m_hardware_type = _beacon_info[BINFO_HARDWARE_TYPE_IDX];
   gpiote_init_hw_type(m_hardware_type);
+  pcf8563_init(SCL_PIN_, SDA_PIN_);
 
   // DFU Services
 #ifndef BOOTLOADER_NOT_FOUND
@@ -1750,7 +1768,6 @@ int main(void)
   // Activate deep sleep mode.
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 #endif
-  //pcf8563_init(SCL_PIN_, SDA_PIN_);
 
 #ifdef BOOTLOADER_NOT_FOUND
   // Initialize the async SVCI interface to bootloader before any interrupts are enabled.

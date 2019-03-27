@@ -81,12 +81,16 @@ void build_bms_data(void)
 
   // Factory Mode
   if ( m_fcm == 0xFF ) {
-    if (pcf8563_read()) {
-      memcpy(&bms_info[10], &m_pre_time, sizeof(m_pre_time));
+    if (m_hardware_type == HW_TYPE_TANGERINE_BEACON) {   
+      if (pcf8563_read()) memcpy(&bms_info[10], &m_pre_time, sizeof(m_pre_time));
+      else memset(&bms_info[10], 0xFF, sizeof(m_pre_time));
     }
-    else {
-     memset(&bms_info[10], 0xFF, sizeof(m_pre_time));
-    }
+    else memcpy(&bms_info[10], &m_pre_time, sizeof(m_pre_time));
+
+    int32_t temp;
+    while (sd_temp_get(&temp)!=NRF_SUCCESS);
+    bms_info[16] = (uint8_t)(temp*25/100);
+
     uint16_t blevel = get_battery_level();
     bms_info[17] = (uint8_t)((blevel & 0xFF00) >> 8);
     bms_info[18] = (uint8_t)(blevel & 0x00FF);
