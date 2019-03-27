@@ -89,11 +89,13 @@ void build_bms_data(void)
 
     int32_t temp;
     while (sd_temp_get(&temp)!=NRF_SUCCESS);
-    bms_info[16] = (uint8_t)(temp*25/100);
+    bms_info[13] = (uint8_t)(temp*25/100);
 
     uint16_t blevel = get_battery_level();
-    bms_info[17] = (uint8_t)((blevel & 0xFF00) >> 8);
-    bms_info[18] = (uint8_t)(blevel & 0x00FF);
+    bms_info[14] = 0xFF;
+    bms_info[15] = 0xFF;
+    bms_info[16] = (uint8_t)((blevel & 0xFF00) >> 8);
+    bms_info[17] = (uint8_t)(blevel & 0x00FF);
   }
 
   // Tx Power
@@ -108,7 +110,7 @@ void build_bms_data(void)
   m_eco_start_time.dec.Minutes   = _beacon_info[BINFO_ECO_MODE_START_TIME_IDX+1];
   m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
   m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
-  if (m_eco_start_time.wTime != m_eco_finish_time.wTime) statusFlags |= 0x08;
+  if (m_eco_start_time.wTime != m_eco_finish_time.wTime) statusFlags |= 0x80;
   bms_info[19] =  statusFlags;
   
   // Beacon Status
@@ -130,6 +132,8 @@ void build_bms_data(void)
 
   // Hardware Type
   bms_info[0] = ( bms_info[0] & 0xF0) | m_hardware_type;
+ 
+  if ( m_fcm == 0xFF ) bms_info[18] = 0xFF;
 }
 
 /**@brief Function for handling advertising events.

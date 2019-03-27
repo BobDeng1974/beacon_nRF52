@@ -858,7 +858,7 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
   else if (handle == p_bms->fcm_handles.value_handle) {
     _beacon_info[BINFO_MODE_LIST_IDX] = BLE_ADV_MODE_BMS;
     _beacon_info[BINFO_STATUS_VALUE_IDX] = 4; // アクティブ
-    g_startup_stage = 0;
+    g_startup_stage = 1;
     m_fcm = 0xFF;
   }
 

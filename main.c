@@ -556,6 +556,8 @@ static void time_60000ms_count_hanlder(void * p_context)
 #endif
   //NRF_LOG_INFO("time_60000ms_count_hanlder");
 
+  if ( m_fcm == 0xFF ) return;
+
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   if (_beacon_info[BINFO_STATUS_VALUE_IDX] != 0x00) {
     g_startup_stage = 0;
