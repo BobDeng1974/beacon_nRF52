@@ -264,10 +264,12 @@ void led_flash_type1()
 
 void gpiote_init(void)
 {
-  //nrf_gpio_cfg_output(DEBUG_PIN);
-  //nrf_gpio_pin_set(DEBUG_PIN);
-  //nrf_gpio_cfg_output(DEBUG_PIN2);
-  //nrf_gpio_pin_set(DEBUG_PIN2);
+#ifdef DEBUG_PIN1_ENABLE
+  nrf_gpio_cfg_output(NRF_GPIO_PIN_MAP(0,9));
+  nrf_gpio_pin_set(NRF_GPIO_PIN_MAP(0,9));
+  nrf_gpio_cfg_output(NRF_GPIO_PIN_MAP(0,10));
+  nrf_gpio_pin_set(NRF_GPIO_PIN_MAP(0,10));
+#endif
 
   nrf_gpio_cfg_output(LED_G);
   nrf_gpio_cfg_output(LED_R);
@@ -461,6 +463,52 @@ uint8_t battery_level_to_percent(const uint16_t mvolts)
   return battery_level;
 }
 
+/*
+  0x0B: 100%: 2650 <=
+  0x0A:  90%
+  0x09:  80%
+  0x08:  70%
+  0x07:  60%
+  0x06:  50%
+  0x05:  40%
+  0x04:  30%
+  0x03:  20%
+  0x02:  10%
+  0x01:   0%
+  0x00: Unkown/continuous power
+*/
+uint8_t battery_level_to_percent_devidedby10(const uint16_t mvolts)
+{
+  uint8_t battery_level;
+
+  if (mvolts >= 99) {           // 100%
+    battery_level = 0x0B;
+  } else if (mvolts >= 90) {    // 90%
+    battery_level = 0x0A;
+  } else if (mvolts >= 80) {    // 80%
+    battery_level = 0x09;
+  } else if (mvolts >= 70) {    // 70%
+    battery_level = 0x08;
+  } else if (mvolts >= 60) {    // 60%
+    battery_level = 0x07;
+  } else if (mvolts >= 50) {    // 50%
+    battery_level = 0x06;
+  } else if (mvolts >= 40) {    // 40%
+    battery_level = 0x05;
+  } else if (mvolts >= 30) {    // 30%
+    battery_level = 0x04;
+  } else if (mvolts >= 20) {    // 20%
+    battery_level = 0x03;
+  } else if (mvolts >= 10) {    // 10%
+    battery_level = 0x02;
+  } else {                        // 0%
+    battery_level = 0x01;
+  }
+
+  return battery_level;
+}
+
+
 int8_t get_adjusted_rssi(uint8_t tx_power) 
 {
   // Tx Power LevelによってRSSI値を変更する
@@ -526,14 +574,14 @@ uint8_t PCF8563_read_regs(uint8_t number, uint8_t length, uint8_t *values)
 {
   m_xfer_done = false;
   ret_code_t err_code = nrf_drv_twi_tx(&m_twi, RTC_SLAVE_ADDR, &number, 1, true);
-  APP_ERROR_CHECK(err_code);
+  if (err_code != NRF_SUCCESS)return false;
   while (m_xfer_done == false) {
     if (m_xfer_done == 0xFF) return false;
   }
 
   m_xfer_done = false;
   err_code = nrf_drv_twi_rx(&m_twi, RTC_SLAVE_ADDR, values, length);
-  APP_ERROR_CHECK(err_code);
+  if (err_code != NRF_SUCCESS)return false;
   while (m_xfer_done == false) {
     if (m_xfer_done == 0xFF) return false;
   }
@@ -544,7 +592,7 @@ uint8_t PCF8563_write_regs(uint8_t length, uint8_t *values)
 {
   m_xfer_done = false;
   ret_code_t err_code = nrf_drv_twi_tx(&m_twi, RTC_SLAVE_ADDR, values, length, false);
-  APP_ERROR_CHECK(err_code);
+  if (err_code != NRF_SUCCESS)return false;
   while (m_xfer_done == false) {
     if (m_xfer_done == 0xFF) return false;
   }

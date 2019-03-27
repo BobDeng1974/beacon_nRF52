@@ -90,6 +90,7 @@ uint16_t battery_level_get2(void);
  * Convert battery level(mv) to percentage
  */
 uint8_t battery_level_to_percent(const uint16_t mvolts);
+uint8_t battery_level_to_percent_devidedby10(const uint16_t mvolts);
 
 /**
  * RTC PCF8563

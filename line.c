@@ -166,12 +166,14 @@ void build_line_beacon_packet_servicedata(void)
   uint8_t *vendorKey    = &_beacon_info[BINFO_LINE_BEACON_VENDOR_KEY_IDX];
   uint8_t *lotKey       = &_beacon_info[BINFO_LINE_BEACON_LOTKEY_IDX];
   uint8_t bat; 
+  uint8_t bBatPsent10;
 
   if (ble_batteryp() != 1) {
     bat = 0x00;
   }
   else {
     bat = _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX];
+    bBatPsent10 = battery_level_to_percent_devidedby10(bat);
   }
 
   // HWID
@@ -190,7 +192,7 @@ void build_line_beacon_packet_servicedata(void)
   line_beacon_service_frame[6] = get_adjusted_rssi(_beacon_info[BINFO_TXPWR_VALUE_IDX]);  
 
   // SECMSG
-  build_line_secmsg(m_line_timestamp, hwid, vendorKey, lotKey, bat, secmsg);
+  build_line_secmsg(m_line_timestamp, hwid, vendorKey, lotKey, bBatPsent10, secmsg);
   for (int i = 0; i < LINE_SECMSG_LENGTH; i++) {
     line_beacon_service_frame[7+i] = secmsg[i];
   }

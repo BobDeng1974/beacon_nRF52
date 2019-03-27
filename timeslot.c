@@ -200,7 +200,10 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
   static enum mode_t mode;
 
-  //nrf_gpio_pin_toggle(9);
+#ifdef DEBUG_PIN1_ENABLE
+  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,9));
+  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,10));
+#endif
 
   signal_callback_return_param.params.request.p_next  = NULL;
   signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;

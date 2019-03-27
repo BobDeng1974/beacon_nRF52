@@ -969,18 +969,24 @@ void set_timeslot_mode(void)
   m_timeslot_mode = _beacon_info[BINFO_TIMESLOT_MODE_STATUS_IDX];
   if (m_timeslot_mode != 0x00) {
     switch(m_timeslot_mode & 0x0f) {
-    case 0 :  // TGR
+    case 0 :  // Factory Default
       m_advertising_packet_type = 0x40; break;
-    case 1 :  // iBeacon + TGR
+    case 1 :  // iBeacon
       m_advertising_packet_type = 0x01; break;
-    case 2 :  // Secure iBeacon + TGR
+    case 2 :  // Secure iBeacon
       m_advertising_packet_type = 0x20; break;
-    case 3 :  // LINE + TGR
+    case 3 :  // LINE
       m_advertising_packet_type = 0x10; break;
-    case 4 :  // LINE + iBeacon + TGR
+    case 4 :  // LINE + iBeacon
       m_advertising_packet_type = 0x11; break;
-    case 5 :  // LINE + Secure iBeacon + TGR
+    case 5 :  // LINE + Secure iBeacon
       m_advertising_packet_type = 0x30; break;
+    case 6 :  // flxBeacon
+      m_advertising_packet_type = 0x40; break;
+    case 7 :  // LINE + Secure iBeacon + flxBeacon
+      m_advertising_packet_type = 0x51; break;
+    case 8 :  // LINE + Secure iBeacon + flxBeacon
+      m_advertising_packet_type = 0x70; break;
     default :
       m_advertising_packet_type = 0x40; break;
     }  

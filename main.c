@@ -339,7 +339,10 @@ static void timeslot_on_radio_event(bool radio_active)
 {
   static bool send_ibeacon = true;
 
-  //nrf_gpio_pin_toggle(9);
+#ifdef DEBUG_PIN1_ENABLE
+  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,9));
+  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,10));
+#endif
 
   if (radio_active) 
   {
@@ -348,17 +351,43 @@ static void timeslot_on_radio_event(bool radio_active)
       return;
     }
 
-    if (m_bTbmRequest) {
-      //m_bTbmRequestCounter++;
+    switch(m_timeslot_mode & 0x0f) {
+    case 1 :  // iBeacon
+    case 2 :  // Secure iBeacon
+    case 3 :  // LINE
+    case 4 :  // LINE + iBeacon
+    case 5 :  // LINE + Secure iBeacon
+      if (m_bTbmRequest) {
+        //m_bTbmRequestCounter++;
+        memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+        //if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
+        m_bTbmRequest = false;
+      }
+      else {
+        if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
+          memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+        }  
+        else return;
+      }
+      break;
+    case 6 :  // flxBeacon
       memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
-      //if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
-      m_bTbmRequest = false;
-    }
-    else {
-      if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
-        memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
-      } 
-      else return;
+      break;
+    case 7 :  // LINE + Secure iBeacon + flxBeacon
+    case 8 :  // LINE + Secure iBeacon + flxBeacon
+      if (send_ibeacon)
+      {
+        memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+      }
+      else {
+        if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
+          memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+        }  
+        else return;
+      }
+      break;
+    default :
+      break;
     }
 
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, NULL);
