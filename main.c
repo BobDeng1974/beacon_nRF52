@@ -341,11 +341,6 @@ static void timeslot_on_radio_event(bool radio_active)
 {
   static bool send_ibeacon = true;
 
-#ifdef DEBUG_PIN1_ENABLE
-  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,9));
-  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,10));
-#endif
-
   if (radio_active) 
   {
     memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
@@ -377,6 +372,11 @@ static void timeslot_on_radio_event(bool radio_active)
       break;
     case 7 :  // LINE + Secure iBeacon + flxBeacon
     case 8 :  // LINE + Secure iBeacon + flxBeacon
+#ifdef DEBUG_PIN1_ENABLE
+  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,9));
+  nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,10));
+#endif
+
       if (send_ibeacon)
       {
         memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
@@ -1257,6 +1257,11 @@ static void services_init(void)
 
   // Timeslot Mode
   set_timeslot_mode();
+#ifdef DEBUG_PIN1_ENABLE
+     m_advertising_packet_type = 0x70;
+     _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 0;
+     m_timeslot_mode = 8;
+#endif
 
   // Hardware Type
   m_hardware_type = _beacon_info[BINFO_HARDWARE_TYPE_IDX];

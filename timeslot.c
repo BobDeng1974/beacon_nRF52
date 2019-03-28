@@ -77,7 +77,7 @@ void radio_pdu_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_param
   // Packer header
   *adv_pdu = 0x66;                             // Advertisement type ADV_NONCONN_IND
   *(adv_pdu+1) = p_adv_data->adv_data.len + sizeof(m_device_addr.addr); 
-
+  *(adv_pdu+1) = 0x24;        // v42130 暫定 
   // Advertising Address
   memcpy(adv_pdu+3, m_device_addr.addr, 6);
   *(adv_pdu+3) = *(adv_pdu+3) + 1;

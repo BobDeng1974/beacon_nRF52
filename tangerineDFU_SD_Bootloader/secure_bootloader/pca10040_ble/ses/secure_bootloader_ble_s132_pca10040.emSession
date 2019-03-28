@@ -24,6 +24,7 @@
   <ProjectSessionItem path="secure_bootloader_ble_s132_pca10040"/>
   <ProjectSessionItem path="secure_bootloader_ble_s132_pca10040;secure_bootloader_ble_s132_pca10040"/>
   <ProjectSessionItem path="secure_bootloader_ble_s132_pca10040;secure_bootloader_ble_s132_pca10040;Application"/>
+  <ProjectSessionItem path="secure_bootloader_ble_s132_pca10040;secure_bootloader_ble_s132_pca10040;nRF_Bootloader"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="secure_bootloader_ble_s132_pca10040" decimalNodes="" octalNodes="" unsignedNodes=""/>
@@ -56,8 +57,10 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="131" useTextEdit="1" useBinaryEdit="0" left="0" path="../../main.c" selected="0" top="60" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4869" useTextEdit="1" useBinaryEdit="0" left="0" path="../config/sdk_config.h" selected="1" top="4832" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="131" useTextEdit="1" useBinaryEdit="0" left="0" path="../../main.c" selected="0" top="113" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4869" useTextEdit="1" useBinaryEdit="0" left="0" path="../config/sdk_config.h" selected="0" top="4968" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="54" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../../../nRF5_SDK_15.2.0_9412b96/components/libraries/bootloader/nrf_bootloader_info.c" selected="0" top="48" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="67" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../../../nRF5_SDK_15.2.0_9412b96/components/libraries/bootloader/nrf_bootloader_info.h" selected="1" top="53" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="secure_bootloader_ble_s132_pca10040" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" debugSearchFileMap="../../../micro-ecc/asm_arm.inc&#xa;&#xa;../../../micro-ecc/curve-specific.inc&#xa;&#xa;../../../micro-ecc/uECC.c&#xa;" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>
