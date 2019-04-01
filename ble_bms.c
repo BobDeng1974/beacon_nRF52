@@ -376,6 +376,15 @@ uint32_t ble_bms_init(ble_bms_t *p_bms)
         return err_code;
     }
 
+    // Factory Default (Flash Clear & Hardware Reset) Characteristic.
+    err_code = add_characteristic(p_bms, p_bms_init,
+                                  BLE_UUID_BMS_FDM_CHARACTERISTIC, 5,
+                                  &p_bms->fdm_handles);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+
     return NRF_SUCCESS;
 }
 
@@ -842,6 +851,7 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
   // Entering DFU mode
   else if (handle == p_bms->dfu_handles.value_handle) {
+    if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) nrf_gpio_cfg_sense_set(SW_HW_MIMAXK, NRF_GPIO_PIN_SENSE_LOW);
     bootloader_start();
   }
 
@@ -883,17 +893,30 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
 
   // Reset Hardware
   else if (handle == p_bms->rst_handles.value_handle) {
-     NVIC_SystemReset();
+    NVIC_SystemReset();
   }
 
   // Power OFF
   else if (handle == p_bms->pwr_handles.value_handle) {
     blink_pending_led(3, 200);
     nrf_delay_ms(2000);
-    if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) nrf_gpio_cfg_sense_set(13, NRF_GPIO_PIN_SENSE_LOW);
+    if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) nrf_gpio_cfg_sense_set(SW_HW_MIMAXK, NRF_GPIO_PIN_SENSE_LOW);
     err_code = sd_power_system_off();
     APP_ERROR_CHECK(err_code);
   }
+
+  // Factory Default (Flash Clear & Hardware Reset) Characteristic.
+  else if (handle == p_bms->fdm_handles.value_handle) {
+    execute_led(LED_ON);
+    if ( m_hardware_type == HW_TYPE_MINEW_MAX_BEACON ) nrf_gpio_cfg_sense_set(SW_HW_MIMAXK, NRF_GPIO_PIN_SENSE_LOW);
+    err_code = tb_manager_reset();
+    APP_ERROR_CHECK(err_code);
+    nrf_delay_ms(3000);
+    execute_led(LED_OFF);
+    NVIC_SystemReset();
+  }
+
+
 }
 
 static uint8_t ac_last_key;

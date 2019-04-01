@@ -137,6 +137,10 @@
 
 #define MAX_ADV_MODE_LIST                     12     // Advertising Mode List Max Index
 
+
+#define BMS_BEACON_INFO_LENGTH                  190
+
+
 /**
  * Public functions
 */
@@ -159,5 +163,8 @@ void     tb_manager_get_deviceid(void);
 
 uint8_t   ble_batteryp();
 uint8_t   ble_tibeacon_pwinfop();
+
+void ble_bms_set_default_value_to_beacon_info();
+uint32_t tb_manager_reset(void);
 
 #endif /* _TB_MANAGER_H_ */

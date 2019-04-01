@@ -169,7 +169,7 @@ static uint8_t m_beacon_info[BMS_BEACON_INFO_LENGTH] = {
 #define BMS_DB_SIZE \
 CEIL_DIV(sizeof(uint8_t) * BMS_BEACON_INFO_LENGTH, sizeof(uint32_t))  /**< Size of bonded centrals database in word size (4 byte). */
 
-static void ble_bms_set_default_value_to_beacon_info();
+void ble_bms_set_default_value_to_beacon_info();
 
 /* File ID and Key used for the configuration record. */
 
@@ -388,6 +388,39 @@ uint32_t tb_manager_settings_store(void)
     return err_code;
 }
 
+
+uint32_t tb_manager_reset(void)
+{
+    ret_code_t err_code;
+    fds_record_desc_t desc = {0};
+    fds_find_token_t  token = {0};
+
+    fds_record_t      record = {
+            .file_id = CONFIG_FILE,
+            .key     = CONFIG_REC_KEY,
+            .data = {
+                    .p_data       = &m_beacon_info,
+                    .length_words = (BMS_DB_SIZE * sizeof(uint32_t))
+            }
+    };
+
+    CRITICAL_REGION_ENTER();
+
+    memset(&m_beacon_info, 0xFF, sizeof(m_beacon_info));
+    ble_bms_set_default_value_to_beacon_info();
+
+    err_code = fds_record_find(CONFIG_FILE, CONFIG_REC_KEY, &desc, &token);
+    if (err_code == FDS_SUCCESS)
+    {
+        err_code = fds_record_delete(&desc);	
+    }
+
+    CRITICAL_REGION_EXIT();
+
+    return err_code;
+}
+
+
 uint8_t* ble_bms_get_beacon_info(void)
 {
     return (uint8_t *) &m_beacon_info;
@@ -507,7 +540,7 @@ void ble_bms_reset_beacon_info()
 
 }
 
-static void ble_bms_set_default_value_to_beacon_info()
+void ble_bms_set_default_value_to_beacon_info()
 {
   if (m_beacon_info[BINFO_MAJOR_VALUE_IDX] == 0xFF) {
     m_beacon_info[BINFO_MAJOR_VALUE_IDX] = 0x00;    

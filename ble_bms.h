@@ -17,6 +17,7 @@
 #define BLE_UUID_BMS_BCM_CHARACTERISTIC          0x0013
 #define BLE_UUID_BMS_RST_CHARACTERISTIC          0x0014
 #define BLE_UUID_BMS_PWR_CHARACTERISTIC          0x0015
+#define BLE_UUID_BMS_FDM_CHARACTERISTIC          0x0016
 
 #define BLE_BMS_MAX_DATA_LEN            (BLE_GATT_ATT_MTU_DEFAULT - 3)  /**< Maximum length of data (in bytes) that can be transmitted 
                                                                         by the Nordic UART service module to the peer. */
@@ -54,6 +55,7 @@ typedef struct ble_bms_s
     ble_gatts_char_handles_t bcm_handles;
     ble_gatts_char_handles_t rst_handles;
     ble_gatts_char_handles_t pwr_handles;
+    ble_gatts_char_handles_t fdm_handles;
     uint16_t                 conn_handle;             /**< Handle of the current connection (as provided by the S110 SoftDevice). 
                                                          This will be BLE_CONN_HANDLE_INVALID if not in a connection. */
     bool                     is_notification_enabled; /**< Variable to indicate if the peer has enabled notification of the all characteristic.*/
