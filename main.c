@@ -193,7 +193,11 @@ uint8_t m_adc_status = true;
   static void time_10min_count_hanlder(TimerHandle_t xTimer);
   static TimerHandle_t m_10min_count_timer;
 #else
-  #define COUNTER_10min_INTERVAL APP_TIMER_TICKS(600 * 1000) // 690000msec = 10min
+ #ifdef DEBUG_PIN1_ENABLE
+  #define COUNTER_10min_INTERVAL APP_TIMER_TICKS(60000 * 2) // 600000msec = 10min
+ #else
+  #define COUNTER_10min_INTERVAL APP_TIMER_TICKS(60000 * 10) // 600000msec = 10min
+ #endif
   APP_TIMER_DEF(m_10min_count_timer_id);
   static void m_10min_count_timer(void * p_context);
 #endif
@@ -288,11 +292,6 @@ static void softdevice_advertising_init(void)
   m_sd_adv_params.interval        = NON_CONNECTABLE_ADV_INTERVAL;
   m_sd_adv_params.interval        = get_beacon_frequency2(txFreq, true);
   m_sd_adv_params.duration        = 0;       // Never time out.
-
-  if (m_advertising_packet_type == 0x10) {
-    uint32_t tbm_frq = _beacon_info[BINFO_TBM_TXFRQ_VALUE_IDX] * 1000;
-    m_sd_adv_params.interval = MSEC_TO_UNITS(tbm_frq, UNIT_0_625_MS);
-  }
 }
 
 /**@brief Function for handling SoC events.
@@ -370,8 +369,10 @@ static void timeslot_on_radio_event(bool radio_active)
     case 6 :  // flxBeacon
       memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
       break;
-    case 7 :  // LINE + Secure iBeacon + flxBeacon
-    case 8 :  // LINE + Secure iBeacon + flxBeacon
+    case 7 :  // iBeacon / flxBeacon
+    case 8 :  // Secure iBeacon / flxBeacon
+    case 9 :  // LINE + Secure iBeacon / flxBeacon
+    case 10 : // LINE + Secure iBeacon / flxBeacon
 #ifdef DEBUG_PIN1_ENABLE
   nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,9));
   nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,10));
@@ -620,8 +621,11 @@ static void time_10min_count_hanlder(void * p_context)
   if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) {
     m_bFlashSaveRequest = true;
     m_bFlashSaveRequestCounter = 0;
-    if (get_timeslot()) timeslot_stop();
-  }
+    //if (get_timeslot()) timeslot_stop();
+    timeslot_stop();
+    //ret_code_t err_code = sd_ble_gap_adv_stop(m_sd_adv_handle);
+    //APP_ERROR_CHECK(err_code);
+}
 
   // Battery update
   read_battery_hysteresis(NULL);
@@ -680,6 +684,9 @@ static void time_10min_count_hanlder(void * p_context)
  */
 static bool old_sw_value = 0xFF;
 static bool cnt_sw_value = 0;
+static uint32_t old_timeslot_interrupt_counter = 0xFFFFFFFF;
+static bool timeslot_interrupt_stopping = false;
+static uint32_t timeslot_interrupt_stopping_check_counter = 0;
 
 #ifdef FREERTOS_SWITCH
 static void time_1000ms_count_hanlder(TimerHandle_t xTimer)
@@ -691,6 +698,34 @@ static void time_1000ms_count_hanlder(void * p_context)
   UNUSED_PARAMETER(p_context);
 #endif
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
+
+  if (g_startup_stage == 0) {
+    if (ble_line_beacon_enablep() == 1) {
+      if (m_timeslot_interrupt_counter != old_timeslot_interrupt_counter ) timeslot_interrupt_stopping_check_counter = 0;
+      else timeslot_interrupt_stopping_check_counter++;
+
+      if (timeslot_interrupt_stopping_check_counter > 10) {
+        timeslot_interrupt_stopping = true;
+        timeslot_interrupt_stopping_check_counter = 0;
+
+      #ifdef DEBUG_PIN1_ENABLE
+        NRF_LOG_INFO("TIMESLOT Stopping!");
+        NRF_LOG_INFO("TIME %02X:%02X:%02X", m_pre_time.hours, m_pre_time.minutes, m_pre_time.seconds);
+      #endif
+
+        if (!m_bFlashSaveRequest ) {
+          timeslot_start();
+          timeslot_interrupt_stopping = false;
+          timeslot_interrupt_stopping_check_counter = 0;
+        #ifdef DEBUG_PIN1_ENABLE
+          NRF_LOG_INFO("TIMESLOT Restarted!");
+          NRF_LOG_INFO("TIME %02X:%02X:%02X", m_pre_time.hours, m_pre_time.minutes, m_pre_time.seconds);
+        #endif
+        }
+      }
+    }
+    old_timeslot_interrupt_counter = m_timeslot_interrupt_counter;
+  }
 
   m_system_timer++;
   if (m_system_timer > 0x015180) m_system_timer = 0;
@@ -726,7 +761,7 @@ static void time_1000ms_count_hanlder(void * p_context)
       if ( sw_value == 0) {
         blink_pending_led(3, 200);
         nrf_delay_ms(2000);
-        nrf_gpio_cfg_sense_set(13, NRF_GPIO_PIN_SENSE_LOW);
+        nrf_gpio_cfg_sense_set(SW_HW_MIMAXK, NRF_GPIO_PIN_SENSE_LOW);
         sleep_mode_enter();
       }
       m_sw_check_counter = 0;
@@ -759,22 +794,27 @@ static void time_1000ms_count_hanlder(void * p_context)
   }
 
   if( m_bFlashSaveRequest ) {
-    if ( !get_timeslot() ) {
-
+    if ( !get_timeslot() || timeslot_interrupt_stopping) {
+      #ifdef DEBUG_PIN1_ENABLE
+        if (timeslot_interrupt_stopping) NRF_LOG_INFO("FLASH SAVE TIMESLOT FOOLPROOF!");
+        NRF_LOG_INFO("FLASH SAVE %02X:%02X:%02X", m_pre_time.hours, m_pre_time.minutes, m_pre_time.seconds);
+      #endif
       m_bFlashSaveRequestCounter++;
       if (m_bFlashSaveRequestCounter == 3)
       {
         uint32_t err_code = tb_manager_settings_store();
         if ( err_code != NRF_SUCCESS ) NRF_LOG_INFO("tb_manager_settings_store ERROR = %d", err_code);
         APP_ERROR_CHECK(err_code);
-
         //NRF_LOG_INFO("tb_manager_settings_store");
       }
       else if (m_bFlashSaveRequestCounter == 6) {
-        timeslot_start();
+        if (ble_line_beacon_enablep() == 1) {
+          timeslot_start();
+          timeslot_interrupt_stopping = false;
+          timeslot_interrupt_stopping_check_counter = 0;
+        }
+        //(void)sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
         m_bFlashSaveRequest = false;
-
-        //NRF_LOG_INFO("timeslot_start");
       }
     }
   }
@@ -1258,9 +1298,12 @@ static void services_init(void)
   // Timeslot Mode
   set_timeslot_mode();
 #ifdef DEBUG_PIN1_ENABLE
+     //m_advertising_packet_type = 0x60;
+     //_beacon_info[BINFO_TXFRQ_VALUE_IDX] = 6;
+     //m_timeslot_mode = 8;
      m_advertising_packet_type = 0x70;
-     _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 0;
-     m_timeslot_mode = 8;
+     _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 6;
+     m_timeslot_mode = 10;
 #endif
 
   // Hardware Type
@@ -1897,7 +1940,6 @@ int main(void)
 
 
     (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
-
     int8_t txPowerLevel = get_tx_power_level( _beacon_info[BINFO_TXPWR_VALUE_IDX] );
     err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_sd_adv_handle, txPowerLevel);
     APP_ERROR_CHECK(err_code);

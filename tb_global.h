@@ -63,7 +63,7 @@
 #define RGB_LED
 //#define PCA10040
 #define DEFAULT_HW_TYPE
-//#define DEBUG_PIN1_ENABLE
+#define DEBUG_PIN1_ENABLE
 //#define DEBUG_RTC_ENABLE
 
 #include "custom_board.h"
@@ -92,7 +92,7 @@
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x50 /* v41040 refactoring version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x60 /* v41056 LINE support version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x70 /* v41072 Tangerine Secure Beacon v1.0 support */
-#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x96 /* v42134 nRF52 Tangerine Secure Beacon v1.1 support */
+#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x97 /* v42135 nRF52 Tangerine Secure Beacon v1.1 support */
 
 //----------------------------------------------------------------------------
 // device name and company identifier

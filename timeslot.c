@@ -39,6 +39,7 @@ enum mode_t
 static  uint8_t m_adv_pdu[APP_PDU_INFO_LENGTH];
 static  uint8_t line_packet_sw = false;
 
+uint32_t    m_timeslot_interrupt_counter = 0;
 
 nrf_radio_request_t * m_configure_next_event(void)
 {
@@ -206,6 +207,8 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   nrf_gpio_pin_toggle(NRF_GPIO_PIN_MAP(0,10));
 #endif
 
+  m_timeslot_interrupt_counter++;
+
   signal_callback_return_param.params.request.p_next  = NULL;
   signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
@@ -267,6 +270,9 @@ void timeslot_on_sys_evt(uint32_t event)
                 {
                     m_beacon.error_handler(err_code);
                 }
+            #ifdef DEBUG_PIN1_ENABLE
+                NRF_LOG_INFO("m_beacon.is_running = false");
+            #endif
                 m_beacon.is_running = false;
             }
             break;
@@ -309,24 +315,32 @@ void timeslot_init(ble_beacon_init_t * p_init)
 
 void timeslot_start(void)
 {
+#ifdef DEBUG_PIN1_ENABLE
+    NRF_LOG_INFO("timeslot_start");
+#endif
     m_beacon.keep_running = true;
     m_beacon.is_running   = true;
 
     uint32_t err_code = sd_radio_session_open(m_timeslot_callback);
     if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
     {
+        NRF_LOG_INFO("TMS %04X", err_code);
         m_beacon.error_handler(err_code);
     }
     
     err_code = m_request_earliest(NRF_RADIO_PRIORITY_NORMAL);
     if ((err_code != NRF_SUCCESS) && (m_beacon.error_handler != NULL))
     {
+        NRF_LOG_INFO("TMS2 %04X", err_code);
         m_beacon.error_handler(err_code);
     }
 }
 
 void timeslot_stop(void)
 {
+#ifdef DEBUG_PIN1_ENABLE
+    NRF_LOG_INFO("timeslot_stop");
+#endif
     m_beacon.keep_running = false;
 }
 

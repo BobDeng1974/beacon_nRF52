@@ -44,4 +44,6 @@ uint8_t get_timeslot(void);
 
 void radio_pdu_configure(ble_gap_adv_data_t const *p_adv_data, ble_gap_adv_params_t const *p_adv_params,  uint8_t *adv_pdu);
 
+extern  uint32_t    m_timeslot_interrupt_counter;
+
 #endif // TIMESLOT_H__

@@ -1011,9 +1011,13 @@ void set_timeslot_mode(void)
       m_advertising_packet_type = 0x30; break;
     case 6 :  // flxBeacon
       m_advertising_packet_type = 0x40; break;
-    case 7 :  // LINE + Secure iBeacon + flxBeacon
+    case 7 :  // iBeacon / flxBeacon
+      m_advertising_packet_type = 0x41; break;
+    case 8 :  // Secure iBeacon / flxBeacon
+      m_advertising_packet_type = 0x60; break;
+    case 9 :  // LINE + Secure iBeacon / flxBeacon
       m_advertising_packet_type = 0x51; break;
-    case 8 :  // LINE + Secure iBeacon + flxBeacon
+    case 10 : // LINE + Secure iBeacon / flxBeacon
       m_advertising_packet_type = 0x70; break;
     default :
       m_advertising_packet_type = 0x40; break;
