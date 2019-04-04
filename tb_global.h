@@ -63,7 +63,7 @@
 #define RGB_LED
 //#define PCA10040
 #define DEFAULT_HW_TYPE
-#define DEBUG_PIN1_ENABLE
+//#define DEBUG_PIN1_ENABLE
 //#define DEBUG_RTC_ENABLE
 
 #include "custom_board.h"
