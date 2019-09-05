@@ -6,14 +6,13 @@ static uint8_t bms_info[APP_BMS_INFO_LENGTH] =                  /**< Information
     0x00, 0x00,                                                  // Service ID : 2 bytes
     0x00, 0x00, 0x00, 0x00,                                      // Serial ID : 4 bytes
     0x00, 0x00, 0x00, 0x00,                                      // Beacon ID : 4 bytes
-//  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,              // Geo Hash : 8 bytes
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,                    // Geo Hash : 7 bytes
     0x00,                                                        // Tx Power : 1 bytes
     0x00,                                                        // Battery / ECO : 1 bytes
     0x00,                                                        // Mode / Status 1 byte
     0x00,                                                        // Frequency 1 byte
     APP_FIRMWARE_VERSION_VALUE                                   // 2 bytes
-}; // 24bytes
+}; // 23bytes
 
 static uint8_t m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded advertising set. */
 static uint8_t m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded scan response data set. */
@@ -37,6 +36,8 @@ void build_bms_data(void)
   // Service ID: 0-1
   bms_info[0] = 0xD0;
   if (ble_line_beacon_enablep() == 1 || ble_tgsec_ibeacon_enablep() == 1) bms_info[0] = 0xC0;
+  if (g_startup_stage == 0) bms_info[0] != 0x20;
+
   bms_info[1] = 0xFF;
   // 28-29
   //for (int i = BINFO_SERVICE_ID_VALUE_IDX; i < (BINFO_SERVICE_ID_VALUE_IDX+2); i++) {

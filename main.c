@@ -55,10 +55,6 @@ STATIC_ASSERT(IS_SRVC_CHANGED_CHARACT_PRESENT);                                 
 
 #define DEAD_BEEF                         0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define CAL_RTC                           NRF_RTC2
-#define COMPARE_COUNTERTIME               (3UL)                                       /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
-
-
 //------------------------------------------------------------------------------
 // static global variables
 //------------------------------------------------------------------------------
@@ -79,8 +75,6 @@ uint8_t                                   m_tbm_scan_mode = false;
 uint8_t                                   m_timeslot_mode = false;
 uint8_t                                   m_advertising_packet_type = 0x00;
 uint8_t                                   m_eco_adv_stop = false;
-uint8_t                                   m_eco_request = false;
-uint8_t                                   m_eco_request_mode = false;
 ble_gap_addr_t                            m_device_addr;                              // 48-bit address, LSB format
 
 uint8_t                                   g_is_startup;                               // startup status
@@ -114,102 +108,6 @@ static uint8_t                            m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZ
 static uint8_t                            m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];/**< Buffer for storing an encoded scan response data set. */
 
 uint32_t                                  m_system_timer = 0;
-
-static struct tm                          time_struct;
-static struct tm                          m_tm_return_time; 
-static time_t                             m_time;
-static time_t                             m_last_calibrate_time = 0;
-static float                              m_calibrate_factor = 0.0f;
-static uint32_t                           m_rtc_increment = 60;
- 
-
-/** @brief: Function for handling the RTC0 interrupts.
- * Triggered on TICK and COMPARE0 match.
- */
-static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
-{
-    if (int_type == NRF_DRV_RTC_INT_COMPARE0)
-    {
-        //nrf_gpio_pin_toggle(COMPARE_EVENT_OUTPUT);
-    }
-    else if (int_type == NRF_DRV_RTC_INT_TICK)
-    {
-        //nrf_gpio_pin_toggle(TICK_EVENT_OUTPUT);
-    }
-}
-
-/** @brief Function starting the internal LFCLK XTAL oscillator.
- */
-static void lfclk_config(void)
-{
-    ret_code_t err_code = nrf_drv_clock_init();
-    APP_ERROR_CHECK(err_code);
-
-    nrf_drv_clock_lfclk_request(NULL);
-}
-
-/** @brief Function initialization and configuration of RTC driver instance.
- */
-static void rtc_config(void)
-{
-    const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(2);
-    uint32_t err_code;
-
-    //Initialize RTC instance
-    nrf_drv_rtc_config_t config = NRF_DRV_RTC_DEFAULT_CONFIG;
-    config.prescaler = 4095;
-    err_code = nrf_drv_rtc_init(&rtc, &config, rtc_handler);
-    APP_ERROR_CHECK(err_code);
-
-    //Enable tick event & interrupt
-    nrf_drv_rtc_tick_enable(&rtc,true);
-
-    //Set compare channel to trigger interrupt after COMPARE_COUNTERTIME seconds
-    err_code = nrf_drv_rtc_cc_set(&rtc,0,COMPARE_COUNTERTIME * 8,true);
-    APP_ERROR_CHECK(err_code);
-
-    //Power on RTC instance
-    nrf_drv_rtc_enable(&rtc);
-}
-
-void nrf_cal_set_time(struct tm *pretime)
-{
-    static time_t uncal_difftime, difftime, newtime;
-    newtime = mktime(pretime);
-    CAL_RTC->TASKS_CLEAR = 1;  
-    
-    // Calculate the calibration offset 
-    if(m_last_calibrate_time != 0)
-    {
-        difftime = newtime - m_last_calibrate_time;
-        uncal_difftime = m_time - m_last_calibrate_time;
-        m_calibrate_factor = (float)difftime / (float)uncal_difftime;
-    }
-    
-    // Assign the new time to the local time variables
-    m_time = m_last_calibrate_time = newtime;
-}    
-
-struct tm *nrf_cal_get_time(void)
-{
-    time_t return_time;
-    return_time = m_time + CAL_RTC->COUNTER / 8;
-    m_tm_return_time = *localtime(&return_time);
-    return &m_tm_return_time;
-}
-
-struct tm *nrf_cal_get_time_calibrated(void)
-{
-    time_t uncalibrated_time, calibrated_time;
-    if(m_calibrate_factor != 0.0f)
-    {
-        uncalibrated_time = m_time + CAL_RTC->COUNTER / 8;
-        calibrated_time = m_last_calibrate_time + (time_t)((float)(uncalibrated_time - m_last_calibrate_time) * m_calibrate_factor + 0.5f);
-        m_tm_return_time = *localtime(&calibrated_time);
-        return &m_tm_return_time;
-    }
-    else return nrf_cal_get_time();
-}
 
 /**@brief Function for putting the chip into sleep mode.
  *
@@ -734,10 +632,10 @@ static void time_10min_count_hanlder(void * p_context)
   read_battery_hysteresis(NULL);
 
   // Date/Time read
-  //if (m_hardware_type == HW_TYPE_TANGERINE_BEACON) {
+  if (m_hardware_type == HW_TYPE_TANGERINE_BEACON) {
     if ( !pcf8563_read() ) return;
     if ( m_pre_time.years == 0x00 || m_pre_time.months == 0x00 || m_pre_time.days == 0x00 ) return;
-  //}
+  }
 
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
   memcpy(&_beacon_info[BINFO_CURRENT_DATETIME_IDX], &m_pre_time, BINFO_CURRENT_DATETIME_SIZ);
@@ -774,13 +672,8 @@ static void time_10min_count_hanlder(void * p_context)
       }
     }
   }
-  if (m_eco_adv_stop != bEco_Mode) {
-      m_eco_request = true;
-      m_eco_request_mode = bEco_Mode;
-  };
   m_eco_adv_stop = bEco_Mode;
-
-#ifndef  DEBUG_RTC_ENABLE
+#ifdef  DEBUG_RTC_ENABLE
   NRF_LOG_INFO("ECO mode = %d %02X:%02X", m_eco_adv_stop, m_pre_time.hours, m_pre_time.minutes);
   NRF_LOG_INFO("(%02X:%02X-%02X:%02X)", m_eco_start_time.dec.Hours, m_eco_start_time.dec.Minutes, m_eco_finish_time.dec.Hours, m_eco_finish_time.dec.Minutes);  
 #endif
@@ -806,33 +699,6 @@ static void time_1000ms_count_hanlder(void * p_context)
   UNUSED_PARAMETER(p_context);
 #endif
   uint8_t *_beacon_info = ble_bms_get_beacon_info();
-
-#ifndef INTERNAL_RTC_ECO_MODE
-  if (m_eco_request) {
-    if (m_eco_request_mode) {
-      if (ble_line_beacon_enablep() == 1) {
-        timeslot_stop();
-        NRF_LOG_INFO("ECO mode = Timeslot stop");
-      }
-      ret_code_t err_code = sd_ble_gap_adv_stop(m_sd_adv_handle);
-      APP_ERROR_CHECK(err_code);
-      NRF_LOG_INFO("ECO mode = SD stop");
-    }
-    else {
-      if (ble_line_beacon_enablep() == 1) {
-        timeslot_start();
-        timeslot_interrupt_stopping = false;
-        timeslot_interrupt_stopping_check_counter = 0;
-        NRF_LOG_INFO("ECO mode = Timeslot start");
-      }
-      (void)sd_ble_gap_adv_start(m_sd_adv_handle, APP_BLE_CONN_CFG_TAG);
-      NRF_LOG_INFO("ECO mode = SD start");
-    }
-    m_eco_request = false;
-    m_eco_adv_stop = m_eco_request_mode;
-  }
-  if (m_eco_adv_stop) return;
-#endif
 
   if (g_startup_stage == 0) {
     if (ble_line_beacon_enablep() == 1) {
@@ -862,15 +728,6 @@ static void time_1000ms_count_hanlder(void * p_context)
     old_timeslot_interrupt_counter = m_timeslot_interrupt_counter;
   }
 
-#ifdef  DEBUG_RTC_ENABLE
-  pcf8563_read();
-  NRF_LOG_INFO("%02X/%02X/%02X  %02X:%02X:%02X", m_pre_time.years, m_pre_time.months, m_pre_time.days, m_pre_time.hours, m_pre_time.minutes, m_pre_time.seconds);
-  struct tm nowdate;
-  nowdate = *nrf_cal_get_time_calibrated();
-  NRF_LOG_INFO("calib  %02d/%02d/%02d %02d:%02d:%02d", nowdate.tm_year, nowdate.tm_mon, nowdate.tm_mday, nowdate.tm_hour, nowdate.tm_min, nowdate.tm_sec);
-#endif
-
-#ifdef  DEBUG_RTC_ENABLE
   m_system_timer++;
   if (m_system_timer > 0x015180) m_system_timer = 0;
 
@@ -880,6 +737,7 @@ static void time_1000ms_count_hanlder(void * p_context)
   m_pre_time.minutes = bin2bcd(clock / 60);
   clock %= 60;
   m_pre_time.seconds = bin2bcd(clock);
+#ifdef  DEBUG_RTC_ENABLE
   NRF_LOG_INFO("TIME %02X:%02X:%02X", m_pre_time.hours, m_pre_time.minutes, m_pre_time.seconds);
 #endif
 
@@ -1447,7 +1305,6 @@ static void services_init(void)
      m_advertising_packet_type = 0x70;
      _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 6;
      m_timeslot_mode = 10;
-     _beacon_info[BINFO_HARDWARE_TYPE_IDX] = HW_TYPE_TANGERINE_BEACON;
 #endif
 
   // Hardware Type
@@ -1943,7 +1800,6 @@ void clock_init(void)
 /**@brief F unction for application main entry.
  */
 int main(void)
-
 {
   uint32_t err_code;
   bool erase_bonds;
@@ -1958,9 +1814,6 @@ int main(void)
 
   // Initialize.
   log_init();
-
-  lfclk_config();
-  rtc_config();
 #ifdef FREERTOS_SWITCH
   clock_init();
   // Activate deep sleep mode.
@@ -2119,7 +1972,7 @@ int main(void)
     APP_ERROR_HANDLER(NRF_ERROR_FORBIDDEN);
   #else
     UNUSED_RETURN_VALUE(NRF_LOG_PROCESS());
-    //NRF_LOG_FLUSH();
+    NRF_LOG_FLUSH();
     if (NRF_LOG_PROCESS() == false)
     {
         nrf_pwr_mgmt_run();

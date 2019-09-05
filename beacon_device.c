@@ -4,10 +4,6 @@
 #include "nrf_drv_saadc.h"
 
 
-void nrf_cal_set_time(struct tm *pretime);
-struct tm *nrf_cal_get_time(void);
-struct tm *nrf_cal_get_time_calibrated(void);
-
 /* LED */
 static uint8_t m_Blink_LED_count;
 static uint8_t m_Blink_Error_LED_count;
@@ -607,17 +603,7 @@ uint8_t pcf8563_write(void)
 {
   uint8_t data[RTC_TIMEDATE_LENGTH+1];
 
-  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) {
-    struct  tm  time_struct;
-    time_struct.tm_year = bcd2bin(m_pre_time.years);
-    time_struct.tm_mon  = bcd2bin(m_pre_time.months);
-    time_struct.tm_mday = bcd2bin(m_pre_time.days);
-    time_struct.tm_hour = bcd2bin(m_pre_time.hours);
-    time_struct.tm_min  = bcd2bin(m_pre_time.minutes);
-    time_struct.tm_sec  = bcd2bin(m_pre_time.seconds);   
-    nrf_cal_set_time(&time_struct); 
-    return true;  // Tangerine Beacon
-  }
+  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) return true;  // Tangerine Beacon
 
   data[0] = RTC_SECONDS_ADDR;
   data[1] = m_pre_time.seconds;
@@ -632,17 +618,7 @@ uint8_t pcf8563_write(void)
 
 uint8_t pcf8563_read(void)
 {
-  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) {
-    struct  tm time_struct;
-    time_struct = *nrf_cal_get_time();
-    m_pre_time.years    = bin2bcd(time_struct.tm_year);
-    m_pre_time.months   = bin2bcd(time_struct.tm_mon);
-    m_pre_time.days     = bin2bcd(time_struct.tm_mday);
-    m_pre_time.hours    = bin2bcd(time_struct.tm_hour);
-    m_pre_time.minutes  = bin2bcd(time_struct.tm_min);
-    m_pre_time.seconds  = bin2bcd(time_struct.tm_sec);   
-    return true;   
-  }
+  if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) return true;   
 
   uint8_t data[RTC_TIMEDATE_LENGTH];
   uint8_t result = PCF8563_read_regs(RTC_SECONDS_ADDR, RTC_TIMEDATE_LENGTH, data);
@@ -662,7 +638,6 @@ uint8_t pcf8563_init(uint8_t scl_pin, uint8_t sda_pin)
 {
   ret_code_t err_code;
 
-#ifdef  DEBUG_RTC_ENABLE
   if (m_hardware_type != HW_TYPE_TANGERINE_BEACON) {
     // System Timer
     uint8_t *_beacon_info = ble_bms_get_beacon_info();
@@ -670,8 +645,7 @@ uint8_t pcf8563_init(uint8_t scl_pin, uint8_t sda_pin)
     m_system_timer = (bcd2bin(m_pre_time.hours) * 3600) + (bcd2bin(m_pre_time.minutes) * 60)  + bcd2bin(m_pre_time.seconds);
     return true;   
   }
-#endif
-
+  
   const nrf_drv_twi_config_t twi_lm75b_config = {
     .scl = scl_pin,
     .sda = sda_pin,

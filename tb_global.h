@@ -30,8 +30,6 @@
 #include "app_timer.h"
 #include "app_gpiote.h"
 #include "nrf_delay.h"
-#include "nrf_drv_rtc.h"
-#include "nrf_drv_clock.h"
 
 #include "nrf_ble_qwr.h"
 #include "fds.h"
@@ -94,7 +92,7 @@
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x50 /* v41040 refactoring version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x60 /* v41056 LINE support version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x70 /* v41072 Tangerine Secure Beacon v1.0 support */
-#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x9A /* v42138 nRF52 Tangerine Secure Beacon v1.1 support */
+#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x9C /* v42140 nRF52 Tangerine Secure Beacon v1.1 support */
 
 //----------------------------------------------------------------------------
 // device name and company identifier

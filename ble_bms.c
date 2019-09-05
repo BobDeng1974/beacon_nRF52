@@ -775,8 +775,8 @@ static void bms_data_handler(ble_bms_t *p_bms, uint8_t *p_data, uint16_t length,
       _beacon_info[BINFO_SET_CURRENT_DATETIME_IDX+6]= p_data[i+8];
       memcpy(&m_pre_time, &_beacon_info[BINFO_SET_CURRENT_DATETIME_IDX], BINFO_CURRENT_DATETIME_SIZ);
 
-  #ifdef  DEBUG_RTC_ENABLE
       m_system_timer = (bcd2bin(m_pre_time.hours) * 3600) + (bcd2bin(m_pre_time.minutes) * 60)  + bcd2bin(m_pre_time.seconds);
+  #ifdef  DEBUG_RTC_ENABLE
       NRF_LOG_INFO("00EF : SET Current datetime %02d:%02d:%02d -> %d", bcd2bin(m_pre_time.hours), bcd2bin(m_pre_time.minutes), bcd2bin(m_pre_time.seconds), m_system_timer);
   #endif
       pcf8563_write();
