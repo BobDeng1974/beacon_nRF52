@@ -682,11 +682,12 @@ static void time_60000ms_count_hanlder(void * p_context)
 #endif
 
   // Timeslot Started
-  if (ble_bms_get_timeslot_status() != 0x00 &&  ble_line_beacon_enablep() == 1) {
+  if (ble_bms_get_timeslot_status() != 0x00 &&  ble_ibeacon_enablep() == 1) {
 
     sd_ble_gap_adv_stop(m_sd_adv_handle);
 
-    m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
+    //m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_SCANNABLE_UNDIRECTED;
+    m_sd_adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED;
     advertising_init(BLE_ADV_MODE_IBEACON);
 
     sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, &m_sd_adv_params);
@@ -1446,6 +1447,7 @@ static void services_init(void)
      m_advertising_packet_type = 0x70;
      _beacon_info[BINFO_TXFRQ_VALUE_IDX] = 6;
      m_timeslot_mode = 10;
+     _beacon_info[BINFO_HARDWARE_TYPE_IDX] = HW_TYPE_TANGERINE_BEACON;
 #endif
 
   // Hardware Type
@@ -1941,6 +1943,7 @@ void clock_init(void)
 /**@brief F unction for application main entry.
  */
 int main(void)
+
 {
   uint32_t err_code;
   bool erase_bonds;
@@ -2116,7 +2119,7 @@ int main(void)
     APP_ERROR_HANDLER(NRF_ERROR_FORBIDDEN);
   #else
     UNUSED_RETURN_VALUE(NRF_LOG_PROCESS());
-    NRF_LOG_FLUSH();
+    //NRF_LOG_FLUSH();
     if (NRF_LOG_PROCESS() == false)
     {
         nrf_pwr_mgmt_run();
