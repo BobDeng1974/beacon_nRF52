@@ -6,13 +6,13 @@ static uint8_t bms_info[APP_BMS_INFO_LENGTH] =                  /**< Information
     0x00, 0x00,                                                  // Service ID : 2 bytes
     0x00, 0x00, 0x00, 0x00,                                      // Serial ID : 4 bytes
     0x00, 0x00, 0x00, 0x00,                                      // Beacon ID : 4 bytes
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,                    // Geo Hash : 7 bytes
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,              // Geo Hash : 8 bytes
     0x00,                                                        // Tx Power : 1 bytes
     0x00,                                                        // Battery / ECO : 1 bytes
     0x00,                                                        // Mode / Status 1 byte
     0x00,                                                        // Frequency 1 byte
     APP_FIRMWARE_VERSION_VALUE                                   // 2 bytes
-}; // 23bytes
+}; // 24bytes
 
 static uint8_t m_enc_advdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded advertising set. */
 static uint8_t m_enc_scrdata[BLE_GAP_ADV_SET_DATA_SIZE_MAX];    /**< Buffer for storing an encoded scan response data set. */
@@ -95,12 +95,13 @@ void build_bms_data(void)
 
     uint16_t blevel = get_battery_level();
     bms_info[14] = 0xFF;
-    bms_info[15] = (uint8_t)((blevel & 0xFF00) >> 8);
-    bms_info[16] = (uint8_t)(blevel & 0x00FF);
+    bms_info[15] = 0xFF;
+    bms_info[16] = (uint8_t)((blevel & 0xFF00) >> 8);
+    bms_info[17] = (uint8_t)(blevel & 0x00FF);
   }
 
   // Tx Power
-  bms_info[17] =  _beacon_info[BINFO_TXPWR_VALUE_IDX] & 0x0f;
+  bms_info[18] =  _beacon_info[BINFO_TXPWR_VALUE_IDX] & 0x0f;
 
   // Battery / ECO mode
   uint8_t statusFlags = _beacon_info[BINFO_BATTERY_LEVEL10_VALUE_IDX] & 0x7f;
@@ -112,29 +113,29 @@ void build_bms_data(void)
   m_eco_finish_time.dec.Hours    = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX];
   m_eco_finish_time.dec.Minutes  = _beacon_info[BINFO_ECO_MODE_FINISH_TIME_IDX+1];
   if (m_eco_start_time.wTime != m_eco_finish_time.wTime) statusFlags |= 0x80;
-  bms_info[18] =  statusFlags;
+  bms_info[19] =  statusFlags;
   
   // Beacon Status
   statusFlags = m_timeslot_mode << 4;
   statusFlags = statusFlags | _beacon_info[BINFO_STATUS_VALUE_IDX];
   if (_beacon_info[BINFO_STATUS_VALUE_IDX] == 0x00) statusFlags = statusFlags | 0x08;
-  bms_info[19] = statusFlags;
+  bms_info[20] = statusFlags;
 
   // Tx Power / Beacon Frequency
   statusFlags = _beacon_info[BINFO_TIMESLOT_TXFRQ_VALUE_IDX];
   statusFlags = statusFlags  | (_beacon_info[BINFO_TXFRQ_VALUE_IDX] << 4);
 
 
-  bms_info[20] = statusFlags;
+  bms_info[21] = statusFlags;
 
   // Firmware Version
-  bms_info[21] = _beacon_info[BINFO_VERSION_VALUE_IDX];
-  bms_info[22] = _beacon_info[BINFO_VERSION_VALUE_IDX+1];
+  bms_info[22] = _beacon_info[BINFO_VERSION_VALUE_IDX];
+  bms_info[23] = _beacon_info[BINFO_VERSION_VALUE_IDX+1];
 
   // Hardware Type
   bms_info[0] = ( bms_info[0] & 0xF0) | m_hardware_type;
  
-  if ( m_fcm == 0xFF ) bms_info[17] = 0xFF;
+  if ( m_fcm == 0xFF ) bms_info[18] = 0xFF;
 }
 
 /**@brief Function for handling advertising events.
@@ -175,6 +176,11 @@ static ble_gap_adv_data_t m_adv_data =
         .len    = BLE_GAP_ADV_SET_DATA_SIZE_MAX
     }
 };
+
+ble_gap_adv_data_t * get_bms_adv_data(void)
+{
+  return &m_adv_data;
+}
 
 /**@brief Tangerine Beacon Management Service advertising initialization
  */

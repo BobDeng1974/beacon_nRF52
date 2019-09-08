@@ -51,18 +51,18 @@
    <Watchpoint expression="m_enc_advdata" name="m_enc_advdata" radix="16" linenumber="147" filename="../ibeacon.c"/>
    <Watchpoint expression="m_beacon_info" name="m_beacon_info" radix="16" linenumber="95" filename="../tb_manager.c"/>
    <Watchpoint expression="bms_info" name="bms_info" radix="16" linenumber="102" filename="../tbm_packet.c"/>
-   <Watchpoint expression="m_adbuffer" name="m_adbuffer" radix="16" linenumber="278" filename="../beacon_device.c"/>
+   <Watchpoint expression="m_adbuffer" name="m_adbuffer" radix="16" linenumber="281" filename="../beacon_device.c"/>
    <Watchpoint expression="p_adv_pdu" name="p_adv_pdu" radix="16" linenumber="137" filename="../timeslot.c"/>
    <Watchpoint expression="m_pdu_tbm" name="m_pdu_tbm" radix="16" linenumber="271" filename="../tbm_packet.c"/>
-   <Watchpoint expression="m_line_timestamp" name="m_line_timestamp" radix="-1" linenumber="1715" filename="../main.c"/>
-   <Watchpoint expression="m_tgsec_timestamp" name="m_tgsec_timestamp" radix="-1" linenumber="1720" filename="../main.c"/>
+   <Watchpoint expression="m_line_timestamp" name="m_line_timestamp" radix="-1" linenumber="1716" filename="../main.c"/>
+   <Watchpoint expression="m_tgsec_timestamp" name="m_tgsec_timestamp" radix="-1" linenumber="1721" filename="../main.c"/>
    <Watchpoint expression="p_bms" name="p_bms" radix="16" linenumber="373" filename="../ble_bms.c"/>
    <Watchpoint expression="handle" name="handle" radix="-1" linenumber="373" filename="../ble_bms.c"/>
    <Watchpoint expression="p_data" name="p_data" radix="16" linenumber="375" filename="../ble_bms.c"/>
    <Watchpoint expression="ac_key" name="ac_key" radix="-1" linenumber="375" filename="../ble_bms.c"/>
    <Watchpoint expression="ac_match" name="ac_match" radix="16" linenumber="376" filename="../ble_bms.c"/>
    <Watchpoint expression="m_sd_adv_params" name="m_sd_adv_params" radix="-1" linenumber="271" filename="../main.c"/>
-   <Watchpoint expression="buffer" name="buffer" radix="-1" linenumber="414" filename="../beacon_device.c"/>
+   <Watchpoint expression="buffer" name="buffer" radix="-1" linenumber="417" filename="../beacon_device.c"/>
    <Watchpoint expression="m_adv_pdu" name="m_adv_pdu" radix="16" linenumber="39" filename="../timeslot.c"/>
    <Watchpoint expression="m_device_addr" name="m_device_addr" radix="-1" linenumber="98" filename="../timeslot.c"/>
    <Watchpoint expression="m_pre_time" name="m_pre_time" radix="16" linenumber="771" filename="../ble_bms.c"/>
@@ -80,9 +80,16 @@
  </Watch4>
  <Files>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../timeslot.c" selected="0" top="19" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1802" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="0" top="1910" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_global.h" selected="0" top="85" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="337" useTextEdit="1" useBinaryEdit="0" left="0" path="../line.c" selected="1" top="330" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1809" useTextEdit="1" useBinaryEdit="0" left="0" path="../main.c" selected="1" top="1799" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" useBinaryEdit="0" left="0" path="../tb_global.h" selected="0" top="40" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="337" useTextEdit="1" useBinaryEdit="0" left="0" path="../line.c" selected="0" top="330" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="277" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.c" selected="0" top="275" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="17" useTextEdit="1" useBinaryEdit="0" left="0" path="../tbm_packet.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="151" useTextEdit="1" useBinaryEdit="0" left="0" path="../ibeacon.c" selected="0" top="142" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="22" useTextEdit="1" useBinaryEdit="0" left="0" path="../ibeacon.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="174" useTextEdit="1" useBinaryEdit="0" left="0" path="../beacon_device.c" selected="0" top="169" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../beacon_device.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="192" useTextEdit="1" useBinaryEdit="0" left="0" path="../config/custom_board.h" selected="0" top="183" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="Tangerine-beacon-nRF52-SDK15" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" sessionSettings="" debugSearchFileMap="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_clock.c&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_gpiote.c&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_saadc.c&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s&#xa;&#xa;/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf_common.s&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_clock.c&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_gpiote.c&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/drivers/src/nrfx_saadc.c&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf52.s&#xa;&#xa;/Users/sumita/Library/Mobile Documents/com~apple~CloudDocs/nRF5_SDK_15.2.0_9412b96/modules/nrfx/mdk/ses_startup_nrf_common.s&#xa;" fileDialogInitialDirectory="/Users/kiyoshi/Library/Mobile Documents/com~apple~CloudDocs/beacon_nRF52" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

@@ -172,6 +172,7 @@
       <file file_name="$(SDKDir)/components/softdevice/common/nrf_sdh_ble.c" />
       <file file_name="$(SDKDir)/components/softdevice/common/nrf_sdh_soc.c" />
     </folder>
+    <configuration Connection="USB 504404936" Name="Release" />
   </project>
   <configuration Name="Release" c_preprocessor_definitions="NDEBUG" />
   <configuration

@@ -92,7 +92,7 @@
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x50 /* v41040 refactoring version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x60 /* v41056 LINE support version */
 //#define APP_FIRMWARE_VERSION_VALUE    0xA0, 0x70 /* v41072 Tangerine Secure Beacon v1.0 support */
-#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x9C /* v42140 nRF52 Tangerine Secure Beacon v1.1 support */
+#define APP_FIRMWARE_VERSION_VALUE    0xA4, 0x9E /* v42142 nRF52 Tangerine Secure Beacon v1.1 support */
 
 //----------------------------------------------------------------------------
 // device name and company identifier

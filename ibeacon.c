@@ -75,6 +75,11 @@ static ble_gap_adv_data_t m_adv_data =
     }
 };
 
+ble_gap_adv_data_t * get_ibeacon_adv_data(void)
+{
+  return &m_adv_data;
+}
+
 void ibeacon_advertising_init()
 {
   uint32_t      err_code;

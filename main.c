@@ -339,10 +339,12 @@ static void timeslot_beacon_adv_init(void)
 static void timeslot_on_radio_event(bool radio_active) 
 {
   static bool send_ibeacon = true;
+  ble_gap_adv_data_t *p_adv_data;
 
   if (radio_active) 
   {
     memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+    p_adv_data = get_bms_adv_data();
     if ( g_startup_stage == 1 ) {
       return;
     }
@@ -356,18 +358,21 @@ static void timeslot_on_radio_event(bool radio_active)
       if (m_bTbmRequest) {
         //m_bTbmRequestCounter++;
         memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+        p_adv_data = get_bms_adv_data();
         //if (m_bTbmRequestCounter > 10) m_bTbmRequest = false;
         m_bTbmRequest = false;
       }
       else {
         if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
           memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+          p_adv_data = get_ibeacon_adv_data();
         }  
         else return;
       }
       break;
     case 6 :  // flxBeacon
       memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+      p_adv_data = get_bms_adv_data();
       break;
     case 7 :  // iBeacon / flxBeacon
     case 8 :  // Secure iBeacon / flxBeacon
@@ -381,10 +386,12 @@ static void timeslot_on_radio_event(bool radio_active)
       if (send_ibeacon)
       {
         memcpy(m_enc_advdata, get_bms_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+        p_adv_data = get_bms_adv_data();
       }
       else {
         if (ble_ibeacon_enablep() == 1 | ble_tgsec_ibeacon_enablep() == 1) {
           memcpy(m_enc_advdata, get_ibeacon_advertising_data(), BLE_GAP_ADV_SET_DATA_SIZE_MAX);
+          p_adv_data = get_ibeacon_adv_data();
         }  
         else return;
       }
@@ -393,7 +400,7 @@ static void timeslot_on_radio_event(bool radio_active)
       break;
     }
 
-    (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, &m_adv_data, NULL);
+    (void)sd_ble_gap_adv_set_configure(&m_sd_adv_handle, p_adv_data, NULL);
     m_adv_handle = m_sd_adv_handle;
     send_ibeacon = !send_ibeacon;
   }
